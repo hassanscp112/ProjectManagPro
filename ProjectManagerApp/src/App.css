@@ -133,7 +133,7 @@ html, body, #root {
   padding: 1.5rem;
   gap: 1.5rem;
   min-height: 0;
-  overflow: hidden; /* Prevent scrolling here, Gantt handles its own scroll */
+  overflow-y: auto; /* Allow scrolling for Dashboard/Finance/Reports; Gantt manages its own internal scroll */
 }
 
 /* ═══════════════════════════════════════════════════════
