@@ -88,7 +88,7 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
       timeline.removeEventListener('scroll', syncTimelineToGrid);
       clearTimeout(scrollTimeout);
     };
-  }, [gridBodyRef.current, timelineBodyRef.current]);
+  }, []);
 
   const [rowHeights, setRowHeights] = useState({});
   const rowRefs = useRef({});

@@ -1,25 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import TemplateEditor from './TemplateEditor';
 import CalculatorGrid from './CalculatorGrid';
 import './Calculator.css';
 
-const CalculatorView = () => {
-  const [templates, setTemplates] = useState([]);
-  const [activeTemplateId, setActiveTemplateId] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-
-  useEffect(() => {
+// Lazy initializer: read persisted templates once, at first render, instead of
+// inside an effect (avoids a cascading render flagged by react-hooks).
+const loadTemplatesFromStorage = () => {
+  try {
     const saved = localStorage.getItem('pm-calculator-templates');
     if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setTemplates(parsed);
-        if (parsed.length > 0) setActiveTemplateId(parsed[0].id);
-      } catch (e) {
-        console.error('Failed to parse templates', e);
-      }
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
     }
-  }, []);
+  } catch (e) {
+    console.error('Failed to parse templates', e);
+  }
+  return [];
+};
+
+const CalculatorView = () => {
+  const [templates, setTemplates] = useState(loadTemplatesFromStorage);
+  const [activeTemplateId, setActiveTemplateId] = useState(
+    () => loadTemplatesFromStorage()[0]?.id ?? null
+  );
+  const [isEditing, setIsEditing] = useState(false);
 
   const saveTemplatesToStorage = (newTemplates) => {
     setTemplates(newTemplates);

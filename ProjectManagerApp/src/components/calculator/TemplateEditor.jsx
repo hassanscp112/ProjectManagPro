@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import jspreadsheet from 'jspreadsheet-ce';
 import 'jspreadsheet-ce/dist/jspreadsheet.css';
 import { colIndexToLetter } from '../../utils/CalculatorEngine';
@@ -57,7 +57,7 @@ const TemplateEditor = ({ onSave, onCancel, initialTemplate }) => {
       }],
       tabs: false,
       contextMenu: () => false, // disable context menu to keep it simple for now
-      onselection: (instance, col1, row1, col2, row2) => {
+      onselection: (instance, col1) => {
         // When user selects a cell, update the selected column index
         setSelectedColIndex(parseInt(col1));
       },

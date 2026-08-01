@@ -1,7 +1,23 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { calculateRow } from '../../utils/CalculatorEngine';
 
 const CalculatorGrid = ({ template, onUpdateTemplate }) => {
+  // NOTE: hooks must run before any early return, so guard for a null
+  // template inside the memo rather than returning early above it.
+  const totals = useMemo(() => {
+    if (!template) return {};
+    const sums = {};
+    template.columns.forEach(col => {
+      if (col.source === 'formula' || col.source === 'input' || col.source === 'design') {
+        sums[col.id] = template.rows.reduce((acc, row) => {
+          const val = parseFloat(row.values[col.id]) || 0;
+          return acc + val;
+        }, 0);
+      }
+    });
+    return sums;
+  }, [template]);
+
   if (!template) return null;
 
   const handleAddRow = () => {
@@ -36,19 +52,6 @@ const CalculatorGrid = ({ template, onUpdateTemplate }) => {
     onUpdateTemplate({ ...template, rows: newRows });
   };
 
-  const totals = useMemo(() => {
-    const sums = {};
-    template.columns.forEach(col => {
-      if (col.source === 'formula' || col.source === 'input' || col.source === 'design') {
-        sums[col.id] = template.rows.reduce((acc, row) => {
-          const val = parseFloat(row.values[col.id]) || 0;
-          return acc + val;
-        }, 0);
-      }
-    });
-    return sums;
-  }, [template.rows, template.columns]);
-
   return (
     <div className="calc-grid-container">
       <table className="calc-grid">
@@ -62,7 +65,7 @@ const CalculatorGrid = ({ template, onUpdateTemplate }) => {
           </tr>
         </thead>
         <tbody>
-          {template.rows.map((row, index) => (
+          {template.rows.map((row) => (
             <tr key={row.id}>
               <td style={{ textAlign: 'center' }}>
                 <button className="calc-delete-row-btn" onClick={() => handleRemoveRow(row.id)}>✕</button>

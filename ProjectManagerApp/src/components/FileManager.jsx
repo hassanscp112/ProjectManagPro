@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { saveFile, getFiles, deleteFile } from '../utils/FileDB';
 import './FileManager.css';
 
@@ -46,33 +46,56 @@ const FileManager = ({ tasks, targetTask }) => {
     }
   };
 
+  // Re-fetch files whenever the active folder changes. This is async data
+  // fetching from IndexedDB — setState happens after `await` (in the resolved
+  // promise callback), which is the documented safe pattern for effects that
+  // pull from an external system.
   useEffect(() => {
-    loadFiles();
+    let ignore = false;
+    (async () => {
+      setIsLoading(true);
+      try {
+        const folderFiles = await getFiles(currentFolder.id);
+        if (!ignore) setFiles(folderFiles);
+      } catch (err) {
+        console.error('Failed to load files:', err);
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    })();
+    return () => { ignore = true; };
   }, [currentFolder.id]);
 
-  // Handle jumping to a specific task folder from the outside
-  useEffect(() => {
-    if (targetTask) {
-      const buildPath = () => {
-        const path = [
-          { id: 'root', name: 'الرئيسية' },
-          { id: 'tasks_root', name: 'الفقرات (المهام)' }
-        ];
-        
-        if (!targetTask.wbs) return path;
-        
-        // Only build path to the main task (top level)
-        const mainWbs = targetTask.wbs.split('.')[0];
-        const mainTask = tasks.find(t => t.wbs === mainWbs);
-        if (mainTask) {
-          path.push({ id: `task_${mainTask.id}`, name: `${mainTask.wbs} - ${mainTask.name}` });
-        }
-        return path;
-      };
-      
-      setCurrentPath(buildPath());
+  // Derived folder path for the externally-requested target task.
+  // Computed during render (pure function of props) so we never setState
+  // synchronously inside an effect.
+  const targetPath = useMemo(() => {
+    if (!targetTask) return null;
+    const path = [
+      { id: 'root', name: 'الرئيسية' },
+      { id: 'tasks_root', name: 'الفقرات (المهام)' }
+    ];
+    if (targetTask.wbs) {
+      // Only build path to the main task (top level)
+      const mainWbs = targetTask.wbs.split('.')[0];
+      const mainTask = tasks.find(t => t.wbs === mainWbs);
+      if (mainTask) {
+        path.push({ id: `task_${mainTask.id}`, name: `${mainTask.wbs} - ${mainTask.name}` });
+      }
     }
+    return path;
   }, [targetTask, tasks]);
+
+  // Track the last target path we navigated to, so we only navigate when it
+  // actually changes (avoids redundant state updates / cascading renders).
+  const lastTargetPathRef = useRef(null);
+
+  useEffect(() => {
+    if (targetPath && targetPath !== lastTargetPathRef.current) {
+      lastTargetPathRef.current = targetPath;
+      setCurrentPath(targetPath);
+    }
+  }, [targetPath]);
 
   const handleNavigate = (folder) => {
     setCurrentPath([...currentPath, folder]);
