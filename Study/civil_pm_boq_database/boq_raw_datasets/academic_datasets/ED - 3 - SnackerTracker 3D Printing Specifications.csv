@@ -1,0 +1,76 @@
+Print Feature,Parameter,Value
+Quality,Layer Height,0.2 mm
+,Initial Layer Height,0.27 mm
+,Line Width (All),0.4 mm
+Walls,Wall Thickness,0.8 mm
+,Wall Line Count,2
+,Optimize Printing Order,Yes
+,Wall Ordering,Out to In
+,Alternate Extra Wall,No
+,Min Line Width (All),0.34 mm
+,Print Thin Walls,Yes
+,Min Feature Size,0.1 mm
+,Horizontal Expansion,-0.02 mm
+,Initial Layer Horizontal Expansion,-0.02 mm
+,Hole Horizontal Expansion,0.00 mm
+Top/Bottom,Thickness (All),1.2 mm
+,Layers,6
+,Ironing Pattern,Concentric
+,"Enable Ironing, Only Highest Layer",Yes
+Infill,Density,0.2
+,Line Distance,6.0 mm
+,Pattern,Triangles
+,Layer Thickness,0.2 mm
+,Gradual Steps,1
+,Gradual Step Height,1.0 mm
+Material,Printing Temp,250 °C
+,Build Plate Temp,85 °C
+Speed,Print Speed,60.0 mm/s
+Travel,Enable Retraction,Yes
+,Combing Mode,Not Out
+,Z Hop When ,Yes
+,Retracted,
+Cooling,Enable,Yes
+,Fan Speed,0.02
+Support,Generate Support,Yes
+,Structure,Normal
+,Placement,Everywhere
+,Overhang Angle,60 °
+,Support Pattern,Lines
+,Wall Line Count,0
+,Connect Lines,Yes
+,Density,0.15
+,Line Distance (All),2.66 mm
+,Enable Brim,Yes
+,Brim Width,8.0 mm
+,Z/Top/XY Distance,0.3 mm
+,Bottom Distance,0.15 mm
+,Distance Priority,Z over XY
+,Stair Step Height ,0.3 mm
+,Stair Max Width,5.0 mm
+,Stair Min Angle,10.0 °
+,Join Distance,2.0 mm
+,Horizontal Expansion,1.0 mm
+,Infill Layer Thickness,0.2 mm
+,Gradual Infill Steps,0
+,Min Area,9.0 mm2
+,Enable Interface,Yes
+,Enable Roof/Floor,Yes
+,Interface Thickness (All),0.4 mm
+,Interface Resolution,0.2 mm
+,Interface Density (All),0.8
+,Line Distance (All),0.5 mm
+,Interface Pattern (All),Concentric
+,Min Interface Area (All),1.0 mm2
+,Interface Horizontal Expand (All),1.0 mm
+,Fan Speed Override,No
+,Use Towers,No
+Build Plate Adhesion,Enable Prime Blob,No
+,Build Plate Adhesion Type,Brim
+Mesh Fixes,Union Overlapping Volumes,Yes
+,Remove All Holes,No
+,Extensive Stitching,No
+,Keep Disconnected Faces,No
+,Merged Meshes Overlap,0.0 mm
+,Remove Mesh Intersection,Yes
+,Alternate Mesh Removal,Yes

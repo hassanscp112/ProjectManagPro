@@ -1,0 +1,332 @@
+.finance-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-app);
+  overflow: hidden;
+}
+
+.finance-header {
+  padding: 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.finance-summary-cards {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.finance-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 180px;
+}
+
+.finance-card.total {
+  background: var(--apple-blue-action);
+  color: #fff;
+  border-color: var(--apple-blue-action);
+}
+
+.finance-card.total .card-label {
+  color: rgba(255,255,255,0.8);
+}
+
+.card-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.card-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.finance-tabs {
+  display: flex;
+  gap: 12px;
+}
+
+.finance-tab {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.finance-tab.active {
+  background: var(--apple-blue-action);
+  color: #fff;
+}
+
+.finance-tab:hover:not(.active) {
+  background: rgba(0, 113, 227, 0.1);
+}
+
+.finance-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Ledger View Styles */
+.ledger-view {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  width: 100%;
+}
+
+.ledger-sidebar {
+  width: 380px;
+  flex-shrink: 0;
+  padding: 32px;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-soft);
+  overflow-y: auto;
+}
+
+.ledger-main {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ledger-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.ledger-form * {
+  box-sizing: border-box;
+}
+
+.ledger-form label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: -4px;
+}
+
+.ledger-form input, .ledger-form select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.ledger-form input:focus, .ledger-form select:focus {
+  outline: none;
+  border-color: var(--apple-blue-action);
+}
+
+.form-section {
+  background: var(--bg-surface);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.form-section h4 {
+  margin: 0 0 4px 0;
+  color: var(--apple-blue-action);
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-soft);
+  padding-bottom: 8px;
+}
+
+.split-row {
+  display: flex;
+  gap: 12px;
+}
+.split-row > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ledger-filters {
+  display: flex;
+  gap: 24px;
+  padding: 20px;
+  background: var(--bg-surface);
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+}
+
+.ledger-filters .filter-group {
+  flex: 0 0 auto !important;
+  min-width: 200px;
+}
+
+.ledger-table-wrapper {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ledger-table th, .ledger-table td {
+  padding: 14px 16px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 0.9rem;
+}
+
+.ledger-table th {
+  background: var(--bg-app);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--apple-black);
+  white-space: nowrap;
+}
+
+.ledger-table tbody tr:hover {
+  background: rgba(0,0,0,0.02);
+}
+
+.cost-cell {
+  font-weight: 600;
+  color: var(--apple-black);
+  font-family: var(--font-mono);
+}
+
+.cost-cell.total {
+  font-size: 1.1rem;
+}
+
+/* Config Settings Styles */
+.config-editor {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.config-editor h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.config-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.config-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-app);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  border: 1px solid var(--border-soft);
+}
+
+.config-del-btn {
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--apple-red);
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.config-del-btn:hover {
+  background: var(--apple-red);
+  color: white;
+}
+
+.config-add-form {
+  display: flex;
+  gap: 8px;
+}
+
+.config-add-form input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  background: var(--bg-app);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .ledger-main, .ledger-main * {
+    visibility: visible;
+  }
+  .ledger-main {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .ledger-table {
+    border: 1px solid #000;
+  }
+  .ledger-table th, .ledger-table td {
+    border: 1px solid #000;
+  }
+}

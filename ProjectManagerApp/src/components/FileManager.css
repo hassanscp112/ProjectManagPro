@@ -1,0 +1,238 @@
+.fm-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-app);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: none;
+  border: 1px solid var(--border-soft);
+}
+
+.fm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.fm-breadcrumbs {
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.fm-crumb {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.fm-crumb:hover {
+  color: var(--apple-blue);
+}
+
+.fm-crumb.active {
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: default;
+}
+
+.fm-crumb-sep {
+  margin: 0 10px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.fm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.fm-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--apple-blue);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.fm-upload-btn:hover {
+  background: var(--apple-blue-action);
+}
+
+.fm-upload-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fm-dropzone {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.fm-dropzone.dragging {
+  background: rgba(0, 122, 255, 0.05);
+  box-shadow: inset 0 0 0 2px var(--apple-blue);
+}
+
+.fm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+}
+
+.fm-empty-state svg {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.fm-empty-state p {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.fm-empty-sub {
+  font-size: 0.9rem;
+  margin-top: 8px !important;
+  opacity: 0.7;
+}
+
+.fm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.fm-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.fm-item:hover {
+  transform: translateY(-2px);
+  box-shadow: none;
+  border-color: var(--apple-blue-action);
+}
+
+.fm-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fm-icon svg {
+  width: 100%;
+  height: 100%;
+  color: var(--text-secondary);
+}
+
+.fm-item-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fm-item-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.fm-item-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.fm-delete-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px; /* RTL - left side */
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--apple-red);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+}
+
+.fm-item:hover .fm-delete-btn {
+  opacity: 1;
+}
+
+.fm-delete-btn:hover {
+  background: var(--apple-red);
+  color: white;
+}
+
+.fm-delete-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.fm-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+
+.fm-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-soft);
+  border-top-color: var(--apple-blue);
+  border-radius: 50%;
+  animation: fm-spin 1s linear infinite;
+}
+
+@keyframes fm-spin {
+  to { transform: rotate(360deg); }
+}

@@ -1,0 +1,131 @@
+import React, { useState, useEffect } from 'react';
+import TemplateEditor from './TemplateEditor';
+import CalculatorGrid from './CalculatorGrid';
+import './Calculator.css';
+
+const CalculatorView = () => {
+  const [templates, setTemplates] = useState([]);
+  const [activeTemplateId, setActiveTemplateId] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('pm-calculator-templates');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setTemplates(parsed);
+        if (parsed.length > 0) setActiveTemplateId(parsed[0].id);
+      } catch (e) {
+        console.error('Failed to parse templates', e);
+      }
+    }
+  }, []);
+
+  const saveTemplatesToStorage = (newTemplates) => {
+    setTemplates(newTemplates);
+    localStorage.setItem('pm-calculator-templates', JSON.stringify(newTemplates));
+  };
+
+  const activeTemplate = templates.find(t => t.id === activeTemplateId);
+
+  const handleSaveTemplate = (updatedTemplate) => {
+    let newTemplates;
+    if (templates.some(t => t.id === updatedTemplate.id)) {
+      newTemplates = templates.map(t => t.id === updatedTemplate.id ? updatedTemplate : t);
+    } else {
+      newTemplates = [...templates, updatedTemplate];
+    }
+    saveTemplatesToStorage(newTemplates);
+    setActiveTemplateId(updatedTemplate.id);
+    setIsEditing(false);
+  };
+
+  const handleUpdateActiveTemplate = (updatedTemplate) => {
+    const newTemplates = templates.map(t => t.id === updatedTemplate.id ? updatedTemplate : t);
+    saveTemplatesToStorage(newTemplates);
+  };
+
+  const handleDeleteTemplate = (id) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا النموذج بالكامل؟')) {
+      const newTemplates = templates.filter(t => t.id !== id);
+      saveTemplatesToStorage(newTemplates);
+      if (activeTemplateId === id) {
+        setActiveTemplateId(newTemplates.length > 0 ? newTemplates[0].id : null);
+      }
+    }
+  };
+
+  return (
+    <div className="calc-container">
+      {/* Sidebar for Templates */}
+      <div className="calc-sidebar">
+        <div className="calc-sidebar-header">
+          <span className="calc-sidebar-title">النماذج الحسابية</span>
+          <button className="calc-add-tpl-btn" onClick={() => { setActiveTemplateId(null); setIsEditing(true); }} title="إضافة نموذج جديد">+</button>
+        </div>
+        <div className="calc-tpl-list">
+          {templates.length === 0 && (
+            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>لا توجد نماذج. انقر على + للإضافة.</div>
+          )}
+          {templates.map(tpl => (
+            <div 
+              key={tpl.id} 
+              className={`calc-tpl-item ${activeTemplateId === tpl.id ? 'active' : ''}`}
+              onClick={() => { setActiveTemplateId(tpl.id); setIsEditing(false); }}
+            >
+              <span>{tpl.name}</span>
+              <div className="calc-tpl-item-actions">
+                <button 
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--apple-blue-action)' }}
+                  onClick={(e) => { e.stopPropagation(); setActiveTemplateId(tpl.id); setIsEditing(true); }}
+                  title="تعديل النموذج"
+                >✎</button>
+                <button 
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ff3b30' }}
+                  onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(tpl.id); }}
+                  title="حذف النموذج"
+                >✕</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Area */}
+      <div className="calc-main">
+        {isEditing ? (
+          <TemplateEditor 
+            initialTemplate={activeTemplateId ? activeTemplate : null} 
+            onSave={handleSaveTemplate}
+            onCancel={() => setIsEditing(false)}
+          />
+        ) : activeTemplate ? (
+          <>
+            <div className="calc-main-header">
+              <span className="calc-main-title">{activeTemplate.name}</span>
+            </div>
+            <CalculatorGrid template={activeTemplate} onUpdateTemplate={handleUpdateActiveTemplate} />
+          </>
+        ) : (
+          <div className="calc-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ width: 64, height: 64, opacity: 0.5, marginBottom: 16 }}>
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+            <p style={{ marginBottom: '20px' }}>اختر نموذجاً من القائمة الجانبية أو قم بإنشاء نموذج جديد</p>
+            <button 
+              className="calc-btn primary" 
+              style={{ fontSize: '1.1rem', padding: '12px 24px' }}
+              onClick={() => { setActiveTemplateId(null); setIsEditing(true); }}
+            >
+              + إنشاء نموذج جديد
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CalculatorView;

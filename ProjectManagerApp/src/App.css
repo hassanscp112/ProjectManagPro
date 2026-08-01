@@ -1,0 +1,450 @@
+/* ═══════════════════════════════════════════════════════
+   APP SHELL (Structural Layout)
+   ═══════════════════════════════════════════════════════ */
+
+/* Remove any default body margins that might cause scrollbars */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* Prevent global scrolling, scroll happens inside the workspace */
+}
+
+/* The true root layout: Sidebar + Workspace */
+.app-root {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-app);
+  direction: rtl; /* Enforce RTL globally */
+}
+
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR (Right Side)
+   ═══════════════════════════════════════════════════════ */
+.app-sidebar {
+  width: 260px;
+  background: var(--apple-black); /* Deep Navy */
+  color: #F9FAFB;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 100;
+  border-left: 1px solid rgba(255, 255, 255, 0.05); /* Sharp separator */
+}
+
+.sidebar-logo {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #FFFFFF;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 0; /* Removing side padding for full-width items */
+  gap: 0; /* Remove gap for dense border-based list */
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 1.5rem;
+  color: #9ca3af;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #FFFFFF;
+}
+
+.nav-item.active {
+  background: rgba(234, 88, 12, 0.1); /* Signal Orange tint */
+  color: var(--apple-orange);
+  border-left: 3px solid var(--apple-orange);
+  font-weight: 800;
+}
+
+/* ═══════════════════════════════════════════════════════
+   WORKSPACE (Left Side relative to RTL)
+   ═══════════════════════════════════════════════════════ */
+.app-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Important for flex children to shrink below content size */
+  background: var(--bg-app);
+}
+
+/* ── Top Bar ── */
+.workspace-topbar {
+  height: 64px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  flex-shrink: 0;
+}
+
+.breadcrumbs {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--apple-blue-action);
+  color: var(--apple-white);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+/* ── Main Content Area ── */
+.workspace-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.5rem;
+  min-height: 0;
+  overflow: hidden; /* Prevent scrolling here, Gantt handles its own scroll */
+}
+
+/* ═══════════════════════════════════════════════════════
+   COMPACT KPI STRIP
+   ═══════════════════════════════════════════════════════ */
+.compact-kpi-strip {
+  display: flex;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.kpi-compact-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); /* Sharp 2px */
+  padding: 0.85rem 1.25rem;
+  min-width: 180px;
+  box-shadow: none; /* Flat design */
+}
+
+.kpi-compact-card.warning {
+  border-color: #ff9f0a;
+  background: #fff8ef;
+}
+
+.kpi-compact-card.warning .kpi-compact-value {
+  color: #b55b00;
+}
+
+.kpi-compact-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+
+.kpi-compact-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono); /* Monospace numbers */
+  letter-spacing: -0.2px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   GANTT FULL WRAPPER
+   ═══════════════════════════════════════════════════════ */
+.gantt-full-wrapper {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); /* Sharp 2px */
+  overflow: hidden;
+  box-shadow: none; /* Flat design */
+}
+
+/* ═══════════════════════════════════════════════════════
+   WORKSPACE TOOLBAR
+   ═══════════════════════════════════════════════════════ */
+.workspace-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.apple-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 18px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.apple-btn.primary {
+  background: var(--apple-blue-action);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.apple-btn.primary:hover {
+  background: #0062c3; /* slightly darker blue */
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MODAL
+   ═══════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 400px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  text-align: center;
+  animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.modal-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.apple-btn.destructive {
+  background: #ff3b30;
+  color: white;
+}
+
+.apple-btn.destructive:hover {
+  background: #d32f2f;
+  transform: translateY(-1px);
+}
+
+.apple-btn.secondary {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  border: 1px solid var(--border-soft);
+}
+
+.apple-btn.secondary:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Project lifecycle control ── */
+.project-lifecycle-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.project-status-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid var(--border-soft);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.project-status-badge.status-signed {
+  background: #ECFDF5;
+  border-color: #10B981;
+  color: #047857;
+}
+
+.project-status-badge.status-executing {
+  background: #EFF6FF;
+  border-color: var(--apple-blue-action);
+  color: var(--apple-blue-action);
+}
+
+.project-status-badge.status-completed {
+  background: #F5F3FF;
+  border-color: #7C3AED;
+  color: #6D28D9;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  background: var(--bg-app);
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--apple-blue-action);
+}
+
+/* ── Variation Orders modal ── */
+.vo-modal {
+  max-width: 580px;
+  text-align: right;
+}
+
+.vo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.vo-form .modal-input {
+  margin-bottom: 0;
+  text-align: right;
+  height: 38px;
+}
+
+.vo-list {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vo-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 0.5rem;
+}
+
+.vo-item {
+  background: var(--bg-app);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.82rem;
+}
+
+.vo-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.vo-field {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--apple-blue-action);
+  background: #EFF6FF;
+  padding: 1px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.vo-delta {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.vo-reason {
+  color: var(--text-secondary);
+}
+
+.vo-meta {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}

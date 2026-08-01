@@ -1,0 +1,271 @@
+.dashboard-container {
+  padding: 32px;
+  background-color: var(--bg-app);
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: inherit;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-header h2 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.dashboard-header p {
+  margin: 8px 0 0 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* Summary Cards */
+.dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.summary-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-top: 3px solid var(--border-soft);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--radius-sm); /* Sharp 2px */
+  box-shadow: none;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.summary-card:hover {
+  border-top-color: var(--apple-blue-action);
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+.summary-card .card-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.summary-card .card-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--apple-black);
+}
+
+/* Summary Card Colors */
+.summary-card.overdue { border-top: 3px solid #dc2626; }
+.summary-card.overdue .card-value { color: #dc2626; }
+
+.summary-card.active { border-top: 3px solid #ea580c; }
+.summary-card.active .card-value { color: #ea580c; }
+
+.summary-card.upcoming { border-top: 3px solid #2563eb; }
+.summary-card.upcoming .card-value { color: #2563eb; }
+
+.summary-card.completed { border-top: 3px solid #059669; }
+.summary-card.completed .card-value { color: #059669; }
+
+.dashboard-action-items {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-action-items h3 {
+  margin: 0;
+  padding: 16px 20px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-showcase);
+  color: var(--apple-black);
+}
+
+.action-table-wrapper {
+  overflow-x: auto;
+}
+
+.action-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: right;
+}
+
+.action-table th,
+.action-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.action-table th {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 700;
+  background: var(--bg-showcase);
+  letter-spacing: 0.5px;
+}
+
+.action-table tr:last-child td {
+  border-bottom: none;
+}
+
+.action-table tbody tr {
+  transition: background 0.15s;
+}
+
+.action-table tbody tr:hover {
+  background: rgba(0,0,0,0.02);
+}
+
+/* Badges */
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+}
+
+.priority-badge.critical {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.priority-badge.medium {
+  background: #fff7ed;
+  color: #ea580c;
+  border-color: #fdba74;
+}
+
+.priority-badge.low {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #93c5fd;
+}
+
+.priority-badge.done {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #6ee7b7;
+}
+
+/* Progress Bar */
+.dash-progress-wrapper {
+  width: 100px;
+  background: var(--border-soft);
+  height: 4px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+.dash-progress-fill {
+  height: 100%;
+  background: var(--apple-black);
+}
+
+.dash-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.summary-card h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ---------- Earned Value Management (EVM) ---------- */
+.dashboard-evm h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.evm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.evm-tile {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-top: 3px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.evm-tile.good {
+  border-top-color: #16a34a;
+}
+
+.evm-tile.bad {
+  border-top-color: #ef4444;
+}
+
+.evm-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.evm-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.evm-index .evm-value {
+  color: var(--apple-blue-action);
+}
+
+.evm-tile.good .evm-value {
+  color: #16a34a;
+}
+
+.evm-tile.bad .evm-value {
+  color: #ef4444;
+}
+
+.evm-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}

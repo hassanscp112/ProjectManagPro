@@ -1,0 +1,622 @@
+/* ═══════════════════════════════════════════════════════
+   GANTT CHART — APPLE RETAIL/COMMERCE
+   ═══════════════════════════════════════════════════════ */
+
+/* ── WRAPPER ── */
+.gantt-wrapper {
+  --gantt-header-height: 88px;
+
+  display: flex;
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); /* Sharp 2px */
+  overflow: hidden;
+  box-shadow: none; /* Flat */
+  min-height: 0;
+}
+
+.data-grid {
+  display: flex;
+  flex-direction: column;
+  width: 50%; /* 50/50 split gives more room for both sides */
+  min-width: 1450px; /* Force wide layout to prevent cramping, triggers horizontal scroll inside flex parent if needed */
+  background: var(--bg-surface);
+  z-index: 2;
+  border-left: 1px solid var(--border-soft);
+  overflow-x: scroll; /* Force horizontal scrollbar track to align with timeline */
+  scrollbar-width: thin; /* Firefox */
+}
+
+/* ── Header ── */
+.dg-header {
+  display: flex;
+  align-items: center;
+  height: var(--gantt-header-height);
+  min-height: var(--gantt-header-height);
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border-mid);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.dg-header .dg-cell {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: -0.12px;
+  user-select: none;
+}
+
+/* ── Body ── */
+.dg-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.dg-body::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
+/* ── Rows ── */
+.dg-row {
+  display: flex;
+  align-items: stretch; /* Change from center to stretch */
+  height: 64px; /* Fixed height for alignment */
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-surface);
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.dg-row.active {
+  background: var(--bg-app) !important;
+}
+
+.dg-row.group {
+  background: var(--bg-app);
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  z-index: 1;
+}
+
+.dg-row.group.active {
+  background: var(--bg-showcase) !important;
+}
+
+.dg-row.has-warning {
+  box-shadow: inset -3px 0 0 #ff9f0a;
+}
+
+.dg-row.group .dg-cell {
+  font-weight: 700;
+  color: var(--apple-ink);
+  background: transparent;
+  font-size: 1.05rem; 
+}
+
+/* ── Tree Indentation ── */
+.task-name-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.tree-indent {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.tree-indicator {
+  color: var(--border-mid);
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  opacity: 0.5;
+  user-select: none;
+}
+
+.wbs-sub {
+  opacity: 0.55;
+  font-weight: 500;
+}
+
+.wbs-main {
+  font-weight: 700;
+  color: var(--apple-ink);
+  font-size: 0.9rem;
+}
+
+/* ── Cells ── */
+.dg-cell {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid var(--border-soft);
+  box-sizing: border-box;
+  overflow: hidden;
+  font-size: 1.05rem; /* Increased from 0.95rem */
+  white-space: normal; /* Allow text wrapping */
+  word-break: break-word;
+  color: var(--text-primary);
+}
+
+.dg-cell.num {
+  text-align: left;
+  direction: ltr;
+  white-space: nowrap;
+}
+
+.dg-cell.mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  direction: ltr;
+  text-align: center;
+}
+
+/* ── Column widths ── */
+.c-wbs { width: 68px; justify-content: center; gap: 4px; font-size: 0.85rem; color: var(--text-secondary); }
+.c-name { flex: 1; min-width: 250px; font-weight: 500; }
+.c-dur { width: 60px; justify-content: center; }
+.c-qty { width: 110px; justify-content: flex-end; }
+.c-actq { width: 110px; justify-content: flex-end; }
+.c-price { width: 130px; justify-content: flex-end; }
+.c-amt { width: 160px; justify-content: flex-end; font-weight: 500; color: var(--text-primary); }
+.c-unit { width: 60px; justify-content: center; color: var(--text-secondary); }
+.c-pct { width: 80px; justify-content: center; }
+.c-date { width: 110px; justify-content: center; font-size: 0.85rem; color: var(--text-secondary); }
+.c-depid { width: 210px; justify-content: center; }
+.c-deptype { width: 128px; justify-content: center; }
+.c-lag { width: 60px; justify-content: center; }
+
+.task-name-text, .task-name-wrapper strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+/* ── Progress Pill ── */
+.progress-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm); /* Sharp 2px */
+  background: var(--bg-showcase);
+  color: var(--text-primary);
+  font-family: var(--font-mono); /* Monospace numbers */
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--border-soft);
+}
+
+.row-warning {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ff9f0a;
+  color: #fff;
+  font-family: var(--font-family);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Inputs within cells ── */
+.cell-input, .cell-select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 28px; /* Slightly taller */
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 4px;
+  padding: 0 6px;
+  font-family: inherit;
+  font-size: 0.95rem; /* Increased from 0.8rem */
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.cell-input:hover, .cell-select:hover {
+  background: rgba(0,0,0,0.02);
+  border-color: var(--border-soft);
+}
+
+.cell-input:focus, .cell-select:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.2); /* Apple focus ring */
+}
+
+.cell-input:disabled,
+.cell-select:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dependency-select {
+  min-width: 0;
+  direction: rtl;
+  text-overflow: ellipsis;
+}
+
+.relation-select {
+  font-size: 0.8rem;
+}
+
+.dependency-display {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+}
+
+/* ══════════════════════════════════════════════════════
+   DIVIDER
+   ══════════════════════════════════════════════════════ */
+.gantt-divider {
+  width: 1px;
+  background: var(--border-mid);
+  cursor: col-resize;
+  position: relative;
+  z-index: 5;
+}
+
+/* ══════════════════════════════════════════════════════
+   TIMELINE PANEL
+   ══════════════════════════════════════════════════════ */
+.timeline-panel {
+  flex: 1;
+  display: block;
+  overflow-y: auto;
+  overflow-x: scroll; /* Force horizontal scrollbar track */
+  background: var(--bg-surface);
+  direction: rtl;
+  position: relative;
+  scrollbar-width: thin; /* Firefox */
+}
+
+/* Custom Scrollbar to guarantee 14px height for alignment sync */
+.timeline-panel::-webkit-scrollbar,
+.data-grid::-webkit-scrollbar {
+  height: 14px;
+  width: 14px;
+}
+.timeline-panel::-webkit-scrollbar-track,
+.data-grid::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-soft);
+}
+.timeline-panel::-webkit-scrollbar-thumb,
+.data-grid::-webkit-scrollbar-thumb {
+  background: var(--border-mid);
+  border-radius: 7px;
+  border: 3px solid var(--bg-surface);
+}
+.timeline-panel::-webkit-scrollbar-thumb:hover,
+.data-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--border-dark);
+}
+
+/* ── Timeline headers (Multi-tier) ── */
+.tl-header-container {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: var(--gantt-header-height);
+  min-height: var(--gantt-header-height);
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border-mid);
+  display: flex;
+  flex-direction: column;
+}
+
+.tl-tier {
+  display: flex;
+}
+
+.tl-tier-cell {
+  flex-shrink: 0;
+  border-left: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.05rem; /* Increased from 0.9rem */
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.tl-tier:last-child .tl-tier-cell {
+  border-bottom: none;
+}
+
+.tier-year {
+  height: 32px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 1.1rem; /* Increased from 1rem */
+}
+
+.tier-month {
+  height: 30px;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-size: 1.05rem;
+}
+
+.tier-week {
+  height: 26px;
+  background: var(--bg-app);
+  font-size: 0.95rem; /* Increased from 0.85rem */
+}
+
+.tl-week-cell {
+  /* Removed - replaced by tl-tier-cell */
+}
+
+.tl-week-cell span {
+  direction: ltr;
+  display: inline-block;
+}
+
+/* ── Timeline body ── */
+.tl-body {
+  position: relative;
+}
+
+/* ── Gridlines ── */
+.tl-gridlines {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tl-gridline {
+  height: 100%;
+  border-left: 1px solid var(--border-soft);
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+/* ── Timeline rows ── */
+.tl-row {
+  height: 64px; /* Fixed height for alignment */
+  position: relative;
+  border-bottom: 1px solid var(--border-soft);
+  z-index: 1;
+  transition: background 0.15s ease;
+}
+
+.tl-row.active {
+  background: var(--bg-app);
+}
+
+/* ══════════════════════════════════════════════════════
+   TASK BARS (Capsules)
+   ══════════════════════════════════════════════════════ */
+.bar-container {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  transition: opacity 0.2s;
+}
+
+.bar-container:hover {
+  opacity: 0.85;
+  z-index: 10;
+}
+
+/* ── Normal Bar ── */
+.bar-track {
+  width: 100%;
+  height: 24px;
+  background: var(--bg-app);
+  border-radius: var(--radius-sm); /* Sharp */
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--apple-blue-action);
+  border-radius: var(--radius-sm); /* Sharp */
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Group Bar ── */
+.bar-group-shape {
+  position: relative;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.bar-group-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--apple-black);
+  transform: translateY(-50%);
+  border-radius: var(--radius-sm); /* Sharp */
+}
+
+.bar-group-diamond {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.bar-group-diamond.right { right: -3px; }
+.bar-group-diamond.left  { left: -3px; }
+
+/* ══════════════════════════════════════════════════════
+   TOOLTIP
+   ══════════════════════════════════════════════════════ */
+.bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  min-width: 260px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1.15rem;
+  box-shadow: var(--shadow-level-1);
+  pointer-events: none;
+  z-index: 50;
+  direction: rtl;
+  color: var(--apple-black);
+}
+
+.tt-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--apple-black);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.tt-row {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  line-height: 1.5;
+}
+
+.tt-row.dim {
+  color: var(--border-dark);
+}
+
+.tt-sep {
+  opacity: 0.4;
+}
+
+/* ═══════════════════════════════════════════════════════
+   EDIT MODE BUTTONS
+   ═══════════════════════════════════════════════════════ */
+.add-subtask-btn {
+  background: transparent;
+  color: var(--apple-blue-action);
+  border: 1px solid var(--apple-blue-action);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: auto; /* Push to the left in RTL */
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.add-subtask-btn:hover {
+  background: var(--apple-blue-action);
+  color: #fff;
+}
+
+.add-main-task-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 84px;
+  box-sizing: border-box;
+  padding: 0 1.5rem;
+  background: var(--bg-surface);
+}
+
+.add-main-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-mid);
+  border-radius: 6px;
+  padding: 8px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  max-width: 400px;
+}
+
+.add-main-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+  background: rgba(0,0,0,0.02);
+}
+
+.delete-task-btn {
+  background: transparent;
+  color: #ff3b30;
+  border: 1px solid #ff3b30;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.delete-task-btn:hover {
+  background: #ff3b30;
+  color: #fff;
+}
+
+/* Row action buttons (folder + details) */
+.jump-to-folder-btn,
+.jump-to-details-btn {
+  border-radius: var(--radius-xs);
+  transition: background 0.15s;
+}
+
+.jump-to-folder-btn:hover,
+.jump-to-details-btn:hover {
+  background: var(--bg-hover);
+}
+
+/* BOQ-linked cell (quantity/unit driven by Task Details elements) */
+.locked-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  cursor: help;
+  opacity: 0.85;
+}

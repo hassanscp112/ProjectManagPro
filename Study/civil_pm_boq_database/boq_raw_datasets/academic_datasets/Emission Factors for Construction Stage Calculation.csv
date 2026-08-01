@@ -1,0 +1,18 @@
+Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7
+Emission Factors for Construction Stage Calculation,,,,,
+Energy Type,Carbon Emission Factor,Factor Unit,Year,Region,Source
+Electricity,0.5366,kgCO2e/kWh,2022,China,"Ministry of, E., C. Environment of the People's Republic of, and S. National Bureau of, Announcement on the 2022 National Average CO₂ Emission Factor for Electricity. 2024."
+Diesel,3.1,kgCO2e/kg,2024,China,"Tian, Y., X.X. Zhang, and X.X. Li, Life-cycle carbon footprint accounting of building decoration materials in China. Building Science, 2024. 40(5): p. 123-130."
+Labor,1.11,kgCO2e/man-day,2023,China,"Association, C.B.D., T/CBDA 69-2023: Standard for calculation of carbon emissions of building decoration engineering. 2023, China Architecture & Building Press: Beijing."
+floor tile,846,kgCO2e/m³,2023,China ,
+stone material,307.5,kgCO2e/m³,2023,China ,
+click-lock flooring,750.2,kgCO2e/m³,2023,China ,
+cement mortar,197,kgCO2e/t,2023,China ,
+aluminum ceiling panel,3291,kgCO2e/t,2023,China ,
+aluminum alloy,2450,kgCO2e/t,2023,China ,
+latex paint,4120,kgCO2e/t,2023,China ,
+calcium silicate board,234,kgCO2e/m³,2023,China ,
+steel plate,2890,kgCO2e/t,2023,China ,
+glass,4334.2,kgCO2e/m³,2023,China ,
+fabric,0.6,kgCO2e/m2,2023,China ,
+real stone paint,3500,kgCO2e/t,2023,China ,

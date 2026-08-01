@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ═══════════════════════════════════════════════════════
+   NAHI KAREEM SYSTEM TOKENS (Brutalist Minimal)
+   ═══════════════════════════════════════════════════════ */
+:root {
+  /* Core Palette: Modern Swiss Blueprint */
+  --apple-black: #111827; /* Deep Navy Charcoal */
+  --apple-ink: #1F2937; /* Dark Slate */
+  --apple-gray-pale: #F3F4F6; /* Technical Gray */
+  --apple-white: #FFFFFF;
+  
+  /* Technical Accents */
+  --apple-blue-action: #0284C7; /* Electric Cyan/Blue */
+  --apple-blue-link: #0EA5E9;
+  --apple-blue-high: #38BDF8;
+  --apple-orange: #EA580C; /* Signal Orange */
+
+  /* Surfaces & Backgrounds (High Contrast Structural Separation) */
+  --bg-app: #E5E7EB; /* Distinct solid gray background */
+  --bg-surface: #FFFFFF; /* Pure white for popping cards */
+  --bg-elevated: #FFFFFF;
+  --bg-showcase: #DBEAFE; /* Stronger blue for active areas */
+  --bg-hover: #F3F4F6;
+  
+  /* Text & Neutrals */
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-inverse: #FFFFFF;
+  
+  /* Borders (Very crisp, high visibility) */
+  --border-soft: #9CA3AF; /* Much stronger gray for clear outlines */
+  --border-mid: #6B7280;
+  --border-dark: #374151;
+
+  /* Geometry & Radii - Technical 2px */
+  --radius-xs: 2px;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius-pill: 2px; /* Enforcing sharp geometry even on pills */
+  
+  /* Depth - Subtle, tight shadow for flat aesthetic */
+  --shadow-level-1: 0 1px 2px rgba(17, 24, 39, 0.05);
+  --shadow-level-2: 0 4px 6px -1px rgba(17, 24, 39, 0.05);
+  --shadow-level-3: 0 10px 15px -3px rgba(17, 24, 39, 0.05);
+
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  --font-mono: 'SF Mono', 'Menlo', 'Consolas', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESET & GLOBAL
+   ═══════════════════════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 15px; /* Slightly larger base size for readability */
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  direction: rtl;
+  line-height: 1.6; /* Better line spacing */
+  letter-spacing: 0px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.28px;
+  font-weight: 600;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.apple-btn.secondary {
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  color: var(--text-primary);
+}
+
+.apple-btn.secondary:hover {
+  background: rgba(0,0,0,0.03);
+  border-color: var(--border-mid);
+}
+
+.apple-btn.destructive {
+  background: var(--apple-white);
+  color: #d93838;
+  border: 1px solid #d93838;
+}
+
+.apple-btn.destructive:hover {
+  background: #d93838;
+  color: var(--apple-white);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-soft);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-mid);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}

@@ -1,0 +1,23 @@
+Requirement Classification,Design Criteria/Constraint,Description
+Primary,Satisfies UK and Oxford BSB animal home cage size requirements and restrictions,"The SnackerTracker must satisfy the most conservative legal requirements of European Union Directive 2010/63. Animal home-cages must provide at least 330cm² floor area in total and 60cm² per animal. The most restrictive cage area and height in commonly used enclosures (i.e., individually ventilated cages and small open-top cages, respectively) is 435cm² and 12cm, respectively. The SnackerTracker therefore cannot have an aerial footprint greater than 105cm² or a vertical height exceeding 12cm."
+,Biocompatible ,"The chassis must be designed using biocompatible materials as to not cause physical (i.e., sharp edges and restrictive spaces) or chemical (i.e., non-toxic) harm to animals."
+,Isolated and faultless electronics,Electrically active components must be inaccessible to animals and wired correctly to prevent short-circuits or exposed connections.
+,Avoid heat generation,"The device cannot produce excessive heat which may put animals at risk (and/or confound behaviour), interfere with thermographic recording, or damage the device itself."
+,Noiseless,"Operation cannot generate excessive noise, could cause animals stress. 'Noise' includes all frequencies within animals' hearing range (i.e., 1-100kHz for mice)."
+,Accurate data recording,"Devices must be calibrated to known weights and validated to ensure accurate measurement over time (i.e., no drift)."
+,Continuous data recording,Measurements must be registered continuously to reveal patterns of animal-device interactions and food intake.
+,Accurate clock and real-time alignment,"Recordings must be validated to ensure that recording times are accurate (i.e., that a second is indeed a second) and align with the date/time at which recordings took place."
+,Local data storage,Data must be reliably stored to integrated hardware for later retrieval.
+,Accurate data processing,"Filters must be validated across a range of experimental settings to ensure that 1) appropriate software is developed, and 2) that they can be applied in combination to optimise processing."
+Secondary,Cost-effective,"Costs must be minimised. A similar system (i.e., the FED3, RRID:SCR_015942) is listed at €475 with material costs totalling €205. SnackerTracker costs should not exceed this (£180)."
+,Battery-operated,"Wireless function would make devices compatible with individually ventilated cages, and otherwise avoids the use of additional cables and connection to a power supply."
+,Sufficient battery life,"The device must function over an adequate timeframe (e.g., 24 hours)."
+,Event-marking,"Switches could be incorporated to mark experimentally relevant events. For example, if food needs to be changed, the researcher can flip a switch to record when this took place. This would appear in the output dataset upon analysis."
+,Easy operation,"The device must be easy to use experimentally (e.g., seamless software upload, calibration, cage insertion, data extraction, and data processing)."
+,Intuitive interface,Both operational and analysis software must have an intuitive interface for user-operation. Code should include thorough error-checking.
+,Ease of analysis,Analysis software must be properly documented and available via open-access platforms.
+Tertiary,Wireless data monitoring,The device could enable remote monitoring for quality control and animal-surveillance.
+,Wireless device control,The device could enable researchers to remotely control device operation. Researchers could wirelessly start/stop recordings or command additional peripheral integrations.
+,Cloud-based data storage,"Data could be stored remotely (e.g., cloud-based, in addition to local SD registration) to improve ease of data extraction."
+,Cage enrichment,The device may enrich the animal home-cage environment. The overhang created by the food-holder provides a space under which animals may prefer to nest.
+,Additional peripheral integrations,"Easy-to-incorporate additional peripheral integrations include auditory sensors, speakers, thermographic cameras, passive infrared sensors, and LED lights. Advanced integrations might involve optogenetic probes or thermal leads. These would introduce new options for control over experimental design and data collection."
