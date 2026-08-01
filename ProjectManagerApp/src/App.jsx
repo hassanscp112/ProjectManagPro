@@ -8,7 +8,7 @@ import FinanceManager from './components/finance/FinanceManager'
 import Dashboard from './components/dashboard/Dashboard'
 import TaskDetails from './components/taskDetails/TaskDetails'
 import { GanttEngine } from './utils/GanttEngine'
-
+import { exportAppData, readBackupFile, validateBackup, restoreAppData } from './utils/DataIO'
 const STORAGE_KEY = 'project-manager-gantt-tasks';
 const META_KEY = 'project-manager-project-meta';
 const PROJECT_START = '2025-08-02';
@@ -101,6 +101,12 @@ function App() {
   const [signOffBy, setSignOffBy] = useState('');
   const [voOpen, setVoOpen] = useState(false);
   const [voDraft, setVoDraft] = useState({ taskId: '', field: 'quantity', newValue: '', reason: '', approver: '' });
+
+  // Backup / restore (data-safety: protect against localStorage loss)
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [restoreInfo, setRestoreInfo] = useState(null);
+  const fileInputRef = useRef(null);
+  const pendingRestoreRef = useRef(null);
 
   const historyRef = useRef([]);
   const typingTimeoutRef = useRef(null);
@@ -466,6 +472,52 @@ function App() {
     };
   }, [taskToDelete, tasks]);
 
+  // Trigger a JSON download of all app data (tasks, baseline, finance, …).
+  const handleExport = () => {
+    const filename = exportAppData();
+    // brief visual hint via the warnings-free path
+    console.log('Backup exported:', filename);
+  };
+
+  // User clicked import → open the file picker.
+  const handleImportClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  // File chosen → read + validate, then show a confirmation modal before applying.
+  const handleImportFile = async (event) => {
+    const file = event.target.files && event.target.files[0];
+    // reset so selecting the same file again re-fires onChange
+    if (event.target) event.target.value = '';
+    if (!file) return;
+    try {
+      const parsed = await readBackupFile(file);
+      const result = validateBackup(parsed);
+      if (!result.ok) {
+        alert(result.reason);
+        return;
+      }
+      pendingRestoreRef.current = parsed;
+      setRestoreInfo(result.stats);
+      setRestoreOpen(true);
+    } catch (err) {
+      alert(err.message || 'تعذّر قراءة ملف النسخة الاحتياطية.');
+    }
+  };
+
+  // Confirmed → write to localStorage and reload so all components re-init.
+  const handleConfirmRestore = () => {
+    try {
+      const parsed = pendingRestoreRef.current;
+      if (!parsed) return;
+      restoreAppData(parsed);
+      window.location.reload();
+    } catch (err) {
+      alert(err.message || 'فشل الاستعادة.');
+      setRestoreOpen(false);
+    }
+  };
+
   const totalDays = engineResult.projectDuration;
 
   return (
@@ -612,13 +664,36 @@ function App() {
                     ↩ تراجع
                   </button>
                 )}
-                <button 
-                  className={`apple-btn ${isEditMode ? 'primary' : 'secondary'}`} 
+                <button
+                  className="apple-btn secondary"
+                  onClick={handleExport}
+                  title="تنزيل نسخة احتياطية من كافة بيانات المشروع (المهام، الخط الأساس، الحسابات، التقارير)"
+                >
+                  ⬇ نسخة احتياطية
+                </button>
+                <button
+                  className="apple-btn secondary"
+                  onClick={handleImportClick}
+                  title="استعادة بيانات المشروع من ملف نسخة احتياطية"
+                >
+                  ⬆ استعادة
+                </button>
+                <button
+                  className={`apple-btn ${isEditMode ? 'primary' : 'secondary'}`}
                   onClick={() => setIsEditMode(!isEditMode)}
                 >
                   {isEditMode ? 'إنهاء التعديل' : 'وضع التعديل'}
                 </button>
               </div>
+
+              {/* Hidden file input for backup restore */}
+              <input
+                type="file"
+                accept="application/json,.json"
+                ref={fileInputRef}
+                onChange={handleImportFile}
+                style={{ display: 'none' }}
+              />
 
               {/* Full Screen Gantt Chart */}
               <div className="gantt-full-wrapper">
@@ -681,6 +756,25 @@ function App() {
               <button className="apple-btn primary" onClick={() => { handleSignOff(signOffBy); setSignOffOpen(false); }}>
                 اعتماد وتوقيع
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── RESTORE CONFIRMATION MODAL ── */}
+      {restoreOpen && restoreInfo && (
+        <div className="modal-overlay" onClick={() => setRestoreOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-icon">⬆</div>
+            <h3 className="modal-title">استعادة البيانات</h3>
+            <p className="modal-text">
+              سيتم استبدال بيانات المشروع الحالية بمحتوى النسخة الاحتياطية
+              ({restoreInfo.keys} أقسام، {(restoreInfo.bytes / 1024).toFixed(0)} كيلوبايت).
+              هذا الإجراء لا يمكن التراجع عنه، وستُعاد تحميل الصفحة تلقائياً.
+            </p>
+            <div className="modal-actions">
+              <button className="apple-btn secondary" onClick={() => setRestoreOpen(false)}>إلغاء</button>
+              <button className="apple-btn primary" onClick={handleConfirmRestore}>استعادة الآن</button>
             </div>
           </div>
         </div>
