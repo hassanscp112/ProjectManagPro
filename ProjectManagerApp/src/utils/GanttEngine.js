@@ -116,6 +116,119 @@ export const daysBetween = (startDate, endDate) => {
   return Math.max(0, Math.round((end - start) / DAY_MS));
 };
 
+// Linear interpolation of a task's progress fraction at a given point in time.
+// Returns 0 before the task starts, 1 after it ends, and a linear fraction in
+// between. Mirrors the per-task plannedProgress logic used at "today".
+const progressAtDate = (task, dateMs) => {
+  const start = parseDate(task.startDate);
+  const end = parseDate(task.endDate);
+  if (!start || !end) return 0;
+  const startMs = start.getTime();
+  const endMs = end.getTime();
+  if (dateMs <= startMs) return 0;
+  if (dateMs >= endMs) return 1;
+  return (dateMs - startMs) / (endMs - startMs);
+};
+
+// Build the S-curve: weekly samples of cumulative Planned Value (PV),
+// Earned Value (EV), and Actual Cost (AC) across the whole schedule.
+//
+// PV at time t  = Σ leaf totalCost × plannedFraction(t)   (what should be done)
+// EV at time t  = Σ leaf totalCost × progress              (prorated evenly over
+//                  the task window as an approximation of when value was earned)
+// AC at time t  = Σ leaf actualCost × plannedFraction(t)   (actual spend prorated
+//                  by elapsed time as an approximation of when cost was incurred)
+//
+// Returns [] when there are no leaf tasks or no schedule window.
+export const buildSCurve = (leafTasks, scheduleStart, scheduleEnd) => {
+  if (!leafTasks.length || !scheduleStart || !scheduleEnd) return [];
+
+  const startMs = parseDate(scheduleStart)?.getTime();
+  const endMs = parseDate(scheduleEnd)?.getTime();
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return [];
+
+  const totalDays = Math.round((endMs - startMs) / DAY_MS);
+  // Weekly buckets; ~1 point per week, capped to keep the chart legible.
+  const stepDays = Math.max(7, Math.ceil(totalDays / 60));
+
+  const todayMs = (() => {
+    const now = new Date();
+    return Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  })();
+
+  const points = [];
+  for (let offset = 0; offset <= totalDays; offset += stepDays) {
+    const t = startMs + offset * DAY_MS;
+    let pv = 0;
+    let ev = 0;
+    let ac = 0;
+    leafTasks.forEach((task) => {
+      const frac = progressAtDate(task, t);
+      pv += task.totalCost * frac;
+      ev += task.totalCost * task.progress * frac;
+      ac += task.actualCost * frac;
+    });
+    points.push({
+      date: formatDate(new Date(t)),
+      pv,
+      ev,
+      ac,
+      isFuture: t > todayMs,
+    });
+  }
+
+  // Ensure the curve terminates exactly at the schedule end so PV/EV/AC reach
+  // their full value (the weekly step can otherwise land short of the end).
+  const last = points[points.length - 1];
+  if (!last || last.date !== scheduleEnd) {
+    let pv = 0;
+    let ev = 0;
+    let ac = 0;
+    leafTasks.forEach((task) => {
+      pv += task.totalCost; // past end ⇒ planned fraction = 1
+      ev += task.totalCost * task.progress;
+      ac += task.actualCost;
+    });
+    points.push({ date: scheduleEnd, pv, ev, ac, isFuture: endMs > todayMs });
+  }
+  return points;
+};
+
+// Per-WBS EVM roll-up: for each top-level group (WBS with no dots), sum the
+// BAC / PV / EV / AC of its leaf descendants and derive SPI / CPI. Returns one
+// entry per top-level group that has priced leaf descendants.
+export const buildPerWbsEvm = (computedTasks) => {
+  const topGroups = computedTasks.filter(
+    (t) => t.isGroup && t.wbs && !t.wbs.includes('.')
+  );
+  return topGroups
+    .map((group) => {
+      const prefix = `${group.wbs}.`;
+      const leaves = computedTasks.filter(
+        (t) => !t.isGroup && t.wbs && t.wbs.startsWith(prefix)
+      );
+      const bac = leaves.reduce((s, t) => s + t.totalCost, 0);
+      const pv = leaves.reduce((s, t) => s + (t.plannedCost || 0), 0);
+      const ev = leaves.reduce((s, t) => s + t.totalCost * t.progress, 0);
+      const ac = leaves.reduce((s, t) => s + t.actualCost, 0);
+      const spi = pv > 0 ? ev / pv : 0;
+      const cpi = ac > 0 ? ev / ac : 0;
+      return {
+        wbs: group.wbs,
+        name: group.name,
+        taskCount: leaves.length,
+        bac,
+        pv,
+        ev,
+        ac,
+        spi,
+        cpi,
+      };
+    })
+    .filter((row) => row.taskCount > 0 && row.bac > 0);
+};
+
+
 // Calculates everything for a list of tasks
 export class GanttEngine {
   static calculate(tasks, projectStartDate, projectMeta) {
@@ -328,6 +441,10 @@ export class GanttEngine {
     const scheduleStartDate = startDates[0] || projectStart;
     const scheduleEndDate = endDates[endDates.length - 1] || projectStart;
 
+    // S-curve (planned vs earned vs actual over time) + per-WBS EVM roll-up.
+    const sCurve = buildSCurve(leafTasks, scheduleStartDate, scheduleEndDate);
+    const perWbsEvm = buildPerWbsEvm(computedTasks);
+
     return {
       tasks: computedTasks,
       projectTotalCost,
@@ -336,6 +453,8 @@ export class GanttEngine {
       projectPlannedProgress,
       projectDeviation,
       evm,
+      sCurve,
+      perWbsEvm,
       scheduleStartDate,
       scheduleEndDate,
       projectDuration: daysBetween(scheduleStartDate, scheduleEndDate),

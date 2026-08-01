@@ -1,12 +1,33 @@
 import { useMemo } from 'react';
 import './Dashboard.css';
+import SCurveChart from './SCurveChart';
+
+// Color tone for an SPI/CPI index: ≥1 good (on/under), 0.9–1 warn, <0.9 bad.
+const evmTone = (idx) => {
+  const v = Number(idx) || 0;
+  if (v >= 1) return 'good';
+  if (v >= 0.9) return 'warn';
+  return 'bad';
+};
 
 const Dashboard = ({ tasks, summary }) => {
   const today = new Date().toISOString().split('T')[0];
   const evm = summary?.evm;
+  const sCurve = summary?.sCurve;
+  const perWbsEvm = summary?.perWbsEvm;
   const fmtCur = (n) =>
     new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(Number(n) || 0));
   const fmtIdx = (n) => (Number(n) || 0).toFixed(2);
+
+  // Per-WBS rows, sorted by WBS numeric order.
+  const wbsRows = useMemo(() => {
+    if (!perWbsEvm || !perWbsEvm.length) return [];
+    return [...perWbsEvm].sort((a, b) => {
+      const an = parseInt(a.wbs, 10) || 0;
+      const bn = parseInt(b.wbs, 10) || 0;
+      return an - bn;
+    });
+  }, [perWbsEvm]);
 
   const processedData = useMemo(() => {
     const data = {
@@ -135,6 +156,63 @@ const Dashboard = ({ tasks, summary }) => {
               <span className="evm-value">{fmtCur(evm.vac)}</span>
               <span className="evm-hint">{evm.vac >= 0 ? 'تحت الميزانية' : 'تجاوز الميزانية'}</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* S-curve: cumulative PV vs EV vs AC over time */}
+      {sCurve && sCurve.length > 1 && (
+        <div className="scurve-section">
+          <h3>منحنى القيمة (S-Curve)</h3>
+          <p className="scurve-subtitle">
+            القيمة المخططة (PV) مقابل المكتسبة (EV) مقابل التكلفة الفعلية (AC) عبر زمن المشروع.
+          </p>
+          <SCurveChart points={sCurve} />
+        </div>
+      )}
+
+      {/* Per-WBS EVM roll-up */}
+      {wbsRows.length > 0 && (
+        <div className="wbs-evm-section">
+          <h3>تحليل EVM حسب الفقرة الرئيسية (WBS)</h3>
+          <p className="wbs-evm-subtitle">
+            مؤشر الأداء الزمني (SPI) وأداء التكلفة (CPI) لكل مجموعة رئيسية، مع الميزانية (BAC) والتكلفة الفعلية (AC).
+          </p>
+          <div className="wbs-evm-table-wrap">
+            <table className="wbs-evm-table">
+              <thead>
+                <tr>
+                  <th>الرمز</th>
+                  <th>الاسم</th>
+                  <th>عدد البنود</th>
+                  <th>BAC (د.ع)</th>
+                  <th>PV (د.ع)</th>
+                  <th>EV (د.ع)</th>
+                  <th>AC (د.ع)</th>
+                  <th>SPI</th>
+                  <th>CPI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {wbsRows.map((row) => (
+                  <tr key={row.wbs}>
+                    <td className="wbs-code">{row.wbs}</td>
+                    <td className="name-cell">{row.name}</td>
+                    <td className="num">{row.taskCount}</td>
+                    <td className="num">{fmtCur(row.bac)}</td>
+                    <td className="num">{fmtCur(row.pv)}</td>
+                    <td className="num">{fmtCur(row.ev)}</td>
+                    <td className="num">{fmtCur(row.ac)}</td>
+                    <td className="num">
+                      <span className={`wbs-evm-pill ${evmTone(row.spi)}`}>{fmtIdx(row.spi)}</span>
+                    </td>
+                    <td className="num">
+                      <span className={`wbs-evm-pill ${evmTone(row.cpi)}`}>{fmtIdx(row.cpi)}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
