@@ -1,3 +1,6 @@
+import { sumValueOrdersByTask, sumExpenses } from './OrderEngine.js';
+import { computeCriticalPath } from './CriticalPath.js';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 const VALID_DEP_TYPES = new Set(['FS', 'SS', 'FF', 'SF']);
 
@@ -229,15 +232,34 @@ export const buildPerWbsEvm = (computedTasks) => {
 };
 
 
-// Calculates everything for a list of tasks
+// Calculates everything for a list of tasks.
+// `orders` (optional) is the order ledger: when a task has approved value
+// orders, its executed quantity is DERIVED from them (the foundation rule —
+// actuals are recorded as orders, never typed). Tasks without orders keep
+// their legacy manual `actualQuantity` (marked orderSource.manual).
 export class GanttEngine {
-  static calculate(tasks, projectStartDate, projectMeta) {
+  static calculate(tasks, projectStartDate, projectMeta, orders = []) {
     const warnings = [];
     const projectStart = parseDate(projectStartDate) ? projectStartDate : formatDate(new Date());
 
+    const orderTotals = sumValueOrdersByTask(orders);
+
     const computedTasks = tasks.map(task => {
       const qty = Math.max(0, parseNumber(task.quantity));
-      const actualQty = Math.max(0, parseNumber(task.actualQuantity));
+      const orderTotalsForTask = orderTotals.get(task.id);
+      // Orders are the source of executed quantity; manual field is the
+      // pre-orders legacy fallback so existing data keeps working.
+      const actualQty = orderTotalsForTask
+        ? Math.max(0, orderTotalsForTask.total)
+        : Math.max(0, parseNumber(task.actualQuantity));
+      const orderSource = orderTotalsForTask
+        ? {
+            manual: false,
+            formalQty: orderTotalsForTask.formalQty,
+            quickQty: orderTotalsForTask.quickQty,
+            orderCount: orderTotalsForTask.orderCount,
+          }
+        : (parseNumber(task.actualQuantity) > 0 ? { manual: true } : null);
       const price = Math.max(0, parseNumber(task.unitPrice));
       const duration = Math.max(0, parseWholeNumber(task.duration));
       const lag = parseWholeNumber(task.lag);
@@ -247,6 +269,7 @@ export class GanttEngine {
         ...task,
         qty,
         actualQty,
+        orderSource,
         price,
         duration,
         lag,
@@ -445,6 +468,19 @@ export class GanttEngine {
     const sCurve = buildSCurve(leafTasks, scheduleStartDate, scheduleEndDate);
     const perWbsEvm = buildPerWbsEvm(computedTasks);
 
+    // Critical path (CPM backward pass) — flags leaves with zero float.
+    const { criticalIds, floatById } = computeCriticalPath(computedTasks);
+    computedTasks.forEach(task => {
+      if (!task.isGroup) {
+        task.isCritical = criticalIds.has(task.id);
+        task.totalFloat = floatById.has(task.id) ? floatById.get(task.id) : null;
+      }
+    });
+
+    // Real money out (expense orders) — separate from valued work so
+    // overspend becomes visible (CPI vs expenses).
+    const expenses = sumExpenses(orders);
+
     return {
       tasks: computedTasks,
       projectTotalCost,
@@ -455,6 +491,7 @@ export class GanttEngine {
       evm,
       sCurve,
       perWbsEvm,
+      expenses,
       scheduleStartDate,
       scheduleEndDate,
       projectDuration: daysBetween(scheduleStartDate, scheduleEndDate),
