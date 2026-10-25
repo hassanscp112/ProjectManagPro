@@ -23,11 +23,20 @@
   min-height: 0;
 }
 
+/* Phones: the page scrolls as a whole; the filling child caps its own height. */
+@media (max-width: 767px) {
+  .fill,
+  .fill .content {
+    flex: none;
+  }
+}
+
 /* Area sub-pages: router links styled like tabs */
 .tabs {
   display: flex;
   gap: var(--ui-space-1);
   border-bottom: 1px solid var(--ui-border);
+  flex-shrink: 0;
   overflow-x: auto;
   scrollbar-width: none;
 }

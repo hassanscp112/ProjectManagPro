@@ -1,0 +1,187 @@
+/* ── Page ── */
+.kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+  margin: 0;
+}
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 120px;
+  flex: 1 1 120px;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-surface);
+}
+.kpi dt {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.kpi dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.toneDanger {
+  color: var(--ui-danger);
+}
+.toneSuccess {
+  color: var(--ui-success);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+.spacer {
+  flex: 1 1 auto;
+}
+.search {
+  width: 220px;
+}
+.kpis,
+.toolbar {
+  flex-shrink: 0;
+}
+
+/* Phones: KPIs and toolbars become single rows that swipe sideways. */
+@media (max-width: 767px) {
+  .kpis,
+  .toolbar,
+  .group {
+    flex-wrap: nowrap;
+  }
+  .kpis,
+  .toolbar {
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: calc(-1 * var(--ui-space-4));
+    padding-inline: var(--ui-space-4);
+  }
+  .kpi {
+    flex: 0 0 auto;
+    min-width: 112px;
+  }
+  .toolbar > *,
+  .group > * {
+    flex-shrink: 0;
+  }
+  .search {
+    width: 160px;
+  }
+  .spacer {
+    display: none;
+  }
+}
+
+/* ── Side panel ── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+.big {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ui-space-2);
+}
+.bigValue {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.muted {
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ui-space-3) var(--ui-space-4);
+  margin: 0;
+}
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.fact dt {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.fact dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.sectionTitle {
+  font-size: var(--ui-fs-md);
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+.actions > * {
+  flex: 1 1 auto;
+}
+
+/* ── Forms (quick edit, variation orders) ── */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--ui-space-3) var(--ui-space-4);
+}
+.wide {
+  grid-column: 1 / -1;
+}
+.voList {
+  margin-top: var(--ui-space-5);
+  padding-top: var(--ui-space-3);
+  border-top: 1px solid var(--ui-divider);
+}
+.editBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-4);
+  border: 1px dashed var(--ui-input-border);
+  border-radius: var(--ui-r-lg);
+  background: var(--ui-sunken);
+}
+
+/* ── Baseline ── */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--ui-space-3);
+}
+.newTag {
+  margin-inline-start: var(--ui-space-2);
+}
+.up {
+  color: var(--ui-danger);
+}
+.down {
+  color: var(--ui-success);
+}

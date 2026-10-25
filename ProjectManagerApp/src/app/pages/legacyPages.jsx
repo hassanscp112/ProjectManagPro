@@ -7,7 +7,6 @@ import ActivityScreen from '../../components/activity/ActivityScreen';
 import CalculatorView from '../../components/calculator/CalculatorView';
 import FileManager from '../../components/FileManager';
 import FinanceManager from '../../components/finance/FinanceManager';
-import PlanningScreen from '../../components/planning/PlanningScreen';
 import RegistriesScreen from '../../components/registries/RegistriesScreen';
 import DailyReports from '../../components/reports/DailyReports';
 import MonthlyReport from '../../components/reports/MonthlyReport';
@@ -17,16 +16,8 @@ import TemplatesScreen from '../../components/templates/TemplatesScreen';
 import { useProject } from '../../state/projectContext.js';
 import { Page } from '../Page.jsx';
 
-export function LookaheadPage() {
-  const { tasks, engineResult, orders, registries } = useProject();
-  return (
-    <Page area="schedule">
-      <PlanningScreen tasks={tasks} computedTasks={engineResult.tasks} orders={orders} registries={registries} />
-    </Page>
-  );
-}
-
-export function TaskPage() {
+/** Full task details (element columns, BOQ links) — the "full page" behind the side panel. */
+export function TaskDetailsPage() {
   const { taskId } = useParams();
   const navigate = useNavigate();
   const p = useProject();
@@ -47,8 +38,8 @@ export function TaskPage() {
         onLinkExistingBoq={p.linkBoqToExisting}
         onAddSubTask={p.addSubTask}
         onDeleteTask={p.requestDeleteTask}
-        onJumpToTaskDetails={(next) => navigate(`/schedule/task/${encodeURIComponent(next.id)}`)}
-        onBack={() => navigate('/schedule')}
+        onJumpToTaskDetails={(next) => navigate(`/schedule/task/${encodeURIComponent(next.id)}/details`)}
+        onBack={() => navigate(`/schedule/task/${encodeURIComponent(task.id)}`)}
       />
     </Page>
   );

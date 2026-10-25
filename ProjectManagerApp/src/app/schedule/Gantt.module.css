@@ -1,0 +1,305 @@
+/* One scroll container: the item columns stick to the reading start while
+   the timeline scrolls beside them, so rows can never misalign. */
+.scroller {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 280px;
+  overflow: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-lg);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.inner {
+  position: relative;
+  width: max-content;
+}
+
+.headRow,
+.row {
+  display: flex;
+}
+
+.headRow {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--ui-sunken);
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.row {
+  min-height: 40px;
+  border-bottom: 1px solid var(--ui-divider);
+}
+
+/* Item columns */
+.gridPart {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  display: flex;
+  flex: none;
+  background: var(--ui-surface);
+  border-inline-end: 1px solid var(--ui-border);
+}
+.headRow .gridPart {
+  z-index: 5;
+  background: var(--ui-sunken);
+}
+
+/* Highlights stay on the item columns so timeline lines stay visible. */
+.row:hover .gridPart {
+  background: var(--ui-sunken);
+}
+.selected .gridPart,
+.selected:hover .gridPart {
+  background: var(--ui-accent-soft);
+  box-shadow: inset 3px 0 0 var(--ui-accent);
+}
+.groupRow .gridPart {
+  font-weight: 600;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  padding: 0 var(--ui-space-2);
+  font-size: var(--ui-fs-sm);
+  min-width: 0;
+  flex: none;
+}
+.headCell {
+  min-height: 48px;
+  color: var(--ui-text-2);
+  font-size: var(--ui-fs-xs);
+  font-weight: 600;
+}
+.num {
+  justify-content: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+.dim {
+  color: var(--ui-text-2);
+}
+
+.cWbs { width: 64px; font-variant-numeric: tabular-nums; color: var(--ui-text-2); }
+.cName { width: 260px; }
+.cPct { width: 68px; }
+.cDur { width: 56px; }
+.cDate { width: 100px; }
+.cPred { width: 180px; }
+.cRel { width: 132px; }
+.cLag { width: 72px; }
+.cQty { width: 108px; }
+.cUnit { width: 72px; }
+.cPrice { width: 104px; }
+.cAmt { width: 128px; }
+
+.nameWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  width: 100%;
+  min-width: 0;
+}
+.nameButton {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.nameButton:hover {
+  color: var(--ui-accent-ink);
+  text-decoration: underline;
+}
+.toggle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--ui-r-sm);
+  background: transparent;
+  color: var(--ui-text-2);
+  cursor: pointer;
+}
+.toggle:hover {
+  background: var(--ui-divider);
+}
+.togglePad {
+  flex: none;
+  width: 24px;
+}
+.critDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-danger);
+}
+.warn {
+  flex: none;
+  color: var(--ui-warning);
+}
+
+.pct {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Edit inputs */
+.cellInput {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 0 var(--ui-space-2);
+  border: 1px solid var(--ui-input-border);
+  border-radius: var(--ui-r-sm);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font-size: var(--ui-fs-sm);
+}
+.cellInput:focus-visible {
+  outline: none;
+  border-color: var(--ui-accent);
+  box-shadow: var(--ui-focus-ring);
+}
+.cellInput:disabled {
+  opacity: 0.5;
+}
+.locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ui-text-2);
+}
+
+/* Timeline */
+.timePart {
+  position: relative;
+  z-index: 1;
+  flex: none;
+}
+.tiers {
+  display: flex;
+  flex-direction: column;
+}
+.tier {
+  display: flex;
+  height: 24px;
+}
+.tierCell {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  border-inline-start: 1px solid var(--ui-divider);
+  font-size: 11px;
+  color: var(--ui-text-2);
+}
+.tier:first-child .tierCell {
+  font-weight: 600;
+  color: var(--ui-text);
+}
+
+.lines {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  pointer-events: none;
+}
+.line {
+  flex: none;
+  height: 100%;
+  border-inline-start: 1px solid var(--ui-divider);
+}
+.todayLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-inline-start: -1px;
+  background: var(--ui-text);
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bar {
+  position: absolute;
+  top: 50%;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--ui-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--ui-border);
+}
+.barCritical {
+  background: var(--ui-danger-soft);
+  box-shadow: inset 0 0 0 1px var(--ui-danger);
+}
+.barFill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  background: var(--ui-accent);
+}
+.barPlanned {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  margin-inline-start: -1px;
+  background: var(--ui-text);
+}
+.groupBar {
+  position: absolute;
+  top: 50%;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 2px;
+  background: var(--ui-text-2);
+}
+
+.addRow {
+  position: sticky;
+  inset-inline-start: 0;
+  display: inline-flex;
+  padding: var(--ui-space-3);
+}
+
+/* Phone: only the item name and progress beside the timeline */
+@media (max-width: 767px) {
+  /* The page scrolls on phones; keep the chart within one screen. */
+  .scroller {
+    max-height: calc(100dvh - 140px);
+  }
+  .optional {
+    display: none;
+  }
+  .cName {
+    width: 170px;
+  }
+  .cWbs {
+    display: none;
+  }
+}

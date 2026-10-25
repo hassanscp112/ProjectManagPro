@@ -35,8 +35,9 @@ export const AREA_TABS = {
     { to: '/record/pending', labelKey: 'record.tabPending' },
   ],
   schedule: [
-    { to: '/schedule', labelKey: 'app.nav.gantt', end: true },
-    { to: '/schedule/lookahead', labelKey: 'app.nav.planning' },
+    { to: '/schedule', labelKey: 'schedule.tabGantt', end: true, alsoActive: ['/schedule/task/'] },
+    { to: '/schedule/lookahead', labelKey: 'schedule.tabLookahead' },
+    { to: '/schedule/baseline', labelKey: 'schedule.tabBaseline' },
   ],
   reports: [
     { to: '/reports/daily', labelKey: 'app.nav.reports' },

@@ -6,7 +6,9 @@ import { createHashRouter, Navigate } from 'react-router';
 import AppLayout from './AppLayout.jsx';
 import HomePage from './home/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
-import SchedulePage from './pages/SchedulePage.jsx';
+import BaselinePage from './schedule/BaselinePage.jsx';
+import LookaheadPage from './schedule/LookaheadPage.jsx';
+import SchedulePage from './schedule/SchedulePage.jsx';
 import RecordLogPage from './record/RecordLogPage.jsx';
 import RecordNewPage from './record/RecordNewPage.jsx';
 import RecordPendingPage from './record/RecordPendingPage.jsx';
@@ -16,11 +18,10 @@ import {
   DailyReportsPage,
   FilesPage,
   FinancePage,
-  LookaheadPage,
   MonthlyReportPage,
   PeoplePage,
   SettingsPage,
-  TaskPage,
+  TaskDetailsPage,
   TemplatesPage,
 } from './pages/legacyPages.jsx';
 
@@ -31,9 +32,18 @@ const appRoutes = {
     { path: 'record', element: <RecordNewPage /> },
     { path: 'record/log', element: <RecordLogPage /> },
     { path: 'record/pending', element: <RecordPendingPage /> },
-    { path: 'schedule', element: <SchedulePage /> },
+    // The task panel is a child route so the Gantt stays mounted while it opens/closes.
+    {
+      path: 'schedule',
+      element: <SchedulePage />,
+      children: [
+        { index: true, element: null },
+        { path: 'task/:taskId', element: null },
+      ],
+    },
+    { path: 'schedule/task/:taskId/details', element: <TaskDetailsPage /> },
     { path: 'schedule/lookahead', element: <LookaheadPage /> },
-    { path: 'schedule/task/:taskId', element: <TaskPage /> },
+    { path: 'schedule/baseline', element: <BaselinePage /> },
     { path: 'reports', element: <Navigate to="/reports/daily" replace /> },
     { path: 'reports/daily', element: <DailyReportsPage /> },
     { path: 'reports/monthly', element: <MonthlyReportPage /> },

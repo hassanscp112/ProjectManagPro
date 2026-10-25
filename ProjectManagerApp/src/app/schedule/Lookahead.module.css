@@ -1,0 +1,182 @@
+/* ── Toolbar: view switch + period navigation ── */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+}
+.period {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+.periodLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 170px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin: 0;
+  max-width: 80ch;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.muted {
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--ui-space-2);
+}
+
+/* ── KPI strip (same shape as the Timeline's) ── */
+.kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+  margin: 0;
+}
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 140px;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-surface);
+}
+.kpi dt {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.kpi dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.toneSuccess {
+  color: var(--ui-success);
+}
+.toneWarning {
+  color: var(--ui-warning);
+}
+.toneDanger {
+  color: var(--ui-danger);
+}
+
+/* ── Plan rows: one line per row on desktop, stacked on phones ── */
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) minmax(150px, 1fr) minmax(160px, 1fr) 36px;
+  grid-template-areas: 'task mid note remove';
+  align-items: end;
+  gap: var(--ui-space-3);
+  padding-block: var(--ui-space-3);
+  border-bottom: 1px solid var(--ui-divider);
+}
+.row:last-child {
+  border-bottom: 0;
+}
+/* Month targets have one more column (quantity + executed). */
+.row:has(.qtyCell) {
+  grid-template-columns: minmax(220px, 2fr) 150px minmax(150px, 1fr) minmax(140px, 1fr) 36px;
+  grid-template-areas: 'task qty rate note remove';
+}
+.taskCell {
+  grid-area: task;
+  min-width: 0;
+}
+.qtyCell {
+  grid-area: qty;
+}
+.whoCell {
+  grid-area: mid;
+  min-width: 0;
+}
+.rateCell {
+  grid-area: rate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+  padding-bottom: var(--ui-space-2);
+}
+.noteCell {
+  grid-area: note;
+}
+.removeCell {
+  grid-area: remove;
+  align-self: end;
+  color: var(--ui-text-2);
+}
+.cellLabel {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.rateLine {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ui-space-2);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.rateNum {
+  color: var(--ui-text);
+}
+.dayStatus {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+
+@media (max-width: 1023px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) 36px;
+    grid-template-areas: 'task remove' 'mid mid' 'note note';
+  }
+  .row:has(.qtyCell) {
+    grid-template-columns: minmax(0, 1fr) 36px;
+    grid-template-areas: 'task remove' 'qty qty' 'rate rate' 'note note';
+  }
+  .removeCell {
+    align-self: start;
+    margin-top: 22px;
+  }
+}
+
+@media (max-width: 767px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .period {
+    justify-content: space-between;
+  }
+  .periodLabel {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .actions > * {
+    flex: 1 1 auto;
+  }
+  .kpi {
+    flex-basis: 120px;
+  }
+}

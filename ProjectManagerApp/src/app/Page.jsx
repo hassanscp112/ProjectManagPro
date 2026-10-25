@@ -1,5 +1,5 @@
 import { Languages } from 'lucide-react';
-import { NavLink } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 import { useI18n } from '../i18n/useI18n.js';
 import { STATUS_KEYS } from '../state/projectModel.js';
 import { useProject } from '../state/projectContext.js';
@@ -35,13 +35,18 @@ function GlobalActions() {
   );
 }
 
-/** Sub-pages of an area as router tabs; counts[to] shows a small pill. */
+/**
+ * Sub-pages of an area as router tabs; counts[to] shows a small pill.
+ * `alsoActive` prefixes keep an `end` tab lit on its child routes
+ * (the Timeline tab while /schedule/task/:id is open).
+ */
 function AreaTabs({ tabs, counts = {} }) {
   const { t } = useI18n();
+  const { pathname } = useLocation();
   return (
     <nav aria-label={t('ui.sectionNav')} className={s.tabs}>
       {tabs.map((tab) => (
-        <NavLink key={tab.to} to={tab.to} end={tab.end} className={s.tab}>
+        <NavLink key={tab.to} to={tab.to} end={tab.end && !tab.alsoActive?.some((p) => pathname.startsWith(p))} className={s.tab}>
           {t(tab.labelKey)}
           {counts[tab.to] ? <span className={s.count}>{counts[tab.to]}</span> : null}
         </NavLink>

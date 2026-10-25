@@ -54,7 +54,15 @@ export function ProjectProvider({ children }) {
   const [identityOpen, setIdentityOpen] = useState(() => !hasIdentity());
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [canUndo, setCanUndo] = useState(false);
-  const [ganttView, setGanttView] = useState({ isEditMode: false, viewMode: 'week' });
+  // Schedule view state lives here so it survives opening/closing the task panel.
+  const [ganttView, setGanttView] = useState({
+    isEditMode: false,
+    zoom: 'month',
+    cols: 'schedule',
+    criticalOnly: false,
+    collapsed: [],
+    query: '',
+  });
   const orders = useMemo(() => ordersData?.orders || [], [ordersData]);
 
   const historyRef = useRef([]);

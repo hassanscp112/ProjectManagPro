@@ -1,0 +1,57 @@
+.signed {
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ui-space-3);
+}
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--ui-space-2);
+  margin-inline-end: var(--ui-space-2);
+  color: var(--ui-text);
+  text-decoration: none;
+}
+.item:hover .name {
+  color: var(--ui-accent-ink);
+  text-decoration: underline;
+}
+.wbs {
+  color: var(--ui-text-2);
+  font-size: var(--ui-fs-sm);
+}
+.changed {
+  background: var(--ui-accent-soft);
+}
+.diff {
+  font-weight: 700;
+}
+/* More contract value = more cost to the client. */
+.up {
+  color: var(--ui-danger);
+  font-weight: 600;
+}
+.down {
+  color: var(--ui-success);
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
