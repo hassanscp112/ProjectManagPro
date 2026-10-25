@@ -1,0 +1,445 @@
+/* ═══════════════════════════════════════════════════════
+   OrdersScreen — the dedicated order-entry screen
+   (KPI strip reuses the global .compact-kpi-strip classes)
+   ═══════════════════════════════════════════════════════ */
+
+.orders-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 4px 40px;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+/* ── Cards ── */
+.ord-section-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow-level-1);
+}
+
+.ord-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ord-card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--apple-black);
+}
+
+.ord-card-sub {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.ord-hint {
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+/* ── Form ── */
+.ord-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ord-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px 14px;
+  align-items: start;
+}
+
+.ord-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ord-field-wide {
+  grid-column: 1 / -1;
+}
+
+.ord-field-narrow {
+  max-width: 130px;
+}
+
+.ord-field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.ord-req {
+  color: #dc2626;
+  margin-right: 2px;
+}
+
+.ord-input,
+.ord-select {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: border-color 0.15s;
+}
+
+.ord-select {
+  cursor: pointer;
+}
+
+.ord-input:hover,
+.ord-select:hover {
+  border-color: var(--border-mid);
+}
+
+.ord-input:focus,
+.ord-select:focus {
+  outline: none;
+  border-color: var(--apple-blue-action);
+}
+
+.ord-input:disabled,
+.ord-select:disabled {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.ord-input-num {
+  font-family: var(--font-mono);
+  text-align: center;
+  direction: ltr;
+}
+
+.ord-amount-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ord-amount-suffix {
+  position: absolute;
+  left: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+/* ── Who widget (expense recipient / quick-work contractor) ── */
+.ord-who {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ord-who-switch {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ord-who-chip {
+  border: 1px solid var(--border-soft);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ord-who-chip:hover {
+  border-color: var(--apple-blue-action);
+  color: var(--apple-blue-action);
+}
+
+.ord-who-chip.active {
+  background: var(--bg-showcase);
+  border-color: var(--apple-blue-action);
+  color: var(--apple-blue-action);
+}
+
+.ord-who-none {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.ord-workers-box {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ord-worker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+}
+
+.ord-worker-row:hover {
+  background: var(--bg-hover);
+}
+
+.ord-worker-trade {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.ord-workers-empty {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 8px;
+}
+
+/* ── Actions + feedback ── */
+.ord-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ord-tier-hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.ord-flash {
+  background: #ecfdf5;
+  border: 1px solid #10b981;
+  color: #047857;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ord-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ── Filters ── */
+.ord-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px 12px;
+  align-items: start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--bg-hover);
+}
+
+/* ── Log table ── */
+.ord-table-wrap {
+  overflow-x: auto;
+}
+
+.ord-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 880px;
+}
+
+.ord-table thead th {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: right;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.ord-table tbody td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--bg-hover);
+  vertical-align: middle;
+}
+
+.ord-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.ord-num {
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+/* Type badge — colored by family (value=blue / expense=red) */
+.ord-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.ord-badge.value {
+  background: var(--bg-showcase);
+  color: var(--apple-blue-action);
+}
+
+.ord-badge.expense {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Status badge — معتمد (green) / مسجل (amber) */
+.ord-status {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.ord-status.approved {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.ord-status.recorded {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.ord-task-cell {
+  max-width: 280px;
+}
+
+.ord-task-wbs {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.ord-row-actions {
+  display: inline-flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.ord-row-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ord-row-btn.approve {
+  color: #047857;
+  border-color: #10b981;
+}
+
+.ord-row-btn.approve:hover {
+  background: #ecfdf5;
+}
+
+.ord-row-btn.danger {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.ord-row-btn.danger:hover {
+  background: #fef2f2;
+}
+
+.ord-empty {
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 22px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 720px) {
+  .ord-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ord-field-narrow {
+    max-width: none;
+  }
+}
+
+/* ── LTR overrides (physical RTL assumptions above) ── */
+
+/* Required asterisk trails the label in LTR. */
+[dir="ltr"] .ord-req {
+  margin-right: 0;
+  margin-left: 2px;
+}
+
+/* Currency suffix sits at the input's end (right) in LTR. */
+[dir="ltr"] .ord-amount-suffix {
+  left: auto;
+  right: 10px;
+}
+
+/* Table header alignment flips with direction. */
+[dir="ltr"] .ord-table thead th {
+  text-align: left;
+}
+
+/* WBS code precedes the task name in LTR, so spacing goes on its right. */
+[dir="ltr"] .ord-task-wbs {
+  margin-left: 0;
+  margin-right: 4px;
+}

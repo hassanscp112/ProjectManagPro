@@ -1,0 +1,91 @@
+/* ═══ OrderTypePicker — value/expense type chip groups ═══ */
+
+.otp-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--font-family);
+}
+
+.otp-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.otp-group-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-right: 3px solid var(--apple-blue-action);
+  padding-right: 8px;
+}
+
+.otp-family-expense .otp-group-label {
+  border-right-color: #dc2626;
+}
+
+.otp-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.otp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.otp-chip:hover {
+  border-color: var(--apple-blue-action);
+  color: var(--apple-blue-action);
+}
+
+.otp-chip.active {
+  background: var(--apple-blue-action);
+  border-color: var(--apple-blue-action);
+  color: #ffffff;
+}
+
+.otp-chip-icon {
+  font-size: 0.95rem;
+}
+
+.otp-chip-tier {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.otp-chip.active .otp-chip-tier {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+/* ── LTR overrides (accent bar flips to the reading start) ── */
+
+[dir="ltr"] .otp-group-label {
+  border-right: none;
+  border-left: 3px solid var(--apple-blue-action);
+  padding-right: 0;
+  padding-left: 8px;
+}
+
+[dir="ltr"] .otp-family-expense .otp-group-label {
+  border-left-color: #dc2626;
+}
