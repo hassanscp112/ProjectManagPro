@@ -29,6 +29,11 @@ export const MORE_AREA = { key: 'more', labelKey: 'ui.more', icon: Ellipsis, pat
 
 /** Sub-pages per area (rendered as tabs under the page title). */
 export const AREA_TABS = {
+  record: [
+    { to: '/record', labelKey: 'record.tabNew', end: true },
+    { to: '/record/log', labelKey: 'record.tabLog' },
+    { to: '/record/pending', labelKey: 'record.tabPending' },
+  ],
   schedule: [
     { to: '/schedule', labelKey: 'app.nav.gantt', end: true },
     { to: '/schedule/lookahead', labelKey: 'app.nav.planning' },

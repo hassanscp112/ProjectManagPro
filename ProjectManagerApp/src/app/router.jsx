@@ -6,6 +6,9 @@ import { createHashRouter, Navigate } from 'react-router';
 import AppLayout from './AppLayout.jsx';
 import MorePage from './pages/MorePage.jsx';
 import SchedulePage from './pages/SchedulePage.jsx';
+import RecordLogPage from './record/RecordLogPage.jsx';
+import RecordNewPage from './record/RecordNewPage.jsx';
+import RecordPendingPage from './record/RecordPendingPage.jsx';
 import {
   ActivityPage,
   BoqCalculatorPage,
@@ -16,7 +19,6 @@ import {
   LookaheadPage,
   MonthlyReportPage,
   PeoplePage,
-  RecordPage,
   SettingsPage,
   TaskPage,
   TemplatesPage,
@@ -26,7 +28,9 @@ const appRoutes = {
   element: <AppLayout />,
   children: [
     { index: true, element: <HomePage /> },
-    { path: 'record', element: <RecordPage /> },
+    { path: 'record', element: <RecordNewPage /> },
+    { path: 'record/log', element: <RecordLogPage /> },
+    { path: 'record/pending', element: <RecordPendingPage /> },
     { path: 'schedule', element: <SchedulePage /> },
     { path: 'schedule/lookahead', element: <LookaheadPage /> },
     { path: 'schedule/task/:taskId', element: <TaskPage /> },

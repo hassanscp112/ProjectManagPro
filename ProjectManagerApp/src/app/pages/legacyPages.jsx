@@ -1,6 +1,6 @@
 // Route pages that mount the existing screens unchanged inside the new
 // shell (Phase 1). Each one is replaced by a rebuilt screen in its phase:
-// Home P3 · Record P2 · Schedule/Task P4 · Reports P5 · the rest P6.
+// Home P3 · Schedule/Task P4 · Reports P5 · the rest P6.
 
 import { Navigate, useNavigate, useParams } from 'react-router';
 import ActivityScreen from '../../components/activity/ActivityScreen';
@@ -8,7 +8,6 @@ import CalculatorView from '../../components/calculator/CalculatorView';
 import Dashboard from '../../components/dashboard/Dashboard';
 import FileManager from '../../components/FileManager';
 import FinanceManager from '../../components/finance/FinanceManager';
-import OrdersScreen from '../../components/orders/OrdersScreen';
 import PlanningScreen from '../../components/planning/PlanningScreen';
 import RegistriesScreen from '../../components/registries/RegistriesScreen';
 import DailyReports from '../../components/reports/DailyReports';
@@ -24,15 +23,6 @@ export function HomePage() {
   return (
     <Page area="home">
       <Dashboard tasks={engineResult.tasks} summary={engineResult} />
-    </Page>
-  );
-}
-
-export function RecordPage() {
-  const { tasks, identity } = useProject();
-  return (
-    <Page area="record">
-      <OrdersScreen tasks={tasks} identity={identity} />
     </Page>
   );
 }
