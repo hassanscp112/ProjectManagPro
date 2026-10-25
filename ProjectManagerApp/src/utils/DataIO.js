@@ -24,6 +24,7 @@ export const APP_STORAGE_KEYS = [
   'pm-activity',                   // app-level activity events
   'pm-snapshots',                  // version-history checkpoints (auto + named)
   'pm-language',                   // selected UI language (ar/en)
+  'pm-theme',                      // light / dark / system
 ];
 
 const BACKUP_MAGIC = 'projectmanager-backup';
