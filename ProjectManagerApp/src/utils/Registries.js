@@ -17,6 +17,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { loadLanguage, translate } from '../i18n/index.js';
+import { notifyStoreChange } from './storeEvents.js';
 
 export const REGISTRIES_STORAGE_KEY = 'pm-registries';
 
@@ -112,6 +113,7 @@ export const saveRegistries = (data) => {
   };
   try {
     localStorage.setItem(REGISTRIES_STORAGE_KEY, JSON.stringify(safe));
+    notifyStoreChange(REGISTRIES_STORAGE_KEY);
   } catch {
     // storage unavailable (quota/private mode) — data still lives in memory
   }

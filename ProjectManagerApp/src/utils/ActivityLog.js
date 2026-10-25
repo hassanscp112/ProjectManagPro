@@ -1,4 +1,5 @@
 import { loadLanguage, translate } from '../i18n/index.js';
+import { notifyStoreChange } from './storeEvents.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ActivityLog — the app's unified event ledger utilities.
@@ -62,6 +63,7 @@ export const saveAppEvents = (list) => {
     // Keep the most recent MAX_APP_EVENTS entries (oldest dropped first).
     const capped = arr.length > MAX_APP_EVENTS ? arr.slice(arr.length - MAX_APP_EVENTS) : arr;
     localStorage.setItem(ACTIVITY_STORAGE_KEY, JSON.stringify(capped));
+    notifyStoreChange(ACTIVITY_STORAGE_KEY);
   } catch {
     // Storage unavailable (quota / private mode) — nothing we can do safely.
   }

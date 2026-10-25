@@ -6,6 +6,8 @@
 // Used to stamp daily reports, approvals and sign-offs.
 // ─────────────────────────────────────────────────────────────
 
+import { notifyStoreChange } from './storeEvents.js';
+
 export const IDENTITY_STORAGE_KEY = 'pm-identity';
 
 const EMPTY_IDENTITY = () => ({ name: '', role: '' });
@@ -33,6 +35,7 @@ export const saveIdentity = ({ name, role }) => {
   };
   try {
     localStorage.setItem(IDENTITY_STORAGE_KEY, JSON.stringify(identity));
+    notifyStoreChange(IDENTITY_STORAGE_KEY);
   } catch {
     // storage unavailable — identity lives in memory only
   }

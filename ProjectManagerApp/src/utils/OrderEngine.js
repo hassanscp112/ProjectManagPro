@@ -24,6 +24,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { loadLanguage, translate } from '../i18n/index.js';
+import { notifyStoreChange } from './storeEvents.js';
 
 export const ORDERS_STORAGE_KEY = 'pm-orders';
 export const REGISTRIES_STORAGE_KEY = 'pm-registries';
@@ -292,6 +293,7 @@ export const saveOrdersData = (data) => {
         : {},
   };
   localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(shaped));
+  notifyStoreChange(ORDERS_STORAGE_KEY);
   return shaped;
 };
 
