@@ -37,19 +37,33 @@ The planning workbench. Split view: **editable data grid + timeline**.
   strip, lifecycle buttons, week/month toggle, undo, backup/restore, edit-mode
   toggle, and the sign-off / VO / restore dialogs (see 02-architecture).
 
-## Orders — `orders/OrdersScreen.jsx` (+ `OrderTypePicker`, `TaskPicker`)
+## Record — `src/app/record/` (rebuilt in Phase 2)
 
 **The most important screen — the app's single entry point for site reality.**
-- Top: KPI strip → type picker chips grouped by family (formal types show a
-  "formal" badge) → data-driven draft form (`ORDER_TYPES` decides which fields).
-- Save validates required fields, then **re-seeds the same type** with smart
-  defaults (date, last who) for rapid consecutive entry.
-- Order log: filters (date range/type/contractor/task), **Approve** (formal &
-  recorded only; approver = identity name or modal input), delete with confirm.
-- Watches browser `storage` events on `pm-orders`/`pm-registries` → two tabs stay in sync.
-- **TaskPicker**: searchable leaf-task combobox, ranked recent-orders-first
-  (by `recordedAt`), then numeric WBS order (`1.2` before `1.10`); caps at 40 shown.
-- Unit autofills from the task's BOQ unit; changing task resets element.
+Three sub-pages (tabs; Pending shows a count, as does the sidebar item):
+
+- **New order `#/record`** — desktop: 9 type cards in two groups (work / expenses,
+  each card says "quick · approved on save" or "formal · needs approval") →
+  data-driven form (`ORDER_TYPES` decides the fields; `OrderForm.jsx`). Date =
+  Today/Yesterday/Other chips; task = `TaskPicker` with "x of y done · z left";
+  quantity box shows the BOQ unit (a unit field appears only if the task has
+  none); who = `WhoPicker` (contractor fields: contractor/none; recipient fields:
+  contractor/team/workers/none). Optional fields say "(optional)"; required ones
+  show "Required" after a save attempt. **Enter / "Save and record next"** saves
+  and re-seeds the same type with smart defaults (today, last who); "Save" saves
+  and closes. "Repeat last order" copies type, task, unit and who. Side panel:
+  pending approvals (Approve) and today's orders.
+- **Phone** (`PhoneRecordFlow.jsx`) — type screen (repeat card + cards) →
+  full-screen form (bottom bar hidden, Save pinned at the bottom) → done screen
+  (record another of this type / another type / Home).
+- **Order log `#/record/log`** — today/week figures, filters (dates, type,
+  contractor, task), table on desktop / rows on phone, Approve + delete (confirm).
+- **Pending `#/record/pending`** — formal orders still `recorded`.
+
+Rules (unchanged): quick orders are approved on save by the current user;
+formal orders start `recorded`; approving uses the current user's name or asks
+for one (`useApproval.jsx`). Logic: `src/state/orderForm.js`.
+The legacy `components/orders/` screen is no longer routed (archived in Phase 7).
 
 ## Planning — `planning/PlanningScreen.jsx`
 

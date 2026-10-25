@@ -113,7 +113,7 @@ monthly report.
 |---|---|---|
 | Home `#/` | `dashboard/Dashboard` | Status cards, EVM tiles, S-curve, per-WBS roll-up, action items |
 | Schedule `#/schedule` | `GanttChart` | Editable task grid + day-based timeline, KPI strip, lifecycle/VO/backup toolbar |
-| Record `#/record` | `orders/OrdersScreen` | THE entry screen: pick type → fill → save; filterable log with approve/delete |
+| Record `#/record` (+ `/log`, `/pending`) | `app/record/*` | THE entry screen: pick type → fill → save (phone: full-screen flow); order log; pending approvals |
 | Schedule › Lookahead `#/schedule/lookahead` | `planning/PlanningScreen` | Month/week/day lookahead targets & assignments |
 | Library › Files `#/library/files` | `FileManager` | Per-task document folders; files stored in IndexedDB |
 | Library › BOQ `#/library/boq` | `calculator/*` | BOQ quantity take-off grids (templates with formulas) |

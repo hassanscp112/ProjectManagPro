@@ -27,12 +27,14 @@ npm run dev        # → http://localhost:5173
 
 ```
 src/
-├── App.jsx          ← the whole app shell (tabs, lifecycle, modals)
-├── components/      ← one folder per screen (17 components)
+├── App.jsx          ← project store + router (tiny)
+├── app/             ← routes, shell layout, one page per route (record/ = rebuilt Record)
+├── state/           ← ProjectProvider + pure project/order logic (tested)
+├── components/      ← legacy screens, replaced phase by phase
 ├── ui/              ← shared components + design tokens (UI rebuild)
 ├── dev/             ← dev-only review page (/#/dev/ui)
-├── utils/           ← engines + persistence (15 modules, tested)
-└── i18n/            ← ar/en dictionaries (16 domain files each)
+├── utils/           ← engines + persistence (tested)
+└── i18n/            ← ar/en dictionaries (17 domain files each)
 ```
 
 ⚠️ **Back up before clearing browser data** — use the in-app **Backup** button

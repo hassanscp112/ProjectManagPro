@@ -35,7 +35,7 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
   ┌───────────────────────────────────────────────────────────────────────────────┐
   │  MODULE SCREENS (components/) — own their persistence via src/utils owners:   │
   │                                                                               │
-  │  OrdersScreen → OrderEngine      → localStorage 'pm-orders'        (notifies) │
+  │  Record pages → OrderEngine      → localStorage 'pm-orders'        (notifies) │
   │  PlanningScreen → PlanningStore  → localStorage 'pm-plans'                    │
   │  RegistriesScreen → Registries   → localStorage 'pm-registries'    (notifies) │
   │  IdentityPicker → Identity       → localStorage 'pm-identity'      (notifies) │
@@ -63,7 +63,7 @@ global state library** — React state + localStorage + change notifications.
 | Area | Route | Screen (Phase 1: existing component) |
 |---|---|---|
 | Home | `/` | `dashboard/Dashboard` |
-| Record | `/record` | `orders/OrdersScreen` |
+| Record | `/record` · `/record/log` · `/record/pending` | **Rebuilt (Phase 2)** — `app/record/`: new order (desktop form + side panel; phone type → form → done), order log, pending approvals |
 | Schedule | `/schedule` | Gantt page (`app/pages/SchedulePage.jsx`: KPI strip, lifecycle/backup toolbar, `GanttChart`, sign-off / VO / restore dialogs) |
 | | `/schedule/lookahead` | `planning/PlanningScreen` |
 | | `/schedule/task/:taskId` | `taskDetails/TaskDetails` (was the hidden tab) |
@@ -77,8 +77,7 @@ global state library** — React state + localStorage + change notifications.
 
 `/reports` and `/library` redirect to their first sub-page; unknown routes go
 Home. Sub-pages show as tabs under the page title (`AREA_TABS` in
-`app/navigation.js`). Not yet split out (later phases): `/record/log`,
-`/record/pending`, `/schedule/baseline`, `/library/rates`, `/finance/:ledger`,
+`app/navigation.js`). Not yet split out (later phases): `/schedule/baseline`, `/library/rates`, `/finance/:ledger`,
 `/people/:kind`.
 
 ### ProjectProvider (`src/state/ProjectProvider.jsx`)
@@ -98,6 +97,10 @@ Home. Sub-pages show as tabs under the page title (`AREA_TABS` in
 | Templates | `generateFromTemplate(tree, meta)` → appends with renumbered WBS; the page then navigates to `/schedule` |
 | Backup/restore | Gantt page toolbar via `utils/DataIO` (validate → confirm → write → reload) |
 
+The Record rules (validation, building an order, repeat-last, log filters,
+KPIs) are pure functions in `src/state/orderForm.js`, tested in
+`src/state/__tests__/orderForm.test.js`.
+
 All tree/lifecycle transforms are pure functions in `projectModel.js`
 (`addSubTask`, `deleteTaskCascade`, `toggleBoqLink`, `signOffProject`,
 `applyVariation`, `appendGeneratedTasks`, …) with tests in
@@ -109,7 +112,7 @@ All tree/lifecycle transforms are pure functions in `projectModel.js`
 |---|---|
 | Dashboard | `tasks={engineResult.tasks} summary={engineResult}` |
 | GanttChart | `tasks={engineResult.tasks}` + `onUpdateTask, projectStart, isEditMode, isSigned, viewMode, onAdd*, onDelete, onJumpTo*` (jumps navigate to `/library/files/:id` and `/schedule/task/:id`) |
-| OrdersScreen | `tasks` (raw), `identity` |
+| Record pages | none — read `useProject()` (tasks, orders, lastWhoByType, registries, identity, engineResult); rules in `src/state/orderForm.js` |
 | PlanningScreen | `tasks` (raw), `computedTasks`, `orders`, `registries` |
 | ActivityScreen | `orders, variations, appEvents, tasks, registries` |
 | MonthlyReport | `summary, computedTasks, orders, variations, projectMeta, registries` |
@@ -162,7 +165,7 @@ order-derived and read-only.
 |---|---|---|---|
 | Task tree + BOQ | ProjectProvider (edit via Gantt grid / TaskDetails) | everything | `project-manager-gantt-tasks` |
 | Project meta (status/baseline/VOs) | ProjectProvider (Gantt page dialogs) | Monthly, Activity, engine | `project-manager-project-meta` |
-| Order ledger | OrdersScreen (OrderEngine) | engine, Planning, Reports, Activity | `pm-orders` |
+| Order ledger | Record pages (OrderEngine `addOrder` / `approveOrder` / `deleteOrder`) | engine, Planning, Reports, Activity | `pm-orders` |
 | Registries | RegistriesScreen | Orders, Planning, Reports, TaskDetails | `pm-registries` |
 | Identity | IdentityPicker | stamps everywhere | `pm-identity` |
 | App events | `logAppEvent` from ProjectProvider/screens | Activity feed | `pm-activity` |
@@ -178,8 +181,8 @@ order-derived and read-only.
 Synchronization: `saveOrdersData`, `saveRegistries`, `saveIdentity` and
 `saveAppEvents` call `notifyStoreChange(key)` (`utils/storeEvents.js`), and
 ProjectProvider re-reads that store at once; it also re-reads orders /
-registries / events on every route change. Across browser tabs, OrdersScreen
-listens to the `storage` event.
+registries / events on every route change. Across browser tabs, nothing syncs
+yet (the legacy OrdersScreen listened to the `storage` event).
 
 ---
 
