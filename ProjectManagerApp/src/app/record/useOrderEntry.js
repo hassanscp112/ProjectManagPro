@@ -1,7 +1,24 @@
 import { useMemo, useState } from 'react';
-import { buildOrderFromDraft, missingRequiredFields } from '../../state/orderForm.js';
+import { buildOrderFromDraft, latestOrder, missingRequiredFields, repeatOrderDraft } from '../../state/orderForm.js';
 import { useProject } from '../../state/projectContext.js';
 import { ORDER_TYPES, addOrder, createOrderDraft, createOrderId, loadOrdersData } from '../../utils/OrderEngine.js';
+
+/**
+ * A prefilled draft requested by the page that navigated here, or null:
+ *   { repeatLast: true } — Home's "repeat last order"
+ *   { taskId }           — the Schedule panel's "record work on this item"
+ *                          (quick work order on that task, its unit filled in)
+ */
+export const draftFromNavigation = (state, { orders = [], tasks = [] } = {}) => {
+  if (state?.repeatLast) return repeatOrderDraft(latestOrder(orders));
+  if (state?.taskId) {
+    const task = tasks.find((x) => x.id === state.taskId);
+    if (!task || task.isGroup) return null;
+    const draft = createOrderDraft('quick_work', { lastWho: loadOrdersData().lastWhoByType });
+    return draft && { ...draft, taskId: task.id, unit: task.unit || '' };
+  }
+  return null;
+};
 
 /**
  * The new-order draft: pick a type, edit fields, save. Saving validates

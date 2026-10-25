@@ -1,4 +1,6 @@
 import { RotateCcw } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useI18n } from '../../i18n/useI18n.js';
 import { latestOrder, ordersOnDay, pendingOrders, repeatOrderDraft } from '../../state/orderForm.js';
 import { useProject } from '../../state/projectContext.js';
@@ -11,7 +13,7 @@ import OrderTypeCards from './OrderTypeCards.jsx';
 import PhoneRecordFlow from './PhoneRecordFlow.jsx';
 import { formatDay, savedMessage } from './orderMeta.js';
 import { useOrderActions } from './useApproval.jsx';
-import { useOrderEntry } from './useOrderEntry.js';
+import { draftFromNavigation, useOrderEntry } from './useOrderEntry.js';
 import s from './Record.module.css';
 
 const ASIDE_LIMIT = 5;
@@ -25,8 +27,16 @@ export default function RecordNewPage() {
 function DesktopRecord() {
   const { t } = useI18n();
   const toast = useToast();
-  const { orders, pendingApprovals } = useProject();
-  const entry = useOrderEntry();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { orders, tasks, pendingApprovals } = useProject();
+  const [prefill] = useState(() => draftFromNavigation(location.state, { orders, tasks }));
+  const entry = useOrderEntry(prefill);
+
+  // Drop the one-shot request so Back / refresh don't reopen the form.
+  useEffect(() => {
+    if (location.state) navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate]);
   const actions = useOrderActions();
   const { draft, spec, missing, showErrors } = entry;
   const last = latestOrder(orders);

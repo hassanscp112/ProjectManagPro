@@ -10,7 +10,7 @@ import { useShell } from '../shellContext.js';
 import OrderForm from './OrderForm.jsx';
 import OrderTypeCards from './OrderTypeCards.jsx';
 import { orderFigure, orderSubject, savedMessage, typeLabel } from './orderMeta.js';
-import { useOrderEntry } from './useOrderEntry.js';
+import { draftFromNavigation, useOrderEntry } from './useOrderEntry.js';
 import s from './Record.module.css';
 
 /**
@@ -23,13 +23,14 @@ export default function PhoneRecordFlow() {
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { orders, pendingApprovals } = useProject();
+  const { orders, tasks, pendingApprovals } = useProject();
   const { setImmersive } = useShell();
   const last = latestOrder(orders);
-  // Home's "repeat last order" arrives with { repeatLast: true } and opens the form directly.
-  const [repeatOnOpen] = useState(() => (location.state?.repeatLast && last ? repeatOrderDraft(last) : null));
-  const entry = useOrderEntry(repeatOnOpen);
-  const [step, setStep] = useState(repeatOnOpen ? 'form' : 'type');
+  // Home ("repeat last order") and the Schedule panel ("record work on this
+  // item") arrive with a request that opens the form already filled in.
+  const [prefill] = useState(() => draftFromNavigation(location.state, { orders, tasks }));
+  const entry = useOrderEntry(prefill);
+  const [step, setStep] = useState(prefill ? 'form' : 'type');
   const [saved, setSaved] = useState(null);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function PhoneRecordFlow() {
 
   // Drop the one-shot request so Back / refresh don't reopen the form.
   useEffect(() => {
-    if (location.state?.repeatLast) navigate(location.pathname, { replace: true, state: null });
+    if (location.state) navigate(location.pathname, { replace: true, state: null });
   }, [location.state, location.pathname, navigate]);
 
   const open = (draftOrType) => {
