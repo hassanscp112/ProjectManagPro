@@ -6,24 +6,14 @@ import { createHashRouter, Navigate } from 'react-router';
 import AppLayout from './AppLayout.jsx';
 import HomePage from './home/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
-import BaselinePage from './schedule/BaselinePage.jsx';
-import LookaheadPage from './schedule/LookaheadPage.jsx';
-import SchedulePage from './schedule/SchedulePage.jsx';
 import RecordLogPage from './record/RecordLogPage.jsx';
 import RecordNewPage from './record/RecordNewPage.jsx';
 import RecordPendingPage from './record/RecordPendingPage.jsx';
-import ActivityPage from './reports/ActivityPage.jsx';
-import DailyReportPage from './reports/DailyReportPage.jsx';
-import MonthlyReportPage from './reports/MonthlyReportPage.jsx';
-import FinancePage from './finance/FinancePage.jsx';
-import BoqPage from './library/BoqPage.jsx';
-import FilesPage from './library/FilesPage.jsx';
-import RatesPage from './library/RatesPage.jsx';
-import TemplateBuilderPage from './library/TemplateBuilderPage.jsx';
-import TemplatesPage from './library/TemplatesPage.jsx';
-import { TaskDetailsPage } from './pages/legacyPages.jsx';
-import PeoplePage from './people/PeoplePage.jsx';
-import SettingsPage from './settings/SettingsPage.jsx';
+
+// Home and Record (the daily screens) load with the app; every other area
+// loads its code on first visit. The router waits for it before switching,
+// so the old page stays until the new one is ready.
+const page = (load) => ({ lazy: () => load().then((m) => ({ Component: m.default })) });
 
 const appRoutes = {
   element: <AppLayout />,
@@ -35,31 +25,31 @@ const appRoutes = {
     // The task panel is a child route so the Gantt stays mounted while it opens/closes.
     {
       path: 'schedule',
-      element: <SchedulePage />,
+      ...page(() => import('./schedule/SchedulePage.jsx')),
       children: [
         { index: true, element: null },
         { path: 'task/:taskId', element: null },
       ],
     },
-    { path: 'schedule/task/:taskId/details', element: <TaskDetailsPage /> },
-    { path: 'schedule/lookahead', element: <LookaheadPage /> },
-    { path: 'schedule/baseline', element: <BaselinePage /> },
+    { path: 'schedule/task/:taskId/details', ...page(() => import('./schedule/TaskDetailsPage.jsx')) },
+    { path: 'schedule/lookahead', ...page(() => import('./schedule/LookaheadPage.jsx')) },
+    { path: 'schedule/baseline', ...page(() => import('./schedule/BaselinePage.jsx')) },
     { path: 'reports', element: <Navigate to="/reports/daily" replace /> },
-    { path: 'reports/daily', element: <DailyReportPage /> },
-    { path: 'reports/monthly', element: <MonthlyReportPage /> },
-    { path: 'reports/activity', element: <ActivityPage /> },
+    { path: 'reports/daily', ...page(() => import('./reports/DailyReportPage.jsx')) },
+    { path: 'reports/monthly', ...page(() => import('./reports/MonthlyReportPage.jsx')) },
+    { path: 'reports/activity', ...page(() => import('./reports/ActivityPage.jsx')) },
     { path: 'finance', element: <Navigate to="/finance/machinery" replace /> },
-    { path: 'finance/:ledger', element: <FinancePage /> },
+    { path: 'finance/:ledger', ...page(() => import('./finance/FinancePage.jsx')) },
     { path: 'library', element: <Navigate to="/library/boq" replace /> },
-    { path: 'library/boq', element: <BoqPage /> },
-    { path: 'library/templates', element: <TemplatesPage /> },
-    { path: 'library/templates/new', element: <TemplateBuilderPage /> },
-    { path: 'library/rates', element: <RatesPage /> },
-    { path: 'library/files', element: <FilesPage /> },
-    { path: 'library/files/:taskId', element: <FilesPage /> },
+    { path: 'library/boq', ...page(() => import('./library/BoqPage.jsx')) },
+    { path: 'library/templates', ...page(() => import('./library/TemplatesPage.jsx')) },
+    { path: 'library/templates/new', ...page(() => import('./library/TemplateBuilderPage.jsx')) },
+    { path: 'library/rates', ...page(() => import('./library/RatesPage.jsx')) },
+    { path: 'library/files', ...page(() => import('./library/FilesPage.jsx')) },
+    { path: 'library/files/:taskId', ...page(() => import('./library/FilesPage.jsx')) },
     { path: 'people', element: <Navigate to="/people/contractors" replace /> },
-    { path: 'people/:kind', element: <PeoplePage /> },
-    { path: 'settings', element: <SettingsPage /> },
+    { path: 'people/:kind', ...page(() => import('./people/PeoplePage.jsx')) },
+    { path: 'settings', ...page(() => import('./settings/SettingsPage.jsx')) },
     { path: 'more', element: <MorePage /> },
   ],
 };

@@ -7,3 +7,13 @@ const LRI = String.fromCharCode(0x2066);
 const PDI = String.fromCharCode(0x2069);
 
 export const ltr = (text) => `${LRI}${text}${PDI}`;
+
+/**
+ * A signed amount inside words, e.g. '+26.5 مليون د.ع': only the signed
+ * number is isolated, so the sign stays on the number and the words keep
+ * the reading direction. `text` is the formatted absolute amount.
+ */
+export const signedAmount = (n, text) => {
+  const sign = n > 0 ? '+' : n < 0 ? '−' : '';
+  return text.replace(/\d[\d.,]*/, (m) => ltr(`${sign}${m}`));
+};

@@ -6,18 +6,13 @@ import { useI18n } from '../../i18n/useI18n.js';
 import { useProject } from '../../state/projectContext.js';
 import { baselineComparison } from '../../state/scheduleModel.js';
 import { Button, EmptyState, StatCard, StatusBadge, Table, cx } from '../../ui/index.js';
-import { ltr } from '../bidi.js';
+import { signedAmount } from '../bidi.js';
 import { formatDay } from '../record/orderMeta.js';
 import { Page } from '../Page.jsx';
 import { SignOffDialog } from './LifecycleDialogs.jsx';
 import s from './Baseline.module.css';
 
-// '+26.5 مليون د.ع': only the signed number is isolated, so the sign stays
-// on the number and the words keep the reading direction.
-const signedMoney = (n, lang) => {
-  const sign = n > 0 ? '+' : n < 0 ? '−' : '';
-  return compactCurrency(Math.abs(n), lang).replace(/\d[\d.,]*/, (m) => ltr(`${sign}${m}`));
-};
+const signedMoney = (n, lang) => signedAmount(n, compactCurrency(Math.abs(n), lang));
 
 /**
  * /schedule/baseline — contract quantities and prices frozen at sign-off

@@ -68,6 +68,7 @@ export function Segmented({ options, value, onChange, label, block = false, clas
     >
       {options.map((o, i) => {
         const on = o.value === value;
+        const Icon = o.icon;
         return (
           <button
             key={o.value}
@@ -78,6 +79,7 @@ export function Segmented({ options, value, onChange, label, block = false, clas
             className={s.segment}
             onClick={() => onChange(o.value)}
           >
+            {Icon && <Icon size={16} aria-hidden="true" />}
             {o.label}
           </button>
         );

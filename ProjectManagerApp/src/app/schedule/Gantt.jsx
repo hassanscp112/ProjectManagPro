@@ -6,6 +6,7 @@ import { ZOOM_DAY_WIDTH, daysBetween, fieldLock, headerTiers } from '../../state
 import { Button, IconButton, cx } from '../../ui/index.js';
 import { formatDay } from '../record/orderMeta.js';
 import s from './Gantt.module.css';
+import { lockText } from './lockText.js';
 
 const COLS = {
   schedule: [
@@ -31,19 +32,6 @@ const DEP_TYPES = ['FS', 'SS', 'FF', 'SF'];
 
 const num = (n) => (n === 0 || n === null || n === undefined || n === '' ? '—' : formatNumber(n));
 const pct = (p) => `${(Math.min(1, Math.max(0, p || 0)) * 100).toFixed(1)}%`;
-
-/** Why a cell is locked, as tooltip text. */
-const lockText = (t, lock, field) => {
-  if (lock === 'boq') return t('gantt.lockedFromDetails');
-  if (lock === 'orders') return t('gantt.autoFromWorkOrders');
-  if (lock === 'dependency') return t('schedule.lockDependency');
-  if (lock === 'signed') {
-    if (field === 'unitPrice') return t('gantt.lockedContractPrice');
-    if (field === 'unit') return t('gantt.lockedContractUnit');
-    return t('gantt.lockedContractQty');
-  }
-  return '';
-};
 
 /**
  * Gantt: item grid (sticky at the reading start) + day-based timeline.

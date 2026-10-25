@@ -54,6 +54,10 @@
 }
 
 .segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: var(--ui-h-sm);
   padding: 0 var(--ui-space-4);
   border: 0;
