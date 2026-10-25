@@ -8,11 +8,21 @@ import s from './Shell.module.css';
  * Pass the rendered <Sidebar> and <BottomNav> in.
  */
 export function AppShell({ sidebar, bottomNav, children, className }) {
-  const { dir } = useI18n();
+  const { dir, t } = useI18n();
+  // Not an in-page #anchor: the hash holds the route, so focus the main column directly.
+  const skip = (e) => {
+    e.preventDefault();
+    document.getElementById('ui-main')?.focus();
+  };
   return (
     <div dir={dir} className={cx('ui-root', s.shell, !bottomNav && s.noBottomNav, className)}>
+      <a href="#ui-main" className="ui-skip-link" onClick={skip}>
+        {t('ui.skipToContent')}
+      </a>
       {sidebar}
-      <main className={s.main}>{children}</main>
+      <main id="ui-main" tabIndex={-1} className={s.main}>
+        {children}
+      </main>
       {bottomNav}
     </div>
   );

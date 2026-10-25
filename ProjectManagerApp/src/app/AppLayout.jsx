@@ -1,7 +1,6 @@
 import { CalendarRange } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import '../App.css';
 import { useI18n } from '../i18n/useI18n.js';
 import { useProject } from '../state/projectContext.js';
 import { AppShell, BottomNav, CommandPalette, Sidebar, useHotkey } from '../ui/index.js';

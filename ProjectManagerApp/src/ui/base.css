@@ -1,7 +1,18 @@
-/* Base styles for everything rendered inside the new UI.
-   Scoped to .ui-root (the app shell, from Phase 1) and .ui-portal
-   (dialogs, popovers and toasts rendered into <body>) so the legacy
-   screens keep their own globals until they are migrated. */
+/* Base styles. The page itself never scrolls: the app shell fills the
+   window and its main column scrolls (printing lets everything flow).
+   Everything else is scoped to .ui-root (the app shell) and .ui-portal
+   (dialogs, popovers and toasts rendered into <body>). */
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+body {
+  overflow: hidden;
+  background: var(--ui-canvas);
+}
 
 .ui-root,
 .ui-portal {
@@ -18,8 +29,8 @@
   background: var(--ui-canvas);
 }
 
-/* Portals live in <body>, which legacy CSS forces to RTL; take the
-   direction from <html dir> (set by I18nProvider) instead. */
+/* Portals live in <body>; take the direction from <html dir> (set by
+   I18nProvider). */
 :root[dir='ltr'] .ui-portal {
   direction: ltr;
 }
@@ -89,19 +100,72 @@
   }
 }
 
-/* Scrollbars follow the theme (the legacy global rule is light-only). */
+/* Thin scrollbars that follow the theme. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
 :where(.ui-root, .ui-portal) ::-webkit-scrollbar-thumb {
   background: var(--ui-border);
+  border-radius: 8px;
 }
 :where(.ui-root, .ui-portal) ::-webkit-scrollbar-thumb:hover {
   background: var(--ui-text-2);
 }
 
+/* Keyboard focus: a visible ring on anything focusable that has no ring
+   of its own (component styles override this low-specificity default). */
+:where(.ui-root, .ui-portal) :where(a, button, [tabindex], summary):focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+
+/* "Skip to content": hidden until focused with the keyboard. */
+.ui-skip-link {
+  position: absolute;
+  inset-inline-start: var(--ui-space-3);
+  top: -100px;
+  z-index: 1000;
+  padding: var(--ui-space-2) var(--ui-space-4);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.ui-skip-link:focus {
+  top: var(--ui-space-3);
+}
+
 /* ── Print ──
    Paper is black on white with small accent touches. `.ui-no-print` hides
    on-screen controls; `.ui-print-sheet` marks what a printable page prints
-   and stays visible even where legacy CSS hides `body *` when printing. */
+   and stays visible when printing. */
 @media print {
+  /* Paper is always light, whatever the screen theme (the ID in :not()
+     outranks the theme selectors in tokens.css). */
+  :root:not(#print) {
+    --ui-canvas: #fff;
+    --ui-surface: #fff;
+    --ui-sunken: #f5f3f7;
+    --ui-border: #c9c4cf;
+    --ui-divider: #e1dee5;
+    --ui-track: #e1dee5;
+    --ui-text: #1d1823;
+    --ui-text-2: #55505c;
+    --ui-accent: #553285;
+    --ui-accent-soft: #ece6f5;
+    --ui-accent-ink: #553285;
+    --ui-success: #067647;
+    --ui-warning: #a44a00;
+    --ui-warning-soft: #fef0c7;
+    --ui-danger: #b42318;
+    --ui-color-scheme: light;
+  }
   @page {
     size: A4;
     margin: 12mm;

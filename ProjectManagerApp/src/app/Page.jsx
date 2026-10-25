@@ -1,4 +1,5 @@
 import { Languages } from 'lucide-react';
+import { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { useI18n } from '../i18n/useI18n.js';
 import { STATUS_KEYS } from '../state/projectModel.js';
@@ -68,11 +69,16 @@ export function Page({ area, fill = false, tabCounts, bare = false, children }) 
   const { t } = useI18n();
   const def = ALL_AREAS.find((a) => a.key === area);
   const tabs = AREA_TABS[area];
+  const title = def ? t(def.labelKey) : '';
+  // The window / tab title names the area (read first by screen readers).
+  useEffect(() => {
+    document.title = title ? `${title} · ${t('ui.projectName')}` : t('ui.projectName');
+  }, [title, t]);
   return (
     <div className={cx(s.page, fill && s.fill)}>
       {!bare && (
         <TopBar
-          title={def ? t(def.labelKey) : ''}
+          title={title}
           subtitle={`${t('ui.projectName')} · ${t('ui.projectContract')}`}
           actions={<GlobalActions />}
         />

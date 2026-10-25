@@ -42,6 +42,11 @@ rebuilt screens. Kept for reference; they import paths that may no longer exist.
 | `legacy-components/FileManager.jsx` + `.css` | `ProjectManagerApp/src/components/FileManager.*` | `src/app/library/FilesPage.jsx` (Phase 6) |
 | `legacy-components/orders/` | `ProjectManagerApp/src/components/orders/` (old Orders screen, unrouted since Phase 2) | `src/app/record/` (Phase 2) |
 | `Phase1-LegacyDialogs.jsx` | `ProjectManagerApp/src/app/legacy/LegacyDialogs.jsx` (identity picker wrapper) | `src/app/IdentityDialog.jsx` (Phase 6) |
+| `legacy-components/taskDetails/` | `ProjectManagerApp/src/components/taskDetails/` (full task details: read report + edit) | `src/app/schedule/TaskDetailsPage.jsx`, `TaskDetailsRead.jsx`, `TaskDetailsEdit.jsx` + `state/taskDetailsModel.js` (Phase 7) |
+| `Phase1-legacyPages.jsx` | `ProjectManagerApp/src/app/pages/legacyPages.jsx` (route wrappers that mounted old screens) | direct routes to `src/app/<area>/` pages (Phase 7) |
+| `legacy-components/LanguageSwitcher.jsx` | `ProjectManagerApp/src/i18n/LanguageSwitcher.jsx` (unused; hardcoded ternary caption, quirk #5) | the page-header language menu / Settings (`l.label`) |
+| `legacy-components/App.css`, `index.css` | `ProjectManagerApp/src/App.css`, `src/index.css` (legacy global styles, Inter web font) | `src/ui/base.css` (reset, page lock, scrollbars, focus ring, skip link, print) (Phase 7) |
+| `template-assets/` | `ProjectManagerApp/src/assets/` (hero.png, react.svg, vite.svg) and `public/icons.svg` — Vite template files, never used | — |
 
 ### `.agent/` *(gitignored — 243 MB)*
 "Antigravity Kit" AI-agent toolkit (20 agents / 36 skills / 11 workflows).

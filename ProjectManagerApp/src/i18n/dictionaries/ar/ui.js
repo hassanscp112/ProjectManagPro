@@ -78,4 +78,5 @@ export default {
   'ui.projectName': 'استصلاح أراضي واسط',
   'ui.projectContract': 'عقد 5 / 2023 · غرب الغراف · أيسر MC7',
   'ui.userUnset': 'من يستخدم التطبيق؟',
+  'ui.skipToContent': 'انتقل إلى المحتوى',
 };
