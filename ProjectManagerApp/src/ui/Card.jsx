@@ -47,10 +47,13 @@ export function Card({
   );
 }
 
-/** Headline number: muted label, big value (+ unit), optional footer line or extras. */
-export function StatCard({ label, value, unit, tone, footer, children, className, ...rest }) {
+/**
+ * Headline number: muted label, big value (+ unit), optional footer line or
+ * extras. `compact`: smaller number and padding (phone tiles side by side).
+ */
+export function StatCard({ label, value, unit, tone, footer, compact = false, children, className, ...rest }) {
   return (
-    <div {...rest} className={cx(s.card, s.padMd, s.stat, className)}>
+    <div {...rest} className={cx(s.card, compact ? s.padSm : s.padMd, s.stat, compact && s.statCompact, className)}>
       <span className={s.statLabel}>{label}</span>
       <div className={s.statValueRow}>
         <span className={cx(s.statValue, TONE[tone])}>{value}</span>

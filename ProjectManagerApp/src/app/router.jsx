@@ -4,6 +4,7 @@
 import { lazy, Suspense } from 'react';
 import { createHashRouter, Navigate } from 'react-router';
 import AppLayout from './AppLayout.jsx';
+import HomePage from './home/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
 import SchedulePage from './pages/SchedulePage.jsx';
 import RecordLogPage from './record/RecordLogPage.jsx';
@@ -15,7 +16,6 @@ import {
   DailyReportsPage,
   FilesPage,
   FinancePage,
-  HomePage,
   LookaheadPage,
   MonthlyReportPage,
   PeoplePage,

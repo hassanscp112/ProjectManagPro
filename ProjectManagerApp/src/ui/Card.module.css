@@ -84,6 +84,9 @@
   font-size: var(--ui-fs-md);
   color: var(--ui-text-2);
 }
+.statCompact .statValue {
+  font-size: var(--ui-fs-2xl);
+}
 .statFooter {
   font-size: var(--ui-fs-sm);
   color: var(--ui-text-2);

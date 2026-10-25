@@ -1,5 +1,6 @@
 import { ArrowLeft, Check, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useI18n } from '../../i18n/useI18n.js';
 import { latestOrder, repeatOrderDraft } from '../../state/orderForm.js';
 import { useProject } from '../../state/projectContext.js';
@@ -20,17 +21,26 @@ import s from './Record.module.css';
 export default function PhoneRecordFlow() {
   const { t, lang } = useI18n();
   const toast = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { orders, pendingApprovals } = useProject();
   const { setImmersive } = useShell();
-  const entry = useOrderEntry();
-  const [step, setStep] = useState('type');
-  const [saved, setSaved] = useState(null);
   const last = latestOrder(orders);
+  // Home's "repeat last order" arrives with { repeatLast: true } and opens the form directly.
+  const [repeatOnOpen] = useState(() => (location.state?.repeatLast && last ? repeatOrderDraft(last) : null));
+  const entry = useOrderEntry(repeatOnOpen);
+  const [step, setStep] = useState(repeatOnOpen ? 'form' : 'type');
+  const [saved, setSaved] = useState(null);
 
   useEffect(() => {
     setImmersive(step !== 'type');
     return () => setImmersive(false);
   }, [step, setImmersive]);
+
+  // Drop the one-shot request so Back / refresh don't reopen the form.
+  useEffect(() => {
+    if (location.state?.repeatLast) navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate]);
 
   const open = (draftOrType) => {
     if (typeof draftOrType === 'string') entry.start(draftOrType);

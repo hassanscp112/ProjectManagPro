@@ -7,10 +7,11 @@ import { ORDER_TYPES, addOrder, createOrderDraft, createOrderId, loadOrdersData 
  * The new-order draft: pick a type, edit fields, save. Saving validates
  * required fields (errors show only after a save attempt), stores the
  * order and returns it; the caller decides what comes next.
+ * `initialDraft` opens the form prefilled (e.g. "repeat last order").
  */
-export function useOrderEntry() {
+export function useOrderEntry(initialDraft = null) {
   const { tasks, identity } = useProject();
-  const [draft, setDraft] = useState(null);
+  const [draft, setDraft] = useState(initialDraft);
   const [showErrors, setShowErrors] = useState(false);
   const spec = draft ? ORDER_TYPES[draft.type] : null;
   const missing = useMemo(() => missingRequiredFields(draft, spec), [draft, spec]);

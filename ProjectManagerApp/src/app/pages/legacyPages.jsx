@@ -1,11 +1,10 @@
 // Route pages that mount the existing screens unchanged inside the new
 // shell (Phase 1). Each one is replaced by a rebuilt screen in its phase:
-// Home P3 · Schedule/Task P4 · Reports P5 · the rest P6.
+// Schedule/Task P4 · Reports P5 · the rest P6.
 
 import { Navigate, useNavigate, useParams } from 'react-router';
 import ActivityScreen from '../../components/activity/ActivityScreen';
 import CalculatorView from '../../components/calculator/CalculatorView';
-import Dashboard from '../../components/dashboard/Dashboard';
 import FileManager from '../../components/FileManager';
 import FinanceManager from '../../components/finance/FinanceManager';
 import PlanningScreen from '../../components/planning/PlanningScreen';
@@ -17,15 +16,6 @@ import TaskDetails from '../../components/taskDetails/TaskDetails';
 import TemplatesScreen from '../../components/templates/TemplatesScreen';
 import { useProject } from '../../state/projectContext.js';
 import { Page } from '../Page.jsx';
-
-export function HomePage() {
-  const { engineResult } = useProject();
-  return (
-    <Page area="home">
-      <Dashboard tasks={engineResult.tasks} summary={engineResult} />
-    </Page>
-  );
-}
 
 export function LookaheadPage() {
   const { tasks, engineResult, orders, registries } = useProject();
