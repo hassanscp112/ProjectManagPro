@@ -1,0 +1,616 @@
+/* ═══════════════════════════════════════════════════════
+   TemplatesScreen — التخطيط الآلي (النماذج / الأسعار / المحرر)
+   Uses global tokens: --bg-surface, --border-soft, --text-primary,
+   --text-secondary, --apple-blue-action, --apple-red, --apple-green
+   ═══════════════════════════════════════════════════════ */
+
+.templates-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  padding-bottom: 40px;
+}
+
+/* ---------- Header ---------- */
+.tpl-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tpl-page-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--apple-black);
+}
+
+.tpl-page-sub {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+/* ---------- Tabs ---------- */
+.tpl-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  width: fit-content;
+}
+
+.tpl-tab {
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, color 0.15s;
+}
+
+.tpl-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.tpl-tab.active {
+  background: var(--apple-blue-action);
+  color: #fff;
+}
+
+/* ---------- Notice ---------- */
+.tpl-notice {
+  background: #ECFDF5;
+  border: 1px solid var(--apple-green, #10B981);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #047857;
+}
+
+/* ---------- Body ---------- */
+.tpl-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- Template cards grid ---------- */
+.tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.tpl-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.tpl-card:hover {
+  border-color: var(--apple-blue-action);
+  background: var(--bg-hover);
+}
+
+.tpl-card.selected {
+  border-color: var(--apple-blue-action);
+  background: var(--bg-showcase);
+}
+
+.tpl-card-icon {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.tpl-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.tpl-card-name {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--text-primary);
+}
+
+.tpl-card-meta {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.tpl-card-delete {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tpl-card:hover .tpl-card-delete {
+  opacity: 1;
+}
+
+.tpl-card-delete:hover {
+  color: var(--apple-red);
+  border-color: var(--apple-red);
+}
+
+.tpl-empty {
+  grid-column: 1 / -1;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ---------- Detail panel ---------- */
+.tpl-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+}
+
+.tpl-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.tpl-detail-icon {
+  font-size: 1.8rem;
+}
+
+.tpl-detail-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--apple-black);
+  flex: 1;
+}
+
+.tpl-close-btn {
+  height: 30px;
+  padding: 0 14px;
+  font-size: 0.82rem;
+}
+
+/* ---------- Variable form ---------- */
+.tpl-vars-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.tpl-var-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tpl-var-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.tpl-input {
+  padding: 8px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  min-width: 0;
+}
+
+.tpl-input:focus {
+  outline: none;
+  border-color: var(--apple-blue-action);
+}
+
+/* ---------- Warning strip ---------- */
+.tpl-warning {
+  background: #fff8ef;
+  border: 1px solid #ff9f0a;
+  border-right: 3px solid #ff9f0a;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #b55b00;
+  line-height: 1.7;
+}
+
+/* ---------- Totals ---------- */
+.tpl-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.tpl-total-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.tpl-total-card.accent {
+  background: var(--bg-showcase);
+  border-color: var(--apple-blue-action);
+}
+
+.tpl-total-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.tpl-total-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--apple-black);
+  font-family: var(--font-mono);
+}
+
+/* ---------- Preview / rates table ---------- */
+.tpl-preview-wrap {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  overflow: auto;
+  max-height: 460px;
+  background: var(--bg-surface);
+}
+
+.tpl-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.tpl-preview-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  text-align: right;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+}
+
+.tpl-preview-table tbody td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+}
+
+.tpl-preview-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tpl-preview-table tbody tr:hover td {
+  background: var(--bg-hover);
+}
+
+.tpl-preview-table td.num {
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  direction: ltr;
+  text-align: right;
+}
+
+.tpl-preview-table tr.unpriced td.tpl-name-cell {
+  color: #b55b00;
+}
+
+.tpl-name-cell {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tpl-wbs {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  margin-left: 6px;
+}
+
+.tpl-table-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 20px !important;
+}
+
+/* ---------- Actions ---------- */
+.tpl-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+/* ---------- Rates tab ---------- */
+.tpl-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.tpl-search {
+  max-width: 320px;
+  flex: 1;
+}
+
+.tpl-rate-draft {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 1.2fr auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--apple-blue-action);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.tpl-rate-draft-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tpl-rate-draft-actions .apple-btn {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 0.85rem;
+}
+
+.tpl-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.tpl-mini-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.tpl-mini-btn:hover {
+  border-color: var(--apple-blue-action);
+  color: var(--apple-blue-action);
+}
+
+.tpl-mini-btn.danger:hover {
+  border-color: var(--apple-red);
+  color: var(--apple-red);
+}
+
+.tpl-cat-chip {
+  display: inline-block;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.tpl-note {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
+
+/* ---------- Editor tab ---------- */
+.tpl-editor-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+}
+
+.tpl-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--apple-black);
+}
+
+.tpl-sub-title {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.tpl-from-project {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tpl-from-project .tpl-input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.tpl-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.tpl-editor-head {
+  display: flex;
+  gap: 10px;
+}
+
+.tpl-name-input {
+  flex: 1;
+}
+
+.tpl-icon-input {
+  width: 90px;
+  text-align: center;
+}
+
+.tpl-vars-editor,
+.tpl-elements-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tpl-var-row {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.tpl-el-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+
+.tpl-el-main {
+  display: grid;
+  grid-template-columns: 1.6fr 1.4fr 1.8fr;
+  gap: 8px;
+}
+
+.tpl-el-deps {
+  display: grid;
+  grid-template-columns: 1.4fr 1.6fr 0.7fr 0.7fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.tpl-formula-input {
+  font-family: var(--font-mono);
+  direction: ltr;
+  text-align: left;
+}
+
+.tpl-lag-input {
+  font-family: var(--font-mono);
+}
+
+.tpl-add-btn {
+  align-self: flex-start;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 0.85rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .tpl-rate-draft {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tpl-el-main,
+  .tpl-el-deps {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tpl-var-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------- LTR (English) ----------
+   Base rules assume RTL; these surgical overrides flip the physical
+   alignments. Flex/grid order flips automatically via `direction`. */
+[dir="ltr"] .tpl-preview-table thead th {
+  text-align: left;
+}
+
+[dir="ltr"] .tpl-preview-table td.num {
+  text-align: left;
+}
+
+[dir="ltr"] .tpl-card-delete {
+  left: auto;
+  right: 6px;
+}
+
+[dir="ltr"] .tpl-warning {
+  border-right: 1px solid #ff9f0a;
+  border-left: 3px solid #ff9f0a;
+}
+
+[dir="ltr"] .tpl-wbs {
+  margin-left: 0;
+  margin-right: 6px;
+}
+

@@ -1,0 +1,733 @@
+/* ═══════════════════════════════════════════════════════════════════
+   TemplateEngine — نماذج الهياكل الإنشائية + مولّد المشاريع
+   Templates are parametric RECIPES (pure data): variables + elements.
+   generateProject() turns e.g. "بناية سكنية، 5 طوابق" into a full task
+   tree (App.jsx raw-task shape) with quantities, copy-on-generate prices
+   snapped from RateLibrary, productivity-based durations and FS/SS/FF/SF
+   dependency links — parallelism emerges purely from those links.
+
+   Storage: localStorage key 'pm-templates' → { templates: [...] }
+
+   ── ENGINEERING RATIOS used by the seeded templates ──────────────────
+   Concrete (solid slab)     ≈ 0.34 m3 / m2 of slab area
+   Concrete (flat slab)      ≈ 0.28 m3 / m2 (no downstand beams)
+   Columns + beams           ≈ 0.06 m3 / m2 per floor
+   Separate footings         ≈ 0.09–0.11 m3 / m2 of footprint
+   Blockwork total           ≈ 2.4 m2 wall / m2 floor
+     · internal partitions  ≈ 1.7–1.9 m2 / m2
+     · external face brick  ≈ 0.5–0.75 m2 / m2 (perimeter × height)
+   Plaster (تجليد)           ≈ 2 × blockwork area (both faces)
+   Paint (صبغة)              ≈ plaster area × 0.95
+   Floor tiles               ≈ 0.8–0.95 × floor area
+   Electrical points         ≈ 0.25–0.35 point / m2
+   Windows                   ≈ 0.12–0.20 m2 / m2 floor
+   Excavation                ≈ footprint × depth(1.5–2 m) × 1.2 bulking
+   Backfill                  ≈ 0.4 × excavated volume
+
+   ── DEPENDENCY MODEL ─────────────────────────────────────────────────
+   element.depOn references ANOTHER element (its index in elements[], as
+   number, numeric string, or the FIRST entry of an array). Optional
+   repetition selector suffix: '5@2' → element 5 at repetition 2,
+   '5@last' → element 5 at its last repetition (roof).
+   Rules applied by the generator:
+   1. Repeating section (repeatsVar, e.g. floors) → one copy per floor,
+      element names get " - الطابق N" suffix.
+   2. Element that repeats AND has depOn → a repeating target links to
+      the SAME copy (floor N slab follows floor N columns); a
+      NON-repeating target chains instead: floor N links to floor N-1
+      of the SAME element, FS with lag 7 (typical floor cycle).
+   3. Repeating element WITHOUT depOn → chains to its own previous copy
+      (FS + 7) for copies N > 1.
+   4. Non-repeating element → depOn target resolves to '@last' copy by
+      default (roof items follow the roof slab), or to an explicit
+      '@2' copy — used so finishes lag the structure by 2 floors with
+      SS + 30 days (≈ دورة طابقين هيكليين).
+   ═══════════════════════════════════════════════════════════════════ */
+
+import { loadRateLibrary, findRateByName } from './RateLibrary.js';
+
+export const STORAGE_KEY = 'pm-templates';
+
+/* Typical floor-cycle lag (days) between consecutive repeated floors. */
+export const FLOOR_CYCLE_LAG_DAYS = 7;
+const MAX_DURATION_DAYS = 365;
+
+const uid = () =>
+  typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `tpl_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+export const toISODate = (date) => {
+  const d = date instanceof Date ? date : new Date(date);
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${month}-${day}`;
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   PARTS catalog — productivity = quantity per day per standard crew
+   rateName matches a RateLibrary item name (price lookup).
+   ═══════════════════════════════════════════════════════════════════ */
+export const PARTS = [
+  { id: 'site-prep', name: 'تجهيز موقع', unit: 'م2', category: 'أعمال ترابية', productivity: 500, rateName: 'تجهيز موقع' },
+  { id: 'excavation', name: 'حفر عام', unit: 'م3', category: 'أعمال ترابية', productivity: 250, rateName: 'أعمال حفر عام' },
+  { id: 'base-course', name: 'طبقة أساس', unit: 'م3', category: 'أعمال ترابية', productivity: 60, rateName: 'طبقة أساس حجري' },
+  { id: 'backfill', name: 'دفن ترابي', unit: 'م3', category: 'أعمال ترابية', productivity: 200, rateName: 'دفن ترابي' },
+  { id: 'footings', name: 'قواعد منفصلة', unit: 'م3', category: 'خرسانة', productivity: 35, rateName: 'خرسانة جاهزة C25' },
+  { id: 'col-beams', name: 'جوائز وأعمدة', unit: 'م3', category: 'خرسانة', productivity: 30, rateName: 'خرسانة الهياكل C30' },
+  { id: 'flat-slab', name: 'سقف فلات', unit: 'م3', category: 'خرسانة', productivity: 35, rateName: 'خرسانة جاهزة C25' },
+  { id: 'solid-slab', name: 'سقف سوليد', unit: 'م3', category: 'خرسانة', productivity: 30, rateName: 'خرسانة الهياكل C30' },
+  { id: 'balcony', name: 'بلكونات', unit: 'م3', category: 'خرسانة', productivity: 20, rateName: 'خرسانة جاهزة C25' },
+  { id: 'stairs', name: 'سلم', unit: 'م3', category: 'خرسانة', productivity: 8, rateName: 'خرسانة الهياكل C30' },
+  { id: 'block-internal', name: 'جدار بلوك داخلي', unit: 'م2', category: 'بناء', productivity: 80, rateName: 'بلوك 15 سم' },
+  { id: 'brick-external', name: 'جدار طابوق خارجي', unit: 'م2', category: 'بناء', productivity: 60, rateName: 'مباني طابوق وجه خارجي' },
+  { id: 'plaster-internal', name: 'تجليد داخلي', unit: 'م2', category: 'تشطيبات', productivity: 150, rateName: 'تجليد داخلي (بلاستر)' },
+  { id: 'plaster-external', name: 'تجليد خارجي', unit: 'م2', category: 'تشطيبات', productivity: 120, rateName: 'تجليد خارجي' },
+  { id: 'paint', name: 'صبغة', unit: 'م2', category: 'تشطيبات', productivity: 250, rateName: 'صبغة بلاستيكية' },
+  { id: 'tiles', name: 'بلاط', unit: 'م2', category: 'تشطيبات', productivity: 120, rateName: 'بلاط أرضي' },
+  { id: 'waterproofing', name: 'عزل مائي', unit: 'م2', category: 'عزل', productivity: 100, rateName: 'عزل مائي' },
+  { id: 'thermal', name: 'عزل حراري', unit: 'م2', category: 'عزل', productivity: 120, rateName: 'عزل حراري' },
+  { id: 'gypsum', name: 'سقف جبس', unit: 'م2', category: 'تشطيبات', productivity: 90, rateName: 'سقف جبس' },
+  { id: 'electrical', name: 'أعمال كهربائية', unit: 'نقطة', category: 'كهرباء', productivity: 40, rateName: 'أعمال كهربائية (نقطة)' },
+  { id: 'plumbing', name: 'أعمال صحية', unit: 'قطعة', category: 'صحية', productivity: 2, rateName: 'أعمال صحية (تجهيزات)' },
+  { id: 'doors', name: 'أبواب خشبية', unit: 'عدد', category: 'أبواب ونوافذ', productivity: 4, rateName: 'باب خشبي' },
+  { id: 'windows', name: 'شبابيك ألمنيوم', unit: 'م2', category: 'أبواب ونوافذ', productivity: 15, rateName: 'شباك ألمنيوم' },
+  { id: 'facade', name: 'واجهة', unit: 'م2', category: 'أبواب ونوافذ', productivity: 25, rateName: 'واجهات كلادينغ' },
+  { id: 'canopy', name: 'مظلة سقف', unit: 'م2', category: 'أبواب ونوافذ', productivity: 30, rateName: 'مظلة معدنية (ساندويج بانل)' },
+];
+
+const PART_BY_ID = new Map(PARTS.map((p) => [p.id, p]));
+
+/* ═══════════════════════════════════════════════════════════════════
+   Formula evaluator — tiny sandboxed JS arithmetic on variables.
+   Only digits, identifiers, + - * / ( ) . , and whitespace are allowed;
+   every identifier must be a variable key or a whitelisted Math helper.
+   Returns a non-negative number rounded to 2 decimals, or 0 on error.
+   ═══════════════════════════════════════════════════════════════════ */
+const ALLOWED_GLOBAL_IDENTIFIERS = new Set([
+  'Math', 'ceil', 'floor', 'round', 'min', 'max', 'abs', 'sqrt', 'pow', 'PI', 'E',
+]);
+
+export const evaluateFormula = (expr, vars) => {
+  if (expr === null || expr === undefined) return 0;
+  const src = String(expr).trim();
+  if (src === '') return 0;
+  if (!/^[0-9A-Za-z_+\-*/().,\s]+$/.test(src)) return 0;
+
+  const varNames = Object.keys(vars);
+  const identifiers = src.match(/[A-Za-z_][A-Za-z0-9_]*/g) || [];
+  const unknown = identifiers.find((id) => !varNames.includes(id) && !ALLOWED_GLOBAL_IDENTIFIERS.has(id));
+  if (unknown) return 0;
+
+  try {
+    const fn = new Function(...varNames, `"use strict"; return (${src});`);
+    const value = Number(fn(...varNames.map((k) => Number(vars[k]) || 0)));
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    return Math.round(value * 100) / 100;
+  } catch {
+    return 0;
+  }
+};
+
+/* depOn accepts: number | numeric string | 'idx@rep' | array (first entry). */
+const parseDepOn = (depOn) => {
+  let raw = Array.isArray(depOn) ? depOn[0] : depOn;
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === 'number' && Number.isFinite(raw)) return { index: raw, rep: null };
+  const str = String(raw).trim();
+  if (str === '') return null;
+  const match = str.match(/^(\d+)(?:@(\d+|last))?$/);
+  if (!match) return null;
+  return {
+    index: parseInt(match[1], 10),
+    rep: match[2] === undefined ? null : match[2] === 'last' ? 'last' : parseInt(match[2], 10),
+  };
+};
+
+/* Elements are grouped into sections by their `group` name (template order). */
+const buildSections = (elements) => {
+  const sections = [];
+  const byName = new Map();
+  elements.forEach((el, index) => {
+    const name = (el && el.group) || 'أعمال عامة';
+    if (!byName.has(name)) {
+      const section = { name, elements: [] };
+      byName.set(name, section);
+      sections.push(section);
+    }
+    byName.get(name).elements.push({ ...el, index });
+  });
+  return sections;
+};
+
+const sectionRepeatCount = (section, vars) => {
+  let repeat = 1;
+  section.elements.forEach((el) => {
+    if (!el.repeatsVar) return;
+    const v = Math.floor(Number(vars[el.repeatsVar]));
+    if (Number.isFinite(v) && v > repeat) repeat = v;
+  });
+  return repeat;
+};
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+/* ═══════════════════════════════════════════════════════════════════
+   generateProject(template, values, { startDate, rateLibrary, wbsOffset })
+   → { tasks: [...App.jsx raw-task shape...],
+       stats: { taskCount, groupCount, leafCount, totalCost, pricedCount, unpriced: [names] } }
+   ═══════════════════════════════════════════════════════════════════ */
+export const generateProject = (template, values = {}, options = {}) => {
+  const startDate =
+    typeof options.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(options.startDate)
+      ? options.startDate
+      : toISODate(new Date());
+  const rateItems =
+    Array.isArray(options.rateLibrary) && options.rateLibrary.length > 0
+      ? options.rateLibrary
+      : loadRateLibrary();
+  const parsedOffset = parseInt(options.wbsOffset, 10);
+  const wbsOffset = Number.isFinite(parsedOffset) ? Math.max(0, parsedOffset) : 1;
+
+  const vars = {};
+  (template.variables || []).forEach((v) => {
+    const raw = values ? values[v.key] : undefined;
+    const num = raw === undefined || raw === null || raw === '' ? Number(v.default) : Number(raw);
+    vars[v.key] = Number.isFinite(num) ? num : 0;
+  });
+
+  const elements = (template.elements || []).filter(Boolean);
+  const sections = buildSections(elements);
+
+  const tasks = [];
+  const wires = []; // { el, r } — one entry per generated leaf, for dep wiring
+  const instanceByKey = new Map(); // `${elementIndex}#${repetition}` → task
+  const stats = { taskCount: 0, groupCount: 0, leafCount: 0, totalCost: 0, pricedCount: 0, unpriced: [] };
+
+  const sectionRepeatByElement = new Map();
+  sections.forEach((section) => {
+    const repeat = sectionRepeatCount(section, vars);
+    section.elements.forEach((el) => sectionRepeatByElement.set(el.index, repeat));
+  });
+
+  let sectionNumber = wbsOffset;
+  sections.forEach((section) => {
+    const repeat = sectionRepeatCount(section, vars) || 1;
+    for (let r = 1; r <= repeat; r += 1) {
+      const suffix = repeat > 1 ? ` - الطابق ${r}` : '';
+      const sectionTask = {
+        id: uid(),
+        wbs: String(sectionNumber),
+        name: section.name + suffix,
+        isGroup: true,
+        manualStart: null,
+        duration: 1,
+        quantity: 0,
+        actualQuantity: 0,
+        unitPrice: 0,
+        unit: '',
+        dependsOn: null,
+        depType: '',
+        lag: 0,
+      };
+      tasks.push(sectionTask);
+      sectionNumber += 1;
+
+      // Sub-group stack for element-level (isGroup) nodes; attach() assigns wbs.
+      const sectionNode = { task: sectionTask, childCount: 0 };
+      const stack = [];
+      const attach = (node) => {
+        const parent = stack.length > 0 ? stack[stack.length - 1] : sectionNode;
+        parent.childCount += 1;
+        node.task.wbs = `${parent.task.wbs}.${parent.childCount}`;
+      };
+
+      section.elements.forEach((el) => {
+        const repeats = !!el.repeatsVar;
+
+        if (el.isGroup) {
+          if (r !== repeat) return; // sub-groups live in the final copy only
+          const depth = Math.max(1, parseInt(el.depth, 10) || 1);
+          while (stack.length >= depth) stack.pop();
+          const groupTask = {
+            id: uid(),
+            wbs: '',
+            name: el.name || 'مجموعة',
+            isGroup: true,
+            manualStart: null,
+            duration: 1,
+            quantity: 0,
+            actualQuantity: 0,
+            unitPrice: 0,
+            unit: '',
+            dependsOn: null,
+            depType: '',
+            lag: 0,
+          };
+          const node = { task: groupTask, childCount: 0 };
+          attach(node);
+          stack.push(node);
+          tasks.push(groupTask);
+          return;
+        }
+
+        // Leaves: repeating elements emit in every copy, others in the last only.
+        if (!repeats && r !== repeat) return;
+
+        const part = el.partId ? PART_BY_ID.get(el.partId) : null;
+        const name = (el.name || (part ? part.name : 'بند')) + (repeats ? suffix : '');
+        const qty = evaluateFormula(el.qtyFormula, vars);
+        const unit = el.unit || (part ? part.unit : '');
+
+        // Copy-on-generate price snapshot (fixedUnitPrice wins, then rate lookup).
+        let unitPrice = 0;
+        let priced = false;
+        const fixed = Number(el.fixedUnitPrice);
+        if (Number.isFinite(fixed) && fixed > 0) {
+          unitPrice = fixed;
+          priced = true;
+        }
+        if (!priced) {
+          const rateName = el.rateName || (part ? part.rateName : null);
+          const rate = rateName ? findRateByName(rateItems, rateName) : null;
+          if (rate) {
+            unitPrice = Math.max(0, Number(rate.unitPrice) || 0);
+            priced = true;
+          }
+        }
+        if (priced) stats.pricedCount += 1;
+        else stats.unpriced.push(name);
+
+        // Productivity-based duration: ceil(qty / productivity), 1..365 days.
+        let productivity = Number(el.productivity);
+        if (!Number.isFinite(productivity) || productivity <= 0) {
+          productivity = part ? part.productivity : 0;
+        }
+        let duration = 1;
+        if (qty > 0 && productivity > 0) {
+          duration = clamp(Math.ceil(qty / productivity), 1, MAX_DURATION_DAYS);
+        }
+
+        const task = {
+          id: uid(),
+          wbs: '',
+          name,
+          isGroup: false,
+          manualStart: null,
+          duration,
+          quantity: qty,
+          actualQuantity: 0,
+          unitPrice,
+          unit,
+          dependsOn: null,
+          depType: '',
+          lag: 0,
+        };
+        attach({ task, childCount: 0 });
+        tasks.push(task);
+        instanceByKey.set(`${el.index}#${repeats ? r : 1}`, task);
+        wires.push({ el, r: repeats ? r : 1 });
+        stats.totalCost += qty * unitPrice;
+      });
+    }
+  });
+
+  // ── Dependency wiring (second pass, after every instance exists) ──
+  const resolveLink = (el, r) => {
+    const parsed = parseDepOn(el.depOn);
+    if (!parsed) return null;
+    const targetEl = elements[parsed.index];
+    if (!targetEl || targetEl.isGroup) return null;
+
+    const targetRepeat = sectionRepeatByElement.get(parsed.index) || 1;
+    const targetRepeats = !!targetEl.repeatsVar && targetRepeat > 1;
+    const sourceRepeats = !!el.repeatsVar;
+
+    if (!targetRepeats && sourceRepeats && r > 1) {
+      // Non-repeating target (e.g. footings) + floor N > 1 → chain the floor
+      // cycle: same element of floor N-1, FS + 7 days.
+      return { task: instanceByKey.get(`${el.index}#${r - 1}`), depType: 'FS', lag: FLOOR_CYCLE_LAG_DAYS };
+    }
+
+    let key;
+    if (targetRepeats) {
+      let tr;
+      if (sourceRepeats) {
+        tr = clamp(r, 1, targetRepeat); // same floor copy
+      } else if (parsed.rep === 'last' || parsed.rep === null) {
+        tr = targetRepeat; // roof items follow the top floor
+      } else {
+        tr = clamp(parsed.rep, 1, targetRepeat); // explicit '@n'
+      }
+      key = `${parsed.index}#${tr}`;
+    } else {
+      key = `${parsed.index}#1`;
+    }
+    const task = instanceByKey.get(key);
+    if (!task) return null;
+    return { task, depType: el.depType || 'FS', lag: Number(el.lag) || 0 };
+  };
+
+  wires.forEach(({ el, r }) => {
+    const task = instanceByKey.get(`${el.index}#${r}`);
+    if (!task) return;
+    let link = resolveLink(el, r);
+    if (!link && el.repeatsVar && r > 1) {
+      link = { task: instanceByKey.get(`${el.index}#${r - 1}`), depType: 'FS', lag: FLOOR_CYCLE_LAG_DAYS };
+    }
+    if (link && link.task && link.task.id !== task.id) {
+      task.dependsOn = link.task.id;
+      task.depType = link.depType;
+      task.lag = link.lag;
+    }
+  });
+
+  // Anchor tasks without dependencies at the chosen start date
+  // (the Gantt engine defaults null manualStart to the project start).
+  tasks.forEach((task) => {
+    if (!task.isGroup && !task.dependsOn) task.manualStart = startDate;
+  });
+
+  stats.taskCount = tasks.length;
+  stats.groupCount = tasks.filter((t) => t.isGroup).length;
+  stats.leafCount = tasks.length - stats.groupCount;
+  return { tasks, stats };
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   makeTemplateFromTasks(tasks, name) — "save project as template".
+   Extracts a minimal template: every top-level WBS group becomes a
+   section, deeper groups become isGroup elements (with depth), leaves
+   become elements whose qtyFormula is the fixed quantity (a constant —
+   no variables). unitPrice is snapshotted via fixedUnitPrice so the
+   template reproduces the project's prices on regeneration.
+   ═══════════════════════════════════════════════════════════════════ */
+const compareWbsNumeric = (a, b) => {
+  const ap = String(a).split('.').map((n) => parseInt(n, 10) || 0);
+  const bp = String(b).split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(ap.length, bp.length); i += 1) {
+    const av = ap[i] || 0;
+    const bv = bp[i] || 0;
+    if (av !== bv) return av - bv;
+  }
+  return 0;
+};
+
+export const makeTemplateFromTasks = (tasks, name) => {
+  const sorted = (Array.isArray(tasks) ? tasks : [])
+    .filter((t) => t && t.wbs)
+    .sort((a, b) => compareWbsNumeric(a.wbs, b.wbs));
+
+  const topGroups = sorted.filter((t) => t.isGroup && !String(t.wbs).includes('.'));
+  const sectionNameOf = (task) => {
+    const top = String(task.wbs).split('.')[0];
+    const group = topGroups.find((g) => g.wbs === top);
+    return group ? group.name : 'أعمال عامة';
+  };
+
+  const elements = [];
+  sorted.forEach((task) => {
+    const depth = String(task.wbs).split('.').length;
+    if (task.isGroup && depth === 1) return; // the section itself
+    if (task.isGroup) {
+      elements.push({
+        partId: null,
+        name: task.name || 'مجموعة',
+        qtyFormula: '',
+        group: sectionNameOf(task),
+        repeatsVar: null,
+        depOn: null,
+        depType: '',
+        lag: 0,
+        isGroup: true,
+        depth: depth - 1,
+      });
+      return;
+    }
+    const qty = Math.max(0, Number(task.quantity) || 0);
+    const duration = Math.max(0, parseInt(task.duration, 10) || 0);
+    elements.push({
+      partId: null,
+      name: task.name || 'بند',
+      qtyFormula: String(qty),
+      group: sectionNameOf(task),
+      repeatsVar: null,
+      depOn: null,
+      depType: '',
+      lag: 0,
+      unit: task.unit || '',
+      fixedUnitPrice: Math.max(0, Number(task.unitPrice) || 0),
+      productivity: qty > 0 && duration > 0 ? Math.round((qty / duration) * 100) / 100 : 0,
+    });
+  });
+
+  return {
+    id: uid(),
+    name: (name && String(name).trim()) || 'نموذج من مشروع قائم',
+    icon: '📋',
+    variables: [],
+    elements,
+    version: 1,
+    createdAt: new Date().toISOString(),
+    source: 'project',
+  };
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   Seeded templates (created once, on first load, when the key is missing)
+   ═══════════════════════════════════════════════════════════════════ */
+const E = (partId, qtyFormula, group, extra = {}) => ({
+  partId,
+  qtyFormula,
+  group,
+  repeatsVar: null,
+  depOn: null,
+  depType: '',
+  lag: 0,
+  ...extra,
+});
+
+const schoolTemplate = () => ({
+  id: uid(),
+  name: 'مدرسة',
+  icon: '🏫',
+  version: 1,
+  createdAt: new Date().toISOString(),
+  source: 'seed',
+  variables: [
+    { key: 'floors', label: 'عدد الطوابق', default: 2 },
+    { key: 'classroomsPerFloor', label: 'عدد الصفوف في الطابق', default: 6 },
+    { key: 'areaPerFloor', label: 'مساحة الطابق (م2)', default: 750 },
+  ],
+  elements: [
+    /* 0 */ E('site-prep', 'areaPerFloor', 'تجهيز الموقع'),
+    /* 1 */ E('excavation', 'areaPerFloor*1.5*1.2', 'الأعمال الترابية', { depOn: 0, depType: 'FS', lag: 0 }),
+    /* 2 */ E('base-course', 'areaPerFloor*0.25', 'الأعمال الترابية', { depOn: 1, depType: 'FS', lag: 0 }),
+    /* 3 */ E('footings', 'areaPerFloor*0.09', 'الأساسات', { depOn: 2, depType: 'FS', lag: 3 }),
+    /* 4 */ E('col-beams', 'areaPerFloor*0.06', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 3, depType: 'FS', lag: 7 }),
+    /* 5 */ E('solid-slab', 'areaPerFloor*0.34', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 4, depType: 'FS', lag: 0 }),
+    /* 6 */ E('stairs', '2.5', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 5, depType: 'FS', lag: 7 }),
+    /* 7 */ E('backfill', 'areaPerFloor*0.72', 'الأعمال الترابية', { depOn: 3, depType: 'FS', lag: 0 }),
+    /* 8 */ E('block-internal', 'areaPerFloor*1.7', 'البناء والجدران', { depOn: '5@2', depType: 'SS', lag: 7 }),
+    /* 9 */ E('brick-external', 'areaPerFloor*0.7', 'البناء والجدران', { depOn: '5@2', depType: 'SS', lag: 0 }),
+    /* 10 */ E('plaster-internal', 'areaPerFloor*4.1', 'التشطيبات', { depOn: 8, depType: 'FS', lag: 3 }),
+    /* 11 */ E('plaster-external', 'areaPerFloor*0.7', 'التشطيبات', { depOn: 9, depType: 'FS', lag: 3 }),
+    /* 12 */ E('paint', 'areaPerFloor*2.4*2*0.95', 'التشطيبات', { depOn: 10, depType: 'FS', lag: 0 }),
+    /* 13 */ E('tiles', 'areaPerFloor*0.85', 'التشطيبات', { depOn: 10, depType: 'FS', lag: 7 }),
+    /* 14 */ E('gypsum', 'areaPerFloor*0.35', 'التشطيبات', { depOn: 10, depType: 'SS', lag: 3 }),
+    /* 15 */ E('waterproofing', 'areaPerFloor', 'العزل والتسقيف', { depOn: '5@last', depType: 'FS', lag: 3 }),
+    /* 16 */ E('thermal', 'areaPerFloor', 'العزل والتسقيف', { depOn: 15, depType: 'FS', lag: 0 }),
+    /* 17 */ E('canopy', 'areaPerFloor*0.12', 'العزل والتسقيف', { depOn: 15, depType: 'FS', lag: 7 }),
+    /* 18 */ E('electrical', 'areaPerFloor*0.25', 'الكهرباء والصحية', { depOn: '5@2', depType: 'SS', lag: 30 }),
+    /* 19 */ E('plumbing', 'classroomsPerFloor*0.5+4', 'الكهرباء والصحية', { depOn: 13, depType: 'FS', lag: 0 }),
+    /* 20 */ E('doors', 'classroomsPerFloor+2', 'الأبواب والنوافذ', { repeatsVar: 'floors', depOn: 10, depType: 'FS', lag: 0 }),
+    /* 21 */ E('windows', 'areaPerFloor*0.2', 'الأبواب والنوافذ', { depOn: 9, depType: 'SS', lag: 3 }),
+    /* 22 */ E('facade', 'areaPerFloor*0.25', 'الأبواب والنوافذ', { depOn: 11, depType: 'FS', lag: 7 }),
+  ],
+});
+
+const apartmentsTemplate = () => ({
+  id: uid(),
+  name: 'بناية سكنية (شقق)',
+  icon: '🏢',
+  version: 1,
+  createdAt: new Date().toISOString(),
+  source: 'seed',
+  variables: [
+    { key: 'floors', label: 'عدد الطوابق', default: 5 },
+    { key: 'apartmentsPerFloor', label: 'عدد الشقق في الطابق', default: 2 },
+    { key: 'areaPerApartment', label: 'مساحة الشقة (م2)', default: 100 },
+  ],
+  elements: [
+    /* 0 */ E('site-prep', 'apartmentsPerFloor*areaPerApartment', 'تجهيز الموقع'),
+    /* 1 */ E('excavation', 'apartmentsPerFloor*areaPerApartment*1.8*1.2', 'الأعمال الترابية', { depOn: 0, depType: 'FS', lag: 0 }),
+    /* 2 */ E('base-course', 'apartmentsPerFloor*areaPerApartment*0.3', 'الأعمال الترابية', { depOn: 1, depType: 'FS', lag: 0 }),
+    /* 3 */ E('footings', 'apartmentsPerFloor*areaPerApartment*0.1', 'الأساسات', { depOn: 2, depType: 'FS', lag: 3 }),
+    /* 4 */ E('col-beams', 'apartmentsPerFloor*areaPerApartment*0.065', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 3, depType: 'FS', lag: 7 }),
+    /* 5 */ E('flat-slab', 'apartmentsPerFloor*areaPerApartment*0.28', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 4, depType: 'FS', lag: 0 }),
+    /* 6 */ E('balcony', 'apartmentsPerFloor*0.5', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 5, depType: 'FS', lag: 7 }),
+    /* 7 */ E('stairs', '2', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 5, depType: 'FS', lag: 7 }),
+    /* 8 */ E('backfill', 'apartmentsPerFloor*areaPerApartment*0.86', 'الأعمال الترابية', { depOn: 3, depType: 'FS', lag: 0 }),
+    /* 9 */ E('block-internal', 'apartmentsPerFloor*areaPerApartment*1.9', 'البناء والجدران', { depOn: '5@2', depType: 'SS', lag: 7 }),
+    /* 10 */ E('brick-external', 'apartmentsPerFloor*areaPerApartment*0.5', 'البناء والجدران', { depOn: '5@2', depType: 'SS', lag: 0 }),
+    /* 11 */ E('plaster-internal', 'apartmentsPerFloor*areaPerApartment*4.2', 'التشطيبات', { depOn: 9, depType: 'FS', lag: 3 }),
+    /* 12 */ E('plaster-external', 'apartmentsPerFloor*areaPerApartment*0.5', 'التشطيبات', { depOn: 10, depType: 'FS', lag: 3 }),
+    /* 13 */ E('paint', 'apartmentsPerFloor*areaPerApartment*2.4*2*0.95', 'التشطيبات', { depOn: 11, depType: 'FS', lag: 0 }),
+    /* 14 */ E('tiles', 'apartmentsPerFloor*areaPerApartment*0.8', 'التشطيبات', { depOn: 11, depType: 'FS', lag: 7 }),
+    /* 15 */ E('gypsum', 'apartmentsPerFloor*areaPerApartment*0.65', 'التشطيبات', { depOn: 11, depType: 'SS', lag: 3 }),
+    /* 16 */ E('waterproofing', 'apartmentsPerFloor*areaPerApartment', 'العزل والتسقيف', { depOn: '5@last', depType: 'FS', lag: 3 }),
+    /* 17 */ E('thermal', 'apartmentsPerFloor*areaPerApartment', 'العزل والتسقيف', { depOn: 16, depType: 'FS', lag: 0 }),
+    /* 18 */ E('canopy', 'apartmentsPerFloor*areaPerApartment*0.06', 'العزل والتسقيف', { depOn: 16, depType: 'FS', lag: 7 }),
+    /* 19 */ E('electrical', 'apartmentsPerFloor*areaPerApartment*0.28', 'الكهرباء والصحية', { depOn: '5@2', depType: 'SS', lag: 30 }),
+    /* 20 */ E('plumbing', 'apartmentsPerFloor*2.5', 'الكهرباء والصحية', { depOn: 14, depType: 'FS', lag: 0 }),
+    /* 21 */ E('doors', 'apartmentsPerFloor*3', 'الأبواب والنوافذ', { repeatsVar: 'floors', depOn: 11, depType: 'FS', lag: 0 }),
+    /* 22 */ E('windows', 'apartmentsPerFloor*areaPerApartment*0.13', 'الأبواب والنوافذ', { depOn: 10, depType: 'SS', lag: 3 }),
+  ],
+});
+
+const mallTemplate = () => ({
+  id: uid(),
+  name: 'مول تجاري',
+  icon: '🏬',
+  version: 1,
+  createdAt: new Date().toISOString(),
+  source: 'seed',
+  variables: [
+    { key: 'floors', label: 'عدد الطوابق', default: 3 },
+    { key: 'areaPerFloor', label: 'مساحة الطابق (م2)', default: 1500 },
+  ],
+  elements: [
+    /* 0 */ E('site-prep', 'areaPerFloor', 'تجهيز الموقع'),
+    /* 1 */ E('excavation', 'areaPerFloor*2*1.2', 'الأعمال الترابية', { depOn: 0, depType: 'FS', lag: 0 }),
+    /* 2 */ E('base-course', 'areaPerFloor*0.3', 'الأعمال الترابية', { depOn: 1, depType: 'FS', lag: 0 }),
+    /* 3 */ E('footings', 'areaPerFloor*0.11', 'الأساسات', { depOn: 2, depType: 'FS', lag: 3 }),
+    /* 4 */ E('col-beams', 'areaPerFloor*0.055', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 3, depType: 'FS', lag: 7 }),
+    /* 5 */ E('flat-slab', 'areaPerFloor*0.3', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 4, depType: 'FS', lag: 0 }),
+    /* 6 */ E('stairs', '3', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 5, depType: 'FS', lag: 7 }),
+    /* 7 */ E('backfill', 'areaPerFloor*0.96', 'الأعمال الترابية', { depOn: 3, depType: 'FS', lag: 0 }),
+    /* 8 */ E('block-internal', 'areaPerFloor*1.1', 'البناء والجدران', { depOn: '5@2', depType: 'SS', lag: 7 }),
+    /* 9 */ E('brick-external', 'areaPerFloor*0.55', 'البناء والجدران', { depOn: '5@2', depType: 'SS', lag: 0 }),
+    /* 10 */ E('plaster-internal', 'areaPerFloor*2.8', 'التشطيبات', { depOn: 8, depType: 'FS', lag: 3 }),
+    /* 11 */ E('plaster-external', 'areaPerFloor*0.55', 'التشطيبات', { depOn: 9, depType: 'FS', lag: 3 }),
+    /* 12 */ E('paint', 'areaPerFloor*3.35*0.95', 'التشطيبات', { depOn: 10, depType: 'FS', lag: 0 }),
+    /* 13 */ E('tiles', 'areaPerFloor*0.95', 'التشطيبات', { depOn: 10, depType: 'FS', lag: 7 }),
+    /* 14 */ E('gypsum', 'areaPerFloor*0.5', 'التشطيبات', { depOn: 10, depType: 'SS', lag: 3 }),
+    /* 15 */ E('waterproofing', 'areaPerFloor', 'العزل والتسقيف', { depOn: '5@last', depType: 'FS', lag: 3 }),
+    /* 16 */ E('thermal', 'areaPerFloor', 'العزل والتسقيف', { depOn: 15, depType: 'FS', lag: 0 }),
+    /* 17 */ E('canopy', 'areaPerFloor*0.08', 'العزل والتسقيف', { depOn: 15, depType: 'FS', lag: 7 }),
+    /* 18 */ E('electrical', 'areaPerFloor*0.35', 'الكهرباء والصحية', { depOn: '5@2', depType: 'SS', lag: 30 }),
+    /* 19 */ E('plumbing', 'areaPerFloor/400+6', 'الكهرباء والصحية', { depOn: 13, depType: 'FS', lag: 0 }),
+    /* 20 */ E('doors', '8', 'الأبواب والنوافذ', { repeatsVar: 'floors', depOn: 10, depType: 'FS', lag: 0 }),
+    /* 21 */ E('windows', 'areaPerFloor*0.08', 'الأبواب والنوافذ', { depOn: 9, depType: 'SS', lag: 3 }),
+    /* 22 */ E('facade', 'areaPerFloor*0.55', 'الأبواب والنوافذ', { depOn: 11, depType: 'FS', lag: 7 }),
+  ],
+});
+
+const houseTemplate = () => ({
+  id: uid(),
+  name: 'بيت',
+  icon: '🏠',
+  version: 1,
+  createdAt: new Date().toISOString(),
+  source: 'seed',
+  variables: [{ key: 'area', label: 'المساحة (م2)', default: 150 }],
+  elements: [
+    /* 0 */ E('site-prep', 'area', 'تجهيز الموقع'),
+    /* 1 */ E('excavation', 'area*1.5*1.2', 'الأعمال الترابية', { depOn: 0, depType: 'FS', lag: 0 }),
+    /* 2 */ E('base-course', 'area*0.25', 'الأعمال الترابية', { depOn: 1, depType: 'FS', lag: 0 }),
+    /* 3 */ E('footings', 'area*0.1', 'الأساسات', { depOn: 2, depType: 'FS', lag: 3 }),
+    /* 4 */ E('col-beams', 'area*0.06', 'الهيكل الخرساني', { depOn: 3, depType: 'FS', lag: 7 }),
+    /* 5 */ E('solid-slab', 'area*0.34', 'الهيكل الخرساني', { depOn: 4, depType: 'FS', lag: 0 }),
+    /* 6 */ E('stairs', '2', 'الهيكل الخرساني', { depOn: 5, depType: 'FS', lag: 7 }),
+    /* 7 */ E('backfill', 'area*0.6', 'الأعمال الترابية', { depOn: 3, depType: 'FS', lag: 0 }),
+    /* 8 */ E('block-internal', 'area*1.8', 'البناء والجدران', { depOn: 5, depType: 'FS', lag: 7 }),
+    /* 9 */ E('brick-external', 'area*0.75', 'البناء والجدران', { depOn: 5, depType: 'FS', lag: 7 }),
+    /* 10 */ E('plaster-internal', 'area*4.35', 'التشطيبات', { depOn: 8, depType: 'FS', lag: 3 }),
+    /* 11 */ E('plaster-external', 'area*0.75', 'التشطيبات', { depOn: 9, depType: 'FS', lag: 3 }),
+    /* 12 */ E('paint', 'area*2.55*2*0.95', 'التشطيبات', { depOn: 10, depType: 'FS', lag: 0 }),
+    /* 13 */ E('tiles', 'area*0.85', 'التشطيبات', { depOn: 10, depType: 'FS', lag: 7 }),
+    /* 14 */ E('gypsum', 'area*0.45', 'التشطيبات', { depOn: 10, depType: 'SS', lag: 3 }),
+    /* 15 */ E('waterproofing', 'area', 'العزل والتسقيف', { depOn: 5, depType: 'FS', lag: 3 }),
+    /* 16 */ E('thermal', 'area', 'العزل والتسقيف', { depOn: 15, depType: 'FS', lag: 0 }),
+    /* 17 */ E('electrical', 'area*0.25', 'الكهرباء والصحية', { depOn: 5, depType: 'SS', lag: 21 }),
+    /* 18 */ E('plumbing', '4', 'الكهرباء والصحية', { depOn: 13, depType: 'FS', lag: 0 }),
+    /* 19 */ E('doors', '7', 'الأبواب والنوافذ', { depOn: 10, depType: 'FS', lag: 0 }),
+    /* 20 */ E('windows', 'area*0.12', 'الأبواب والنوافذ', { depOn: 9, depType: 'SS', lag: 3 }),
+  ],
+});
+
+const villaTemplate = () => ({
+  id: uid(),
+  name: 'فيلا',
+  icon: '🏡',
+  version: 1,
+  createdAt: new Date().toISOString(),
+  source: 'seed',
+  variables: [
+    { key: 'floors', label: 'عدد الطوابق', default: 2 },
+    { key: 'area', label: 'مساحة الطابق (م2)', default: 250 },
+  ],
+  elements: [
+    /* 0 */ E('site-prep', 'area', 'تجهيز الموقع'),
+    /* 1 */ E('excavation', 'area*1.6*1.2', 'الأعمال الترابية', { depOn: 0, depType: 'FS', lag: 0 }),
+    /* 2 */ E('base-course', 'area*0.28', 'الأعمال الترابية', { depOn: 1, depType: 'FS', lag: 0 }),
+    /* 3 */ E('footings', 'area*0.09', 'الأساسات', { depOn: 2, depType: 'FS', lag: 3 }),
+    /* 4 */ E('col-beams', 'area*0.07', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 3, depType: 'FS', lag: 7 }),
+    /* 5 */ E('solid-slab', 'area*0.34', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 4, depType: 'FS', lag: 0 }),
+    /* 6 */ E('balcony', '5', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 5, depType: 'FS', lag: 7 }),
+    /* 7 */ E('stairs', '2.5', 'الهيكل الخرساني', { repeatsVar: 'floors', depOn: 5, depType: 'FS', lag: 7 }),
+    /* 8 */ E('backfill', 'area*0.77', 'الأعمال الترابية', { depOn: 3, depType: 'FS', lag: 0 }),
+    /* 9 */ E('block-internal', 'area*1.6', 'البناء والجدران', { depOn: '5@2', depType: 'SS', lag: 7 }),
+    /* 10 */ E('brick-external', 'area*0.65', 'البناء والجدران', { depOn: '5@2', depType: 'SS', lag: 0 }),
+    /* 11 */ E('plaster-internal', 'area*3.85', 'التشطيبات', { depOn: 9, depType: 'FS', lag: 3 }),
+    /* 12 */ E('plaster-external', 'area*0.65', 'التشطيبات', { depOn: 10, depType: 'FS', lag: 3 }),
+    /* 13 */ E('paint', 'area*2.25*2*0.95', 'التشطيبات', { depOn: 11, depType: 'FS', lag: 0 }),
+    /* 14 */ E('tiles', 'area*0.9', 'التشطيبات', { depOn: 11, depType: 'FS', lag: 7 }),
+    /* 15 */ E('gypsum', 'area*0.7', 'التشطيبات', { depOn: 11, depType: 'SS', lag: 3 }),
+    /* 16 */ E('waterproofing', 'area', 'العزل والتسقيف', { depOn: '5@last', depType: 'FS', lag: 3 }),
+    /* 17 */ E('thermal', 'area', 'العزل والتسقيف', { depOn: 16, depType: 'FS', lag: 0 }),
+    /* 18 */ E('canopy', 'area*0.06', 'العزل والتسقيف', { depOn: 16, depType: 'FS', lag: 7 }),
+    /* 19 */ E('electrical', 'area*0.3', 'الكهرباء والصحية', { depOn: '5@2', depType: 'SS', lag: 30 }),
+    /* 20 */ E('plumbing', 'floors*3', 'الكهرباء والصحية', { depOn: 14, depType: 'FS', lag: 0 }),
+    /* 21 */ E('doors', '6', 'الأبواب والنوافذ', { repeatsVar: 'floors', depOn: 11, depType: 'FS', lag: 0 }),
+    /* 22 */ E('windows', 'area*0.15', 'الأبواب والنوافذ', { depOn: 10, depType: 'SS', lag: 3 }),
+    /* 23 */ E('facade', 'area*0.2', 'الأبواب والنوافذ', { depOn: 12, depType: 'FS', lag: 7 }),
+  ],
+});
+
+const SEED_TEMPLATES = [schoolTemplate, apartmentsTemplate, mallTemplate, houseTemplate, villaTemplate];
+
+/* ═══════════════════════════════════════════════════════════════════
+   Storage API
+   ═══════════════════════════════════════════════════════════════════ */
+const readStore = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeStore = (templates) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ templates }));
+  } catch {
+    /* ignore write failures */
+  }
+};
+
+export const listTemplates = () => {
+  const store = readStore();
+  if (store && Array.isArray(store.templates)) return store.templates;
+  const seeded = SEED_TEMPLATES.map((factory) => factory());
+  writeStore(seeded);
+  return seeded;
+};
+
+export const saveTemplate = (template) => {
+  const clean = {
+    ...template,
+    id: template.id || uid(),
+    name: template.name || 'نموذج بدون اسم',
+    icon: template.icon || '🏗️',
+    variables: Array.isArray(template.variables) ? template.variables : [],
+    elements: Array.isArray(template.elements) ? template.elements : [],
+    version: template.version || 1,
+    createdAt: template.createdAt || new Date().toISOString(),
+  };
+  const existing = listTemplates();
+  const idx = existing.findIndex((t) => t.id === clean.id);
+  const next =
+    idx >= 0
+      ? existing.map((t) => (t.id === clean.id ? clean : t))
+      : [...existing, clean];
+  writeStore(next);
+  return clean;
+};
+
+export const deleteTemplate = (id) => {
+  const next = listTemplates().filter((t) => t.id !== id);
+  writeStore(next);
+  return next;
+};
