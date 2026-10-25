@@ -1,0 +1,246 @@
+/* ═══════════════════════════════════════════════════════
+   SnapshotsScreen — daily + named whole-state checkpoints
+   House tokens: --bg-surface, --border-soft, --text-primary,
+   --text-secondary, --apple-red, --apple-green
+   ═══════════════════════════════════════════════════════ */
+
+.snapshots-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* ── header ── */
+
+.snaps-header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+.snaps-header p {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  max-width: 720px;
+}
+
+/* ── summary strip ── */
+
+.snaps-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.snaps-stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: var(--shadow-level-1);
+}
+
+.snaps-stat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.snaps-stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ── sections ── */
+
+.snaps-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.snaps-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.snaps-section-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.snaps-section-count {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.snaps-section-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* ── empty state ── */
+
+.snaps-empty {
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 22px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+/* ── create row (inline name input + button) ── */
+
+.snaps-create-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.snaps-name-input {
+  flex: 1;
+  min-width: 260px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  background: var(--bg-app);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.snaps-name-input:focus {
+  outline: none;
+  border-color: var(--apple-blue-action);
+}
+
+.snaps-name-input.inline {
+  min-width: 200px;
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--bg-surface);
+}
+
+/* ── tables (house style: flat white card, gray header band) ── */
+
+.snaps-table-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  box-shadow: var(--shadow-level-1);
+}
+
+.snaps-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.snaps-table thead th {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: right;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+/* LTR: headers lead from the left like the cell content (which follows dir) */
+[dir='ltr'] .snapshots-table thead th {
+  text-align: left;
+}
+
+.snaps-table tbody td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--bg-hover);
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+
+.snaps-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.snaps-table tbody tr:hover td {
+  background: var(--bg-hover);
+}
+
+.snaps-date-cell {
+  white-space: nowrap;
+}
+
+.snaps-time {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.snaps-name-cell {
+  font-weight: 700;
+  min-width: 180px;
+}
+
+/* ── row actions ── */
+
+.snaps-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Compact variant of the house button so table rows stay tight */
+.apple-btn.snaps-action-btn {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+}
+
+/* ── scope note card ── */
+
+.snaps-note {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-right: 3px solid var(--apple-blue-action);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+/* LTR: the accent edge leads from the left */
+[dir='ltr'] .snaps-note {
+  border-right: 1px solid var(--border-soft);
+  border-left: 3px solid var(--apple-blue-action);
+}
+
+.snaps-note strong {
+  color: var(--text-primary);
+}
