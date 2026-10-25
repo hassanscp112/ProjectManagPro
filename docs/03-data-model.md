@@ -2,7 +2,7 @@
 
 There is **no server and no database**. Everything is stored in the browser:
 
-- **localStorage** — all structured data (15 keys, listed first)
+- **localStorage** — all structured data (16 keys, listed first)
 - **IndexedDB** (`ProjectManagerDB`) — uploaded file blobs only
 
 > If you add a new localStorage key, you MUST register it in
@@ -16,9 +16,9 @@ There is **no server and no database**. Everything is stored in the browser:
 |---|-----|--------------|---------------|
 | 1 | `project-manager-gantt-tasks` | ProjectProvider | Task tree (raw array) |
 | 2 | `project-manager-project-meta` | ProjectProvider | status / baseline / variations |
-| 3 | `project-manager-finance-data` | FinanceManager | cost ledger entries |
-| 4 | `project-manager-finance-config` | FinanceManager | editable dropdown lists |
-| 5 | `pm-calculator-templates` | CalculatorView | BOQ calculator templates |
+| 3 | `project-manager-finance-data` | Finance | cost ledger entries |
+| 4 | `project-manager-finance-config` | Finance | editable dropdown lists |
+| 5 | `pm-calculator-templates` | CalculatorTemplates | BOQ calculator templates |
 | 6 | `project-manager-daily-reports` | DailyNotes | daily site notes |
 | 7 | `pm-orders` | OrderEngine | order ledger + lastWhoByType |
 | 8 | `pm-registries` | Registries | contractors / teams / workers |
@@ -29,6 +29,7 @@ There is **no server and no database**. Everything is stored in the browser:
 | 13 | `pm-activity` | ActivityLog | app event log (cap 2000) |
 | 14 | `pm-snapshots` | Snapshots | auto (14 days) + named snapshots |
 | 15 | `pm-language` | i18n | `'ar'` \| `'en'` |
+| 16 | `pm-theme` | Theme | `'light'` \| `'dark'` \| `'system'` (default light) |
 
 ---
 

@@ -49,7 +49,7 @@ The rules that prevent mistakes. Read this before changing anything.
 | 1 | `exceljs` and `mathjs` are in package.json but **imported nowhere** | package.json | Don't assume Excel export or mathjs exists; removing them is safe if desired |
 | 2 | `PROJECT_START = '2025-08-02'` is a hardcoded constant | `src/state/projectModel.js` | New projects must edit this |
 | 3 | ~~Topbar breadcrumb is a hardcoded Arabic string~~ **fixed in Phase 1** | — | Project name/contract now `ui.projectName` / `ui.projectContract` |
-| 4 | Payroll compares raw `'مستقطع'` data value | FinanceManager | Stored data value — don't translate the comparison |
+| 4 | Payroll compares raw `'مستقطع'` data value | `state/financeModel.js` (`DEDUCTED_STATUS`) | Stored data value — don't translate the comparison |
 | 5 | LanguageSwitcher caption is a ternary `ar ? 'عربي' : 'EN'` | LanguageSwitcher.jsx | Breaks for a 3rd language — use `l.label` |
 | 6 | ~~No router~~ **fixed in Phase 1** — hash routes | `src/app/router.jsx` | Refresh and links keep the screen; use `#/…` hrefs or `useNavigate()` |
 | 7 | Snapshots cover tasks + projectMeta ONLY | Snapshots.js | Orders/finance NOT in snapshots (full safety = JSON backup) |
@@ -93,14 +93,20 @@ The rules that prevent mistakes. Read this before changing anything.
   (`src/app/schedule/`: timeline, task panel, lookahead, baseline, sign-off and
   VO dialogs) and Reports (`src/app/reports/`: daily, monthly, activity; print
   styles); Finance, Library, People and Settings are still the legacy screens
-  mounted inside the shell. Next: Phase 6. Plan: `plans/ui-rebuild-plan.md`.
-- **Theme:** the app forces `data-theme="light"` (`main.jsx`) until the theme
-  setting ships in Phase 6, because legacy screens are light-only.
-- **Tests:** 14 test files (132 tests), all pure-logic (engines, project model, order form, home model,
-  schedule model, lookahead model, reports model, task ranking, who selection, ar/en dictionary parity); no component tests.
+  mounted inside the shell. Phase 6 rebuilt Finance (`src/app/finance/`),
+  Library (`src/app/library/`), People (`src/app/people/`) and Settings
+  (`src/app/settings/`) and the identity dialog; the only legacy screen left
+  is the full task details page. Next: Phase 7 (polish + cleanup).
+- **Theme:** Settings → Appearance (Light / Dark / Device), stored in
+  `pm-theme`, applied in `main.jsx`. The legacy full task details page is
+  light-only, so it sets `data-theme="light"` while open and restores the
+  theme on leaving.
+- **Tests:** 17 test files (143 tests), all pure-logic (engines, project model, order form, home model,
+  schedule model, lookahead model, reports model, finance / library / people models, task ranking, who selection, ar/en dictionary parity); no component tests.
 - **Printing:** only `.ui-print-sheet` content prints (report pages). The
   legacy Finance CSS still hides `body *` in print; `.ui-print-sheet` overrides
-  it, and the rule goes away with the Finance rebuild (Phase 6).
+  it; the old Finance CSS is archived since Phase 6, but the override stays
+  for the remaining legacy CSS.
 
 ## 7. Roadmap (agreed next steps, in order)
 

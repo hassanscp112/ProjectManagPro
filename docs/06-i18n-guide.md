@@ -15,7 +15,7 @@ src/i18n/
 ├── useI18n.js            ← hook (falls back to Arabic outside a provider)
 ├── LanguageSwitcher.jsx  ← one button per language
 └── dictionaries/
-    ├── ar/               ← 19 domain files: activity, app, calculator, common,
+    ├── ar/               ← 22 domain files: activity, app, calculator, common,
     │                        dashboard, files, finance, gantt, orders, planning,
     │                        registries, reports, snapshots, taskDetails, templates,
     │                        ui (shared src/ui/ components + new navigation),
@@ -24,8 +24,11 @@ src/i18n/
     │                        schedule (rebuilt Schedule: timeline, panel, lookahead,
     │                        baseline; reuses gantt.*, app.* and planning.* labels).
     │                        The rebuilt Reports reuse reports.* / activity.* and
-    │                        add their new keys there ("rebuilt … (Phase 5)" blocks)
-    └── en/               ← same 19 files, same keys
+    │                        add their new keys there ("rebuilt … (Phase 5)" blocks);
+    │                        library, people, settings (rebuilt in Phase 6; reuse
+    │                        calculator.*, templates.*, files.*, registries.*,
+    │                        snapshots.*; new Finance keys sit in finance.js)
+    └── en/               ← same 22 files, same keys
 ```
 
 `npm test` runs `src/i18n/__tests__/dictionaryParity.test.js`, which fails if
@@ -88,7 +91,7 @@ Some utils (OrderEngine, ActivityLog, PlanningStore, Registries) call
 ## 7. Known i18n quirks
 
 - The **fallback chain ends at Arabic**: a typo'd key shows the key itself.
-- `FinanceManager` payroll status `'مستقطع'` is compared as raw Arabic data
+- The payroll status `'مستقطع'` (`financeModel.DEDUCTED_STATUS`) is compared as raw Arabic data
   (stored value, not UI text) — don't "translate" that comparison.
 - Month/weekday names in the Schedule and Lookahead come from `Intl` with
   `ar-IQ-u-nu-latn` (Levantine month names, Latin digits) / `en-GB`.

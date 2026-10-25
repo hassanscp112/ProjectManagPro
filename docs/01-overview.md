@@ -118,15 +118,16 @@ variation orders; `#/schedule/baseline` compares them with the signed baseline.
 | Record `#/record` (+ `/log`, `/pending`) | `app/record/*` | THE entry screen: pick type → fill → save (phone: full-screen flow); order log; pending approvals |
 | Schedule › Lookahead `#/schedule/lookahead` | `app/schedule/LookaheadPage` | Month targets vs approved orders, week crews, day plan with completion rate (PPC) |
 | Schedule › Baseline `#/schedule/baseline` | `app/schedule/BaselinePage` | Signed contract quantities/prices vs today, per item and in total |
-| Library › Files `#/library/files` | `FileManager` | Per-task document folders; files stored in IndexedDB |
+| Library › Files `#/library/files` | `app/library/FilesPage` | Document folders per top-level section; files stored in IndexedDB |
 | Library › BOQ `#/library/boq` | `calculator/*` | BOQ quantity take-off grids (templates with formulas) |
 | Reports › Daily `#/reports/daily` | `app/reports/DailyReportPage` | A day (or a period) on site: work done and expenses built from the orders, plus site notes; printable |
 | Reports › Monthly `#/reports/monthly` | `app/reports/MonthlyReportPage` | Printable monthly report recomputed from the order ledger |
 | Reports › Activity `#/reports/activity` | `app/reports/ActivityPage` | Audit feed, one item's whole story, 12-month activity heatmap (`?view=task` / `?view=heatmap`) |
-| Settings `#/settings` | `snapshots/SnapshotsScreen` | Restore points (auto + named) |
-| Finance `#/finance` | `finance/FinanceManager` | Site cost ledgers (machinery/materials/petty cash/payroll) |
-| People `#/people` | `registries/RegistriesScreen` | Contractors / teams / workers / current identity |
-| Library › Templates `#/library/templates` | `templates/TemplatesScreen` | Generate a task tree from parametric templates; rate library |
+| Settings `#/settings` | `app/settings/SettingsPage` | You (identity), theme and language, lifecycle status, backup / restore, restore points |
+| Finance `#/finance/:ledger` | `app/finance/FinancePage` | Site cost ledgers (machinery / materials / petty cash / payroll) + their dropdown lists |
+| People `#/people/:kind` | `app/people/PeoplePage` | Contractors / teams / workers |
+| Library › Templates `#/library/templates` (+ `/new`) | `app/library/TemplatesPage` | Generate a task tree from parametric templates; build templates |
+| Library › BOQ `#/library/boq` · Rates `#/library/rates` | `app/library/BoqPage`, `RatesPage` | Quantity take-off grids; the IQD rate library |
 | Task details `#/schedule/task/:id/details` | `taskDetails/TaskDetails` | *(Full details from the task panel)* drill-down per task: element columns, BOQ links, edit mode |
 
 ---

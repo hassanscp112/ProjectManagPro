@@ -133,25 +133,38 @@ and *Today*:
   `src/state/lookaheadModel.js`. Month/weekday names come from `Intl`
   (`ar-IQ`, Levantine month names).
 
-## Files — `FileManager.jsx`
+## Library — `src/app/library/` (rebuilt in Phase 6)
 
-Virtual folder tree: root → *Tasks* → one folder per task. Upload via picker or
-drag-drop; download via object URL; delete. Blobs live in IndexedDB
-(`utils/FileDB`). `targetTask` prop auto-navigates to that task's folder
-(used by the task panel's *Files* action).
-
-## Calculator — `calculator/CalculatorView.jsx` (+ `CalculatorGrid`, `TemplateEditor`)
-
-Quantity take-off tool:
-- **CalculatorView** — template manager shell; persists `pm-calculator-templates`.
-- **CalculatorGrid** — rows × columns grid; column sources: `input` (number),
-  `design` (orange-tinted input), `formula` (read-only, computed by
-  `CalculatorEngine.calculateRow`). Totals row for formula/input/design.
-- **TemplateEditor** — builds a template using **jspreadsheet-ce** (the only
-  jspreadsheet use in the app): Row 0 = headers, Row 1 = test values; typing
-  `=` marks the column as formula; sidebar maps the selected column to a
-  source. Saves raw formulas (from `sheet.options.data`, not evaluated values).
-  Sheet container forced LTR.
+Four sub-pages (tabs):
+- **BOQ `#/library/boq`** — quantity take-off grids. A list of grids and the
+  open one (`?grid=id`): a row per element, input cells (`design` columns
+  tinted), formula cells computed by `CalculatorEngine.calculateRow`, a total
+  per column, add / rename / delete rows. *Edit columns* opens
+  `BoqTemplateEditor.jsx`: a small **jspreadsheet-ce** sheet (the only
+  jspreadsheet use; kept left-to-right in its own light box) where row 1 =
+  column names and row 2 = a test value or an Excel-style formula
+  (`=A2*B2` — typing `=` marks the column as a formula); the side panel sets
+  the selected column's source. Saves raw formulas. Storage:
+  `utils/CalculatorTemplates.js`.
+- **Templates `#/library/templates`** — template cards; picking one (`?t=id`)
+  shows its variables + start date, a live preview (items, quantity, unit,
+  price, cost, duration; unpriced items flagged) and *Generate N items*, which
+  asks first, appends the tree with renumbered WBS and opens the Timeline.
+  *Save project as template* stores the current tree with fixed quantities.
+  Seed template names and rate categories are stored in Arabic and shown in
+  the UI language (`templateLabels.js`).
+- **Template builder `#/library/templates/new`** — name + icon, variables
+  (key, label, default), line items (part, section, quantity formula over the
+  variables, "repeats per", depends on another item with FS/SS/FF/SF + lag).
+  Checked by `cleanTemplateDraft()`.
+- **Rates `#/library/rates`** — the IQD rate library: search, add / edit in a
+  dialog, delete (asks first). Prices are copied at generation time.
+- **Files `#/library/files`** — folders: root → *Items* → one per top-level
+  section (`task_<id>`); the open folder is in `?folder=`;
+  `#/library/files/:taskId` opens the folder of that item's section (the task
+  panel's *Files*). Upload (button or drop), download, delete (asks first).
+  Blobs live in IndexedDB (`utils/FileDB`).
+Logic: `src/state/libraryModel.js`.
 
 ## Reports — `src/app/reports/` (rebuilt in Phase 5)
 
@@ -197,44 +210,49 @@ category, net), signature lines. The project name comes from `ui.projectName`
 Logic: `src/state/reportsModel.js`; month / weekday names and the issue stamp:
 `src/app/dates.js`.
 
-## Snapshots — `snapshots/SnapshotsScreen.jsx`
+## Finance — `src/app/finance/FinancePage.jsx` (rebuilt in Phase 6)
 
-Restore points. **Auto** (daily, restore-only, capped 14) and **Named**
-(create with Enter, rename inline, delete, restore with confirm → page reload).
-Stats strip via `snapshotsStats()`. Scope note in UI: snapshots cover
-tasks/projectMeta only.
+`#/finance/:ledger` — four ledgers as tabs (machinery, materials, petty cash,
+payroll) plus **Lists**. A totals strip (all ledgers + each one) on top. Each
+ledger: a table with date-range and per-ledger filters (machine type / driver,
+material, expense type, employee), the period total, delete (asks first) and
+Print (only the table prints); the add-record form sits beside it on wide
+screens (≥ 1100 px) and opens in a drawer / bottom sheet otherwise. After a
+save the date and the slow-changing fields stay for fast repeated entry.
+- Machinery total = machine hours × rate + driver hours × rate + fuel liters
+  × price.
+- Payroll net = salary − advance **only when the status is `'مستقطع'`**
+  (stored Arabic data value, deliberately not translated — see quirks).
+- **Lists** — the dropdown values (machine types and sizes, employees,
+  materials, expense types, advance statuses): add / remove; they are user
+  data and stay as entered.
+Storage: `utils/Finance.js`; rules: `src/state/financeModel.js`.
 
-## Finance — `finance/FinanceManager.jsx`
+## People — `src/app/people/PeoplePage.jsx` (rebuilt in Phase 6)
 
-Site cost ledgers, four tabs: machinery / materials / petty cash / payroll,
-plus a Settings tab for the editable dropdown lists (`-config`).
-- Machinery total = machine + driver + fuel subtotals.
-- Payroll net = salary − advance **only when status === `'مستقطع'`** (stored
-  Arabic data value, deliberately not translated — see quirks).
-- Per-ledger filters; printing via `window.print()`.
+`#/people/:kind` — contractors, teams, workers. Edits save as you type
+(`saveRegistries` notifies the store, so every picker updates).
+- Contractors / workers: editable tables (name, phone, notes; workers add
+  trade with suggestions and daily rate).
+- Teams: cards with name, foreman, member chips (★ marks the foreman), default
+  size — automatic while it equals the member count; typing a number makes it
+  manual; *Auto* resets it.
+- Deleting asks first; deleting a worker says how many teams use them and
+  automatic teams resize. Rules: `src/state/peopleModel.js`.
 
-## Registries — `registries/RegistriesScreen.jsx` (+ `IdentityPicker`)
+## Settings — `src/app/settings/SettingsPage.jsx` (rebuilt in Phase 6)
 
-CRUD for **contractors / teams / workers** + the current-identity card.
-- Every mutation goes through `commit()` = setState + `saveRegistries` + notify App.
-- Teams: member chips, foreman pick, default size (auto = member count; typing
-  a number makes it manual; clearing restores auto).
-- Deleting a worker re-syncs auto teams and warns how many teams used them.
-- Trade field has datalist suggestions.
-- **IdentityPicker** — "who is using the app?" modal (name required + role);
-  App opens it on first launch (`hasIdentity()` false).
-
-## Templates — `templates/TemplatesScreen.jsx`
-
-Template studio, three tabs:
-1. **Templates** — pick a card → fill variables + start date → live preview
-   (items/qty/unit/price/cost/duration; warns on unpriced leaves) → Generate
-   → App appends the tree with renumbered WBS and jumps to the Timeline.
-2. **Rates** — the IQD unit-price library (search/add/edit/delete).
-3. **Editor** — save current project as a template, or build one from parts:
-   variables, elements (part/group/formula/repeats/dependencies FS/SS/FF/SF
-   with lag).
-Seed templates keep Arabic names in storage with display-time English mapping.
+- **You** — the current user (name, role) and *Change* (opens the identity
+  dialog, `src/app/IdentityDialog.jsx`, which also opens on first launch).
+- **Appearance** — theme Light / Dark / Device (`utils/Theme.js`, `pm-theme`,
+  applied before the first paint in `main.jsx`) and language.
+- **Project lifecycle** — the status, and a link to the Schedule where the
+  lifecycle actions are.
+- **Backup & restore** — full JSON backup / restore (`useBackupRestore.jsx`,
+  shared with the Schedule's More menu).
+- **Snapshots** — counts and size; create a named snapshot; named ones can be
+  restored, renamed, deleted; automatic daily ones (last 14) restored. Restore
+  asks first and reloads. Snapshots cover tasks + project meta only.
 
 ## Task Details — `taskDetails/TaskDetails.jsx` (`#/schedule/task/:id/details`)
 

@@ -53,13 +53,13 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 - Engine: `GanttEngine.calculate(tasks, PROJECT_START, projectMeta, orders)` → schedule + costs + progress + critical path + EVM + S-curve. `PROJECT_START = '2025-08-02'` (hardcoded in `src/state/projectModel.js`).
 - Order ledger keys: `pm-orders`; 9 types; families value/expense; tiers quick (auto-approved)/formal (needs Approve).
 - Screens persist their own stores via `src/utils`; orders/registries/identity/activity owners announce writes (`utils/storeEvents.js`) and the provider re-reads them instantly (also on every navigation).
-- 15 localStorage keys + IndexedDB `ProjectManagerDB` — full table in `docs/03-data-model.md`.
+- 16 localStorage keys + IndexedDB `ProjectManagerDB` — full table in `docs/03-data-model.md`.
 - i18n: flat `'domain.key'` dictionaries, fallback ar→key, direction from `LANGUAGES`, persisted in `pm-language`.
 
 ## Current state & next steps
 
 **UI rebuild in progress** on branch `redesign/aubergine` — plan, phases and
-decisions in `plans/ui-rebuild-plan.md`. Phases 0–5 are done: Phase 1 moved
+decisions in `plans/ui-rebuild-plan.md`. Phases 0–6 are done: Phase 1 moved
 state into `src/state/`, added the hash router and the new shell, and mounts the
 existing screens unchanged inside it; Phase 2 rebuilt Record (`src/app/record/`,
 rules in `src/state/orderForm.js`); Phase 3 rebuilt Home (`src/app/home/`,
@@ -68,7 +68,10 @@ rules in `src/state/homeModel.js`); Phase 4 rebuilt the Schedule
 dialogs; rules in `src/state/scheduleModel.js` and `lookaheadModel.js`); Phase 5
 rebuilt Reports (`src/app/reports/`: daily with site notes via
 `utils/DailyNotes.js`, monthly, activity; print styles; rules in
-`src/state/reportsModel.js`). Phase 0: design tokens (`src/ui/tokens.css`, all names `--ui-*`), shared components in
+`src/state/reportsModel.js`); Phase 6 rebuilt Finance, Library, People and
+Settings (`src/app/finance|library|people|settings/`; theme setting in
+`utils/Theme.js`; rules in `financeModel.js`, `libraryModel.js`,
+`peopleModel.js`). Only the full task details page is still legacy. Phase 0: design tokens (`src/ui/tokens.css`, all names `--ui-*`), shared components in
 `src/ui/` (import from `src/ui/index.js`), CSS Modules per component. New UI
 code uses `src/ui/` components only; legacy screens stay untouched until their
 phase. Roadmap after the rebuild: `docs/07-conventions-quirks-roadmap.md` §6–7.

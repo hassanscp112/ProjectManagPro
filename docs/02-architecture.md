@@ -7,7 +7,7 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
 ## 1. The big picture (one diagram)
 
 ```
- main.jsx ─ fonts + src/ui tokens/base css ─ data-theme="light"
+ main.jsx ─ fonts + src/ui tokens/base css ─ applyTheme(loadTheme())
    └─ I18nProvider → UiProvider (Radix direction, tooltips, toasts) → App
         └─ App.jsx = ProjectProvider + RouterProvider (hash URLs)
 
@@ -37,15 +37,16 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
   │                                                                               │
   │  Record pages → OrderEngine      → localStorage 'pm-orders'        (notifies) │
   │  LookaheadPage → PlanningStore   → localStorage 'pm-plans'                    │
-  │  RegistriesScreen → Registries   → localStorage 'pm-registries'    (notifies) │
-  │  IdentityPicker → Identity       → localStorage 'pm-identity'      (notifies) │
+  │  PeoplePage    → Registries      → localStorage 'pm-registries'    (notifies) │
+  │  IdentityDialog → Identity       → localStorage 'pm-identity'      (notifies) │
   │  logAppEvent → ActivityLog       → localStorage 'pm-activity'      (notifies) │
-  │  TemplatesScreen → TemplateEngine/RateLibrary → 'pm-templates'/'pm-rate-library'
-  │  SnapshotsScreen → Snapshots     → localStorage 'pm-snapshots'                │
-  │  FileManager     → FileDB        → IndexedDB 'ProjectManagerDB'               │
-  │  CalculatorView  → (own state)   → localStorage 'pm-calculator-templates'     │
+  │  Templates/Rates pages → TemplateEngine/RateLibrary → 'pm-templates'/'pm-rate-library'
+  │  SettingsPage  → Snapshots       → localStorage 'pm-snapshots'                │
+  │  SettingsPage  → Theme           → localStorage 'pm-theme'                    │
+  │  FilesPage     → FileDB          → IndexedDB 'ProjectManagerDB'               │
+  │  BoqPage       → CalculatorTemplates → localStorage 'pm-calculator-templates' │
   │  DailyReportPage → DailyNotes    → localStorage 'project-manager-daily-reports'
-  │  FinanceManager                  → 'project-manager-finance-data'/'-config'   │
+  │  FinancePage   → Finance         → 'project-manager-finance-data'/'-config'   │
   └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -69,10 +70,10 @@ global state library** — React state + localStorage + change notifications.
 | | `/schedule/baseline` | **Rebuilt (Phase 4)** — `app/schedule/BaselinePage.jsx` (signed vs current contract) |
 | | `/schedule/task/:taskId/details` | `taskDetails/TaskDetails` (legacy, "Full details" from the panel) |
 | Reports | `/reports/daily` · `/reports/monthly` · `/reports/activity` | **Rebuilt (Phase 5)** — `app/reports/`: `DailyReportPage`, `MonthlyReportPage`, `ActivityPage` (view in `?view=`); printable sheets share `ReportSheet.jsx` |
-| Finance | `/finance` | `finance/FinanceManager` |
-| Library | `/library/boq` · `/library/templates` · `/library/files(/:taskId)` | `CalculatorView` · `TemplatesScreen` · `FileManager` |
-| People | `/people` | `registries/RegistriesScreen` |
-| Settings | `/settings` | `snapshots/SnapshotsScreen` |
+| Finance | `/finance/:ledger` (`machinery` · `materials` · `pettyCash` · `payroll` · `lists`) | **Rebuilt (Phase 6)** — `app/finance/FinancePage.jsx` |
+| Library | `/library/boq` (`?grid=`) · `/library/templates` (`?t=`) · `/library/templates/new` · `/library/rates` · `/library/files(/:taskId)` (`?folder=`) | **Rebuilt (Phase 6)** — `app/library/` |
+| People | `/people/:kind` (`contractors` · `teams` · `workers`) | **Rebuilt (Phase 6)** — `app/people/PeoplePage.jsx` |
+| Settings | `/settings` | **Rebuilt (Phase 6)** — `app/settings/SettingsPage.jsx` |
 | (phone) | `/more` | `app/pages/MorePage.jsx` — every area + identity |
 | (dev) | `/dev/ui` | `dev/UiReview.jsx`, dev builds only |
 
@@ -121,12 +122,8 @@ All tree/lifecycle transforms are pure functions in `projectModel.js`
 | Schedule / Lookahead / Baseline pages | none — read `useProject()`; the Gantt gets rows from `visibleRows()` and calls `onUpdate(id, patch)` with only the changed fields |
 | Record pages | none — read `useProject()` (tasks, orders, lastWhoByType, registries, identity, engineResult); rules in `src/state/orderForm.js` |
 | Report pages | none — read `useProject()`; rules in `src/state/reportsModel.js` |
-| SnapshotsScreen | `tasks, projectMeta, identity, onRestored(→reload)` |
 | TaskDetails | `task, allTasks, computedTasks, isSigned, orders, registries, identity` + 7 callbacks |
-| FileManager | `tasks` (computed), `targetTask` (from `:taskId`) |
-| TemplatesScreen | `onGenerate, tasks` |
-| RegistriesScreen | `onChange(→setRegistries)` |
-| CalculatorView / FinanceManager | none (fully self-owned) |
+| Finance / Library / People / Settings pages | none — read `useProject()` (People saves through `saveRegistries` + `setRegistries`); rules in `src/state/financeModel.js`, `libraryModel.js`, `peopleModel.js` |
 
 ---
 
@@ -170,16 +167,17 @@ order-derived and read-only.
 | Task tree + BOQ | ProjectProvider (edit via the Schedule grid / task panel / TaskDetails) | everything | `project-manager-gantt-tasks` |
 | Project meta (status/baseline/VOs) | ProjectProvider (Schedule dialogs) | Monthly, Activity, Baseline, engine | `project-manager-project-meta` |
 | Order ledger | Record pages (OrderEngine `addOrder` / `approveOrder` / `deleteOrder`) | engine, Planning, Reports, Activity | `pm-orders` |
-| Registries | RegistriesScreen | Orders, Planning, Reports, TaskDetails | `pm-registries` |
-| Identity | IdentityPicker | stamps everywhere | `pm-identity` |
+| Registries | PeoplePage | Orders, Planning, Reports, TaskDetails | `pm-registries` |
+| Identity | IdentityDialog (first launch, sidebar user, Settings) | stamps everywhere | `pm-identity` |
 | App events | `logAppEvent` from ProjectProvider/screens | Activity feed | `pm-activity` |
 | Plans | LookaheadPage (via PlanningStore) | itself | `pm-plans` |
-| Snapshots | SnapshotsScreen + auto-writer | restore | `pm-snapshots` |
-| Templates / rates | TemplatesScreen | generator | `pm-templates` / `pm-rate-library` |
-| Calculator | CalculatorView | itself | `pm-calculator-templates` |
+| Snapshots | SettingsPage + auto-writer | restore | `pm-snapshots` |
+| Templates / rates | Templates / builder / Rates pages | generator | `pm-templates` / `pm-rate-library` |
+| Calculator grids | BoqPage (via `utils/CalculatorTemplates.js`) | itself | `pm-calculator-templates` |
+| Theme | SettingsPage (via `utils/Theme.js`) | `main.jsx` | `pm-theme` |
 | Daily site notes | DailyReportPage (via `utils/DailyNotes.js`) | itself | `project-manager-daily-reports` |
-| Finance ledgers | FinanceManager | itself | `project-manager-finance-data` / `-config` |
-| Uploaded files | FileManager | itself | IndexedDB `ProjectManagerDB` |
+| Finance ledgers | FinancePage (via `utils/Finance.js`) | itself | `project-manager-finance-data` / `-config` |
+| Uploaded files | FilesPage (via `utils/FileDB.js`) | itself | IndexedDB `ProjectManagerDB` |
 | Language | LanguageSwitcher | i18n provider | `pm-language` |
 
 Synchronization: `saveOrdersData`, `saveRegistries`, `saveIdentity` and

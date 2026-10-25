@@ -154,7 +154,19 @@ No storage, no imports. Excel-style evaluation for calculator rows:
 - `calculateRow(row, columns)` — computes all `formula` columns of a row
 
 (The calculator's *templates* persist under `pm-calculator-templates`, owned by
-`CalculatorView`, not this module.)
+`CalculatorTemplates.js`, not this module.)
+
+## CalculatorTemplates.js / Finance.js / Theme.js — small storage owners
+
+- `CalculatorTemplates.js`: `loadCalcTemplates()` (drops malformed grids),
+  `saveCalcTemplates(list)` — key `pm-calculator-templates`.
+- `Finance.js`: `LEDGERS`, `DEFAULT_FINANCE_CONFIG`, `loadFinanceData()` /
+  `saveFinanceData()` (`project-manager-finance-data`), `loadFinanceConfig()`
+  (stored lists over the defaults) / `saveFinanceConfig()`
+  (`project-manager-finance-config`). Record shapes: `state/financeModel.js`.
+- `Theme.js`: `THEMES = ['light','dark','system']`, `loadTheme()` (default
+  `'light'`), `saveTheme()`, `applyTheme()` (sets `<html data-theme>`, or
+  removes it for `'system'`) — key `pm-theme`.
 
 ---
 
@@ -169,7 +181,7 @@ DB `ProjectManagerDB` v1, store `files`.
 
 **Storage:** `pm-identity` = `{name, role}`.
 `loadIdentity()` / `saveIdentity({name, role})` / `hasIdentity()`.
-(App opens the IdentityPicker automatically when `hasIdentity()` is false.)
+(The store opens the IdentityDialog automatically when `hasIdentity()` is false.)
 
 ---
 
@@ -214,7 +226,7 @@ Pure. Tests: `whoSelection.test.js`.
 
 ## DataIO.js — full backup / restore
 
-`APP_STORAGE_KEYS` — the canonical list of all 15 keys (see
+`APP_STORAGE_KEYS` — the canonical list of all 16 keys (see
 [03-data-model §1](03-data-model.md)). **Adding a key anywhere = adding it here.**
 - `exportAppData()` — downloads JSON backup (format in 03-data-model §12)
 - `readBackupFile(file)` → parsed JSON (throws on bad file)
