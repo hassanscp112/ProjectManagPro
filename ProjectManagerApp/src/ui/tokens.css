@@ -1,0 +1,180 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Aubergine design tokens — the single source of every color, size and
+   shadow used by src/ui/. Values match the "Color system · Aubergine"
+   board; contrast ratios (WCAG) are noted where they matter.
+
+   Every name starts with --ui- so it never collides with the legacy
+   --text-... and --radius-... variables still used by the old screens.
+
+   Theme: light by default; <html data-theme="dark"> forces dark;
+   no data-theme attribute = follow the OS (prefers-color-scheme).
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Surfaces */
+  --ui-canvas: #ECEAEE;          /* page background */
+  --ui-surface: #FFFFFF;         /* cards, inputs */
+  --ui-sunken: #F5F3F7;          /* table headers, wells */
+  --ui-raised: #FFFFFF;          /* popovers, dialogs */
+  --ui-overlay: rgba(29, 24, 35, 0.45);
+
+  /* Lines */
+  --ui-border: #C9C4CF;          /* card edge, 1.71:1 on white (+ shadow) */
+  --ui-divider: #E1DEE5;         /* rows inside cards */
+  --ui-input-border: #7A7482;    /* controls, 4.52:1 on white */
+  --ui-track: #E1DEE5;           /* progress tracks */
+
+  /* Text */
+  --ui-text: #1D1823;            /* 17.4:1 */
+  --ui-text-2: #55505C;          /* secondary, 7.8:1 */
+  --ui-placeholder: #7A7482;     /* 4.52:1 */
+
+  /* Accent (aubergine) */
+  --ui-accent: #553285;          /* 9.6:1 on white */
+  --ui-accent-hover: #45276F;
+  --ui-on-accent: #FFFFFF;
+  --ui-accent-soft: #ECE6F5;     /* selected backgrounds */
+  --ui-accent-ink: #553285;      /* text on accent-soft, 7.9:1 */
+
+  /* Sidebar */
+  --ui-sidebar: #241A30;
+  --ui-sidebar-strong: #FFFFFF;
+  --ui-sidebar-text: #D6CEE0;    /* 10.9:1 */
+  --ui-sidebar-muted: #A99DB8;   /* 6.5:1 */
+  --ui-sidebar-active: #33263F;
+  --ui-sidebar-mark: #B89BD9;
+
+  /* Status: always paired with an icon or word, never color alone */
+  --ui-success: #067647;
+  --ui-success-soft: #D1FADF;
+  --ui-warning: #A44A00;
+  --ui-warning-soft: #FEF0C7;
+  --ui-danger: #B42318;
+  --ui-danger-hover: #912018;
+  --ui-danger-soft: #FEE4E2;
+  --ui-on-danger: #FFFFFF;
+
+  /* Charts */
+  --ui-chart-planned: #6E6878;
+  --ui-chart-actual: #C2410C;
+
+  /* Elevation */
+  --ui-shadow-card: 0 1px 2px rgba(16, 24, 40, 0.08), 0 2px 6px rgba(16, 24, 40, 0.06);
+  --ui-shadow-pop: 0 8px 24px rgba(16, 24, 40, 0.14), 0 2px 6px rgba(16, 24, 40, 0.08);
+  --ui-focus-ring: 0 0 0 3px rgba(85, 50, 133, 0.35);
+
+  /* Shape */
+  --ui-r-sm: 6px;
+  --ui-r-md: 8px;
+  --ui-r-lg: 12px;
+  --ui-r-xl: 16px;
+  --ui-r-pill: 999px;
+
+  /* Spacing (4px grid) */
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 20px;
+  --ui-space-6: 24px;
+  --ui-space-8: 32px;
+  --ui-space-10: 40px;
+
+  /* Control heights (44px = minimum touch target) */
+  --ui-h-sm: 36px;
+  --ui-h-md: 44px;
+  --ui-h-lg: 52px;
+
+  /* Type */
+  --ui-font: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ui-font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --ui-fs-xs: 12px;
+  --ui-fs-sm: 13px;
+  --ui-fs-md: 14px;
+  --ui-fs-lg: 16px;
+  --ui-fs-xl: 18px;
+  --ui-fs-2xl: 24px;
+  --ui-fs-3xl: 32px;
+
+  --ui-ease: cubic-bezier(0.2, 0, 0, 1);
+  --ui-dur: 160ms;
+
+  --ui-color-scheme: light;
+}
+
+/* Dark values, written once and applied by the two selectors below. */
+:root[data-theme='dark'] {
+  --ui-canvas: #120D18;
+  --ui-surface: #1D1626;
+  --ui-sunken: #171120;
+  --ui-raised: #2A2136;
+  --ui-overlay: rgba(0, 0, 0, 0.6);
+  --ui-border: #463A55;
+  --ui-divider: #352B42;
+  --ui-input-border: #7D7090;    /* 3.84:1 on surface */
+  --ui-track: #352B42;
+  --ui-text: #EEEAF2;            /* 14.8:1 */
+  --ui-text-2: #B8AEC5;          /* 8.3:1 */
+  --ui-placeholder: #9A90A8;
+  --ui-accent: #C4A3F0;          /* 8.2:1 on surface */
+  --ui-accent-hover: #D3B9F5;
+  --ui-on-accent: #120D18;       /* 9.0:1 */
+  --ui-accent-soft: #2E2340;
+  --ui-accent-ink: #C4A3F0;
+  --ui-sidebar: #0B0810;
+  --ui-sidebar-active: #241A30;
+  --ui-sidebar-mark: #C4A3F0;
+  --ui-success: #3DD68C;
+  --ui-success-soft: #12352A;
+  --ui-warning: #FDB022;
+  --ui-warning-soft: #3A2A0C;
+  --ui-danger: #FF8A80;
+  --ui-danger-hover: #FFA39B;
+  --ui-danger-soft: #3D1A1A;
+  --ui-on-danger: #120D18;
+  --ui-chart-planned: #9A90A8;
+  --ui-chart-actual: #FB923C;
+  --ui-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --ui-shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
+  --ui-focus-ring: 0 0 0 3px rgba(196, 163, 240, 0.4);
+  --ui-color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='dark']) {
+    --ui-canvas: #120D18;
+    --ui-surface: #1D1626;
+    --ui-sunken: #171120;
+    --ui-raised: #2A2136;
+    --ui-overlay: rgba(0, 0, 0, 0.6);
+    --ui-border: #463A55;
+    --ui-divider: #352B42;
+    --ui-input-border: #7D7090;
+    --ui-track: #352B42;
+    --ui-text: #EEEAF2;
+    --ui-text-2: #B8AEC5;
+    --ui-placeholder: #9A90A8;
+    --ui-accent: #C4A3F0;
+    --ui-accent-hover: #D3B9F5;
+    --ui-on-accent: #120D18;
+    --ui-accent-soft: #2E2340;
+    --ui-accent-ink: #C4A3F0;
+    --ui-sidebar: #0B0810;
+    --ui-sidebar-active: #241A30;
+    --ui-sidebar-mark: #C4A3F0;
+    --ui-success: #3DD68C;
+    --ui-success-soft: #12352A;
+    --ui-warning: #FDB022;
+    --ui-warning-soft: #3A2A0C;
+    --ui-danger: #FF8A80;
+    --ui-danger-hover: #FFA39B;
+    --ui-danger-soft: #3D1A1A;
+    --ui-on-danger: #120D18;
+    --ui-chart-planned: #9A90A8;
+    --ui-chart-actual: #FB923C;
+    --ui-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.45);
+    --ui-shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
+    --ui-focus-ring: 0 0 0 3px rgba(196, 163, 240, 0.4);
+    --ui-color-scheme: dark;
+  }
+}

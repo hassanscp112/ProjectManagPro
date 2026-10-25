@@ -1,0 +1,77 @@
+/* Chips (DateChips, WhoPicker) and Segmented share these styles. */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  min-height: var(--ui-h-md);
+  padding: 0 var(--ui-space-4);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font-size: var(--ui-fs-md);
+  cursor: pointer;
+  transition: background-color var(--ui-dur) var(--ui-ease), border-color var(--ui-dur) var(--ui-ease);
+}
+.chip:hover {
+  border-color: var(--ui-input-border);
+}
+.chip[aria-checked='true'] {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-ink);
+  font-weight: 600;
+}
+
+.chipSm {
+  min-height: var(--ui-h-sm);
+  padding: 0 var(--ui-space-3);
+  font-size: var(--ui-fs-sm);
+}
+
+.dateRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+}
+
+/* Segmented control: a well with one raised option */
+.segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--ui-r-md);
+  background: var(--ui-divider);
+}
+
+.segment {
+  min-height: var(--ui-h-sm);
+  padding: 0 var(--ui-space-4);
+  border: 0;
+  border-radius: var(--ui-r-sm);
+  background: transparent;
+  color: var(--ui-text);
+  font-size: var(--ui-fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+.segment[aria-checked='true'] {
+  background: var(--ui-surface);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.12);
+}
+
+.block {
+  display: flex;
+}
+.block .segment {
+  flex: 1 1 0;
+}

@@ -22,6 +22,7 @@ import arRegistries from './dictionaries/ar/registries.js';
 import arFinance from './dictionaries/ar/finance.js';
 import arCalculator from './dictionaries/ar/calculator.js';
 import arFiles from './dictionaries/ar/files.js';
+import arUi from './dictionaries/ar/ui.js';
 
 import enCommon from './dictionaries/en/common.js';
 import enApp from './dictionaries/en/app.js';
@@ -38,6 +39,7 @@ import enRegistries from './dictionaries/en/registries.js';
 import enFinance from './dictionaries/en/finance.js';
 import enCalculator from './dictionaries/en/calculator.js';
 import enFiles from './dictionaries/en/files.js';
+import enUi from './dictionaries/en/ui.js';
 
 export const LANGUAGES = [
   { code: 'ar', label: 'العربية', dir: 'rtl' },
@@ -53,14 +55,14 @@ const DICTIONARIES = {
     orders: arOrders, planning: arPlanning, activity: arActivity,
     snapshots: arSnapshots, reports: arReports, taskDetails: arTaskDetails,
     templates: arTemplates, registries: arRegistries,
-    finance: arFinance, calculator: arCalculator, files: arFiles,
+    finance: arFinance, calculator: arCalculator, files: arFiles, ui: arUi,
   },
   en: {
     common: enCommon, app: enApp, dashboard: enDashboard, gantt: enGantt,
     orders: enOrders, planning: enPlanning, activity: enActivity,
     snapshots: enSnapshots, reports: enReports, taskDetails: enTaskDetails,
     templates: enTemplates, registries: enRegistries,
-    finance: enFinance, calculator: enCalculator, files: enFiles,
+    finance: enFinance, calculator: enCalculator, files: enFiles, ui: enUi,
   },
 };
 

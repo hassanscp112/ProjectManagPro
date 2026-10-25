@@ -1,0 +1,273 @@
+/* Dialog, Drawer and CommandPalette share the overlay and panel look. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--ui-overlay);
+  animation: fadeIn var(--ui-dur) var(--ui-ease);
+}
+
+.panel {
+  position: fixed;
+  z-index: 51;
+  display: flex;
+  flex-direction: column;
+  background: var(--ui-raised);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-pop);
+}
+.panel:focus-visible {
+  box-shadow: var(--ui-shadow-pop);
+}
+
+/* Centered dialog */
+.dialog {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(calc(100vw - 32px), 480px);
+  max-height: min(calc(100vh - 32px), 720px);
+  border-radius: var(--ui-r-xl);
+  animation: popIn var(--ui-dur) var(--ui-ease);
+}
+.dialogLg {
+  width: min(calc(100vw - 32px), 720px);
+}
+
+/* Side panel on desktop, bottom sheet on phones */
+.drawer {
+  top: 0;
+  bottom: 0;
+  inset-inline-end: 0;
+  width: min(100vw, 440px);
+  border-block: 0;
+  border-inline-end: 0;
+  animation: slideInEnd 200ms var(--ui-ease);
+}
+.drawerWide {
+  width: min(100vw, 640px);
+}
+@media (max-width: 767px) {
+  .drawer,
+  .drawerWide {
+    top: auto;
+    inset-inline: 0;
+    width: 100%;
+    max-height: 90vh;
+    border: 1px solid var(--ui-border);
+    border-bottom: 0;
+    border-radius: var(--ui-r-xl) var(--ui-r-xl) 0 0;
+    animation: slideUp 200ms var(--ui-ease);
+  }
+}
+
+.handle {
+  display: none;
+}
+@media (max-width: 767px) {
+  .handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: var(--ui-space-2) auto 0;
+    border-radius: var(--ui-r-pill);
+    background: var(--ui-border);
+  }
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-5) var(--ui-space-5) var(--ui-space-3);
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--ui-fs-xl);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.description {
+  font-size: var(--ui-fs-md);
+  color: var(--ui-text-2);
+}
+
+.body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0 var(--ui-space-5) var(--ui-space-5);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-4) var(--ui-space-5);
+  border-top: 1px solid var(--ui-divider);
+}
+@media (max-width: 767px) {
+  .footer > * {
+    flex: 1 1 0;
+  }
+}
+
+/* Toasts */
+.toastViewport {
+  position: fixed;
+  z-index: 70;
+  bottom: var(--ui-space-4);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  width: min(calc(100vw - 32px), 420px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  outline: none;
+}
+[dir='rtl'] .toastViewport {
+  transform: translateX(50%);
+}
+@media (max-width: 767px) {
+  .toastViewport {
+    bottom: 92px; /* above the phone bottom bar */
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border-radius: var(--ui-r-lg);
+  background: var(--ui-text);
+  color: var(--ui-surface);
+  box-shadow: var(--ui-shadow-pop);
+  animation: slideUp 200ms var(--ui-ease);
+}
+.toastText {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 2px;
+}
+.toastTitle {
+  font-size: var(--ui-fs-md);
+  font-weight: 600;
+}
+.toastDescription {
+  font-size: var(--ui-fs-sm);
+  opacity: 0.85;
+}
+.toastIcon {
+  flex: none;
+  margin-top: 2px;
+}
+.toastSuccess .toastIcon {
+  color: var(--ui-success-soft);
+}
+.toastDanger .toastIcon {
+  color: var(--ui-danger-soft);
+}
+.toastClose {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--ui-r-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Dropdown menu */
+.menu {
+  z-index: 60;
+  min-width: 200px;
+  padding: var(--ui-space-1);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-raised);
+  box-shadow: var(--ui-shadow-pop);
+}
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  min-height: 40px;
+  padding: 0 var(--ui-space-3);
+  border-radius: var(--ui-r-sm);
+  font-size: var(--ui-fs-md);
+  color: var(--ui-text);
+  cursor: pointer;
+  outline: none;
+}
+.menuItem[data-highlighted] {
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-ink);
+}
+.menuItemDanger {
+  color: var(--ui-danger);
+}
+.menuSeparator {
+  height: 1px;
+  margin: var(--ui-space-1) 0;
+  background: var(--ui-divider);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.98);
+  }
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+@keyframes slideInEnd {
+  from {
+    opacity: 0.4;
+    translate: 24px 0;
+  }
+}
+[dir='rtl'] .drawer,
+[dir='rtl'] .drawerWide {
+  animation-name: slideInEndRtl;
+}
+@keyframes slideInEndRtl {
+  from {
+    opacity: 0.4;
+    translate: -24px 0;
+  }
+}
+@media (max-width: 767px) {
+  [dir='rtl'] .drawer,
+  [dir='rtl'] .drawerWide {
+    animation-name: slideUp;
+  }
+}

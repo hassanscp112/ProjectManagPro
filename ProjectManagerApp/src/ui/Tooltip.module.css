@@ -1,0 +1,12 @@
+.content {
+  z-index: 60;
+  max-width: 260px;
+  padding: var(--ui-space-1) var(--ui-space-2);
+  border-radius: var(--ui-r-sm);
+  background: var(--ui-text);
+  color: var(--ui-surface);
+  font-size: var(--ui-fs-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: var(--ui-shadow-pop);
+}

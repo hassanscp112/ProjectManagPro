@@ -1,0 +1,212 @@
+/* CommandPalette + TaskPicker (cmdk) */
+
+.palette {
+  top: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100vw - 32px), 600px);
+  max-height: 70vh;
+  border-radius: var(--ui-r-xl);
+  overflow: hidden;
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: 0 var(--ui-space-4);
+  border-bottom: 1px solid var(--ui-divider);
+  color: var(--ui-text-2);
+}
+
+.searchInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--ui-h-lg);
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ui-text);
+  font-size: var(--ui-fs-lg);
+}
+.searchInput:focus-visible {
+  box-shadow: none;
+}
+.searchInput::placeholder {
+  color: var(--ui-placeholder);
+}
+
+.list {
+  overflow-y: auto;
+  max-height: calc(70vh - 56px);
+  padding: var(--ui-space-2);
+}
+
+.empty {
+  padding: var(--ui-space-6) var(--ui-space-4);
+  text-align: center;
+  color: var(--ui-text-2);
+}
+
+.list [cmdk-group-heading] {
+  padding: var(--ui-space-2) var(--ui-space-3) var(--ui-space-1);
+  font-size: var(--ui-fs-xs);
+  font-weight: 600;
+  color: var(--ui-text-2);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  min-height: var(--ui-h-md);
+  padding: var(--ui-space-1) var(--ui-space-3);
+  border-radius: var(--ui-r-md);
+  color: var(--ui-text);
+  cursor: pointer;
+}
+.item[data-selected='true'] {
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-ink);
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.itemLabel {
+  font-size: var(--ui-fs-md);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.itemHint {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+
+.wbs {
+  flex: none;
+  min-width: 52px;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.unit {
+  flex: none;
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+
+.more {
+  padding: var(--ui-space-2) var(--ui-space-3);
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+
+/* TaskPicker trigger looks like an input */
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--ui-input-border);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  text-align: start;
+  cursor: pointer;
+}
+.trigger[data-state='open'] {
+  border-color: var(--ui-accent);
+  box-shadow: var(--ui-focus-ring);
+}
+.triggerText {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.triggerLabel {
+  font-size: var(--ui-fs-md);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.placeholder {
+  color: var(--ui-placeholder);
+  font-weight: 400;
+}
+.triggerHint {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.pickerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+
+.popover {
+  z-index: 55;
+  width: max(var(--radix-popover-trigger-width), 320px);
+  max-width: calc(100vw - 32px);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-lg);
+  background: var(--ui-raised);
+  box-shadow: var(--ui-shadow-pop);
+  overflow: hidden;
+}
+.popover .list {
+  max-height: min(360px, 50vh);
+}
+
+/* WhoPicker */
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+}
+.whoNone {
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.workers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+.worker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  min-height: var(--ui-h-md);
+  padding: 0 var(--ui-space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-surface);
+  font-size: var(--ui-fs-md);
+  cursor: pointer;
+}
+.worker:has(input:checked) {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-ink);
+  font-weight: 600;
+}
+.worker input {
+  accent-color: var(--ui-accent);
+  width: 16px;
+  height: 16px;
+}
+.trade {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+  font-weight: 400;
+}

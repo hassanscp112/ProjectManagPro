@@ -1,0 +1,81 @@
+/* Base styles for everything rendered inside the new UI.
+   Scoped to .ui-root (the app shell, from Phase 1) and .ui-portal
+   (dialogs, popovers and toasts rendered into <body>) so the legacy
+   screens keep their own globals until they are migrated. */
+
+.ui-root,
+.ui-portal {
+  font-family: var(--ui-font);
+  font-size: var(--ui-fs-md);
+  line-height: 1.5;
+  color: var(--ui-text);
+  color-scheme: var(--ui-color-scheme);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ui-root {
+  background: var(--ui-canvas);
+}
+
+:where(.ui-root, .ui-portal) *,
+:where(.ui-root, .ui-portal) *::before,
+:where(.ui-root, .ui-portal) *::after {
+  box-sizing: border-box;
+}
+
+:where(.ui-root, .ui-portal) :where(h1, h2, h3, h4, p, dl, dd, ol, ul, figure) {
+  margin: 0;
+}
+
+:where(.ui-root, .ui-portal) :where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+}
+
+:where(.ui-root, .ui-portal) :where(a) {
+  color: var(--ui-accent);
+}
+
+:where(.ui-root, .ui-portal) :where(:focus-visible) {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+/* Numbers that must not reorder in RTL (WBS codes, dates, amounts). */
+.ui-ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Numeric table cells and figures. */
+.ui-num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Directional icons (chevrons, arrows) point the other way in RTL. */
+[dir='rtl'] .ui-flip-rtl {
+  transform: scaleX(-1);
+}
+
+.ui-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.ui-root, .ui-portal) *,
+  :where(.ui-root, .ui-portal) *::before,
+  :where(.ui-root, .ui-portal) *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}

@@ -1,0 +1,40 @@
+.track {
+  position: relative;
+  height: 8px;
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-track);
+}
+
+.lg {
+  height: 10px;
+}
+
+.fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-accent);
+  transition: width var(--ui-dur) var(--ui-ease);
+}
+
+.success .fill {
+  background: var(--ui-success);
+}
+.warning .fill {
+  background: var(--ui-warning);
+}
+.danger .fill {
+  background: var(--ui-danger);
+}
+
+/* Planned-value tick drawn across the track */
+.marker {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-inline-start: -1px;
+  background: var(--ui-text);
+  border-radius: 1px;
+}

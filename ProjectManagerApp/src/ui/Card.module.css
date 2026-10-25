@@ -1,0 +1,102 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+  min-width: 0;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-lg);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.padSm {
+  padding: var(--ui-space-3) var(--ui-space-4);
+}
+.padMd {
+  padding: var(--ui-space-5);
+}
+.padLg {
+  padding: var(--ui-space-6);
+}
+.padNone {
+  padding: 0;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2) var(--ui-space-3);
+}
+.padNone > .header {
+  padding: var(--ui-space-4) var(--ui-space-5) 0;
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--ui-fs-lg);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.subtitle {
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+
+/* StatCard */
+.stat {
+  gap: var(--ui-space-2);
+}
+.statLabel {
+  font-size: var(--ui-fs-sm);
+  font-weight: 500;
+  color: var(--ui-text-2);
+}
+.statValueRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ui-space-2);
+}
+.statValue {
+  font-size: var(--ui-fs-3xl);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.statUnit {
+  font-size: var(--ui-fs-md);
+  color: var(--ui-text-2);
+}
+.statFooter {
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.toneSuccess {
+  color: var(--ui-success);
+}
+.toneWarning {
+  color: var(--ui-warning);
+}
+.toneDanger {
+  color: var(--ui-danger);
+}
+.toneAccent {
+  color: var(--ui-accent);
+}
