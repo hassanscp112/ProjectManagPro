@@ -47,11 +47,11 @@ The rules that prevent mistakes. Read this before changing anything.
 | # | Quirk | Where | Implication |
 |---|-------|-------|-------------|
 | 1 | `exceljs` and `mathjs` are in package.json but **imported nowhere** | package.json | Don't assume Excel export or mathjs exists; removing them is safe if desired |
-| 2 | `PROJECT_START = '2025-08-02'` is a hardcoded constant | App.jsx top | New projects must edit this |
-| 3 | Topbar breadcrumb is a hardcoded Arabic string | App.jsx | Not translatable currently |
+| 2 | `PROJECT_START = '2025-08-02'` is a hardcoded constant | `src/state/projectModel.js` | New projects must edit this |
+| 3 | ~~Topbar breadcrumb is a hardcoded Arabic string~~ **fixed in Phase 1** | — | Project name/contract now `ui.projectName` / `ui.projectContract` |
 | 4 | Payroll compares raw `'مستقطع'` data value | FinanceManager | Stored data value — don't translate the comparison |
 | 5 | LanguageSwitcher caption is a ternary `ar ? 'عربي' : 'EN'` | LanguageSwitcher.jsx | Breaks for a 3rd language — use `l.label` |
-| 6 | No router — tab string state only | App.jsx | Deep links/refresh always land on Dashboard |
+| 6 | ~~No router~~ **fixed in Phase 1** — hash routes | `src/app/router.jsx` | Refresh and links keep the screen; use `#/…` hrefs or `useNavigate()` |
 | 7 | Snapshots cover tasks + projectMeta ONLY | Snapshots.js | Orders/finance NOT in snapshots (full safety = JSON backup) |
 | 8 | Gantt bars are not draggable by design | GanttChart.jsx | Dates/durations edited via grid inputs |
 | 9 | localStorage **quota** (~5 MB) is the only real limit | all | File blobs already live in IndexedDB; big data goes to backup files |
@@ -86,11 +86,13 @@ The rules that prevent mistakes. Read this before changing anything.
   registries screens, EVM + S-curve, monthly report, full backup/restore.
 - **Git:** `main` fully committed (2026-10-25). UI rebuild on branch
   `redesign/aubergine`, merged to `main` phase by phase.
-- **UI rebuild:** Phase 0 (foundation) done — tokens, shared components,
-  `/#/dev/ui` review page. Next: Phase 1 (store + router + shell). Plan:
-  `plans/ui-rebuild-plan.md`.
-- **Tests:** 8 test files (89 tests), all pure-logic (engines, task ranking,
-  who selection, ar/en dictionary parity); no component tests.
+- **UI rebuild:** Phases 0–1 done — tokens + shared components, project
+  store (`src/state/`), hash router + new shell (`src/app/`) with the existing
+  screens mounted inside. Next: Phase 2 (Record). Plan: `plans/ui-rebuild-plan.md`.
+- **Theme:** the app forces `data-theme="light"` (`main.jsx`) until the theme
+  setting ships in Phase 6, because legacy screens are light-only.
+- **Tests:** 9 test files (101 tests), all pure-logic (engines, project model,
+  task ranking, who selection, ar/en dictionary parity); no component tests.
 
 ## 7. Roadmap (agreed next steps, in order)
 

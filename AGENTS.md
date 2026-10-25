@@ -7,7 +7,7 @@ file already answers.** Docs last verified 2026-10-25.
 ## What this repo is (30 seconds)
 
 A **React 19 + Vite** single-page app (`ProjectManagerApp/`) for managing a
-real Iraqi canal-construction contract. No backend, no router, no database —
+real Iraqi canal-construction contract. No backend, no database (hash-URL router) —
 **all data in browser localStorage** (+ IndexedDB for file blobs), Arabic-first
 (RTL) with English. Core design: site reality is entered once as **"orders"**
 in one screen; every other screen (Gantt, dashboard, reports, activity) is a
@@ -18,7 +18,7 @@ live view over that ledger. Blueprint: `plans/ecosystem-plan.md`.
 | Question | Doc |
 |---|---|
 | Domain words (BOQ, WBS, orders, VO, EVM), what each screen does, folder map | `docs/01-overview.md` |
-| How App.jsx wires everything, data flow, who persists what, "where do I add X" | `docs/02-architecture.md` |
+| How the store, router and shell wire everything, data flow, who persists what, "where do I add X" | `docs/02-architecture.md` |
 | Any localStorage key / data shape / object fields | `docs/03-data-model.md` |
 | Anything in `src/utils/` (engines & their exports) | `docs/04-utils-reference.md` |
 | Screen behavior, flows, UX rules | `docs/05-screens-guide.md` |
@@ -48,18 +48,20 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 
 ## Fast facts (so you never grep for them)
 
-- App shell: single file `src/App.jsx` (~1030 lines): tabs, lifecycle (draft→signed→executing→completed), sign-off baseline, Variation Orders, backup/restore, undo.
-- Engine: `GanttEngine.calculate(tasks, PROJECT_START, projectMeta, orders)` → schedule + costs + progress + critical path + EVM + S-curve. `PROJECT_START = '2025-08-02'` (hardcoded).
+- Project store: `src/state/ProjectProvider.jsx` (+ pure `projectModel.js`) — tasks, meta, lifecycle (draft→signed→executing→completed), sign-off baseline, Variation Orders, undo; read it with `useProject()`.
+- Shell + routes: `src/app/` (`router.jsx` hash URLs, `AppLayout.jsx`, `Page.jsx`, `pages/`). Every screen has a URL, e.g. `#/schedule/task/2.1.2`; route table in `docs/02-architecture.md` §2.
+- Engine: `GanttEngine.calculate(tasks, PROJECT_START, projectMeta, orders)` → schedule + costs + progress + critical path + EVM + S-curve. `PROJECT_START = '2025-08-02'` (hardcoded in `src/state/projectModel.js`).
 - Order ledger keys: `pm-orders`; 9 types; families value/expense; tiers quick (auto-approved)/formal (needs Approve).
-- Screens persist their own stores; App re-reads all stores on every tab switch.
+- Screens persist their own stores via `src/utils`; orders/registries/identity/activity owners announce writes (`utils/storeEvents.js`) and the provider re-reads them instantly (also on every navigation).
 - 15 localStorage keys + IndexedDB `ProjectManagerDB` — full table in `docs/03-data-model.md`.
 - i18n: flat `'domain.key'` dictionaries, fallback ar→key, direction from `LANGUAGES`, persisted in `pm-language`.
 
 ## Current state & next steps
 
 **UI rebuild in progress** on branch `redesign/aubergine` — plan, phases and
-decisions in `plans/ui-rebuild-plan.md`. Phase 0 (foundation) is done: design
-tokens (`src/ui/tokens.css`, all names `--ui-*`), shared components in
+decisions in `plans/ui-rebuild-plan.md`. Phases 0–1 are done: Phase 1 moved
+state into `src/state/`, added the hash router and the new shell, and mounts the
+existing screens unchanged inside it. Phase 0: design tokens (`src/ui/tokens.css`, all names `--ui-*`), shared components in
 `src/ui/` (import from `src/ui/index.js`), CSS Modules per component. New UI
 code uses `src/ui/` components only; legacy screens stay untouched until their
 phase. Roadmap after the rebuild: `docs/07-conventions-quirks-roadmap.md` §6–7.

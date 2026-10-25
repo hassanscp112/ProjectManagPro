@@ -1,7 +1,8 @@
 # 05 — Screens & Components Guide
 
-One section per screen, in sidebar order. Props tables are in
-[02-architecture.md §2](02-architecture.md). Component folders live under
+One section per screen. Routes and props tables are in
+[02-architecture.md §2](02-architecture.md); screens are mounted by route pages in
+`src/app/pages/`. Component folders live under
 `ProjectManagerApp/src/components/`.
 
 **Golden pattern:** screens never call `localStorage` directly — persistence
@@ -32,8 +33,9 @@ The planning workbench. Split view: **editable data grid + timeline**.
   **No drag/resize** — dates are edited via grid inputs (deliberate).
 - Two-way scroll sync + ResizeObserver row-height sync between grid and timeline.
 - Row actions: jump to task folder (Files), jump to task details.
-- The Gantt tab in App.jsx adds: KPI strip, lifecycle buttons, week/month
-  toggle, undo, backup/restore, edit-mode toggle (see 02-architecture).
+- The Gantt page (`src/app/pages/SchedulePage.jsx`, `#/schedule`) adds: KPI
+  strip, lifecycle buttons, week/month toggle, undo, backup/restore, edit-mode
+  toggle, and the sign-off / VO / restore dialogs (see 02-architecture).
 
 ## Orders — `orders/OrdersScreen.jsx` (+ `OrderTypePicker`, `TaskPicker`)
 

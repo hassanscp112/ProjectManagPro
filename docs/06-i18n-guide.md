@@ -59,7 +59,7 @@ Some utils (OrderEngine, ActivityLog, PlanningStore, Registries) call
    `dictionaries/ar/finance.js` AND `dictionaries/en/finance.js`.
 2. Use it: `t('finance.myLabel')`.
 3. Never hardcode user-visible text in JSX (Arabic seed task names in
-   `App.jsx` INITIAL_TASKS are data, not UI — that's fine).
+   `src/state/projectModel.js` INITIAL_TASKS are data, not UI — that's fine).
 
 ## 5. How to add a third language ⭐
 

@@ -14,8 +14,8 @@ There is **no server and no database**. Everything is stored in the browser:
 
 | # | Key | Owner module | What it holds |
 |---|-----|--------------|---------------|
-| 1 | `project-manager-gantt-tasks` | App.jsx | Task tree (raw array) |
-| 2 | `project-manager-project-meta` | App.jsx | status / baseline / variations |
+| 1 | `project-manager-gantt-tasks` | ProjectProvider | Task tree (raw array) |
+| 2 | `project-manager-project-meta` | ProjectProvider | status / baseline / variations |
 | 3 | `project-manager-finance-data` | FinanceManager | cost ledger entries |
 | 4 | `project-manager-finance-config` | FinanceManager | editable dropdown lists |
 | 5 | `pm-calculator-templates` | CalculatorView | BOQ calculator templates |

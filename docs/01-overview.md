@@ -1,4 +1,4 @@
-# 01 — What Is This Project?
+| Task `#/schedule/task/:id` | | Library › Templates `#/library/templates` | | People `#/people` | | Finance `#/finance` | | Settings `#/settings` | | Reports › Activity `#/reports/activity` | | Reports › Monthly `#/reports/monthly` | | Reports › Daily `#/reports/daily` | | Library › BOQ `#/library/boq` | | Library › Files `#/library/files` | | Schedule › Lookahead `#/schedule/lookahead` | | Record `#/record` | | Schedule `#/schedule` | | Home `#/` | # 01 — What Is This Project?
 
 A plain-language overview. No code knowledge needed to read this file.
 
@@ -24,7 +24,7 @@ The core philosophy, from the design blueprint (`plans/ecosystem-plan.md`), is:
 
 | Layer | Choice | Notes |
 |---|---|---|
-| UI | **React 19** (plain JavaScript, no TypeScript) | One `App.jsx`, tab-based navigation, **no router** |
+| UI | **React 19** (plain JavaScript, no TypeScript) | Hash-URL router (`src/app/router.jsx`), project store in `src/state/` |
 | Build | **Vite 8** | `npm run dev` / `npm run build` |
 | Spreadsheet grid | **jspreadsheet-ce v5** | Used ONLY in the calculator template editor |
 | Storage | **Browser localStorage** (+ IndexedDB for uploaded files) | No backend, no server, works offline |
@@ -103,28 +103,28 @@ monthly report.
 
 ### 🔄 Project lifecycle
 `draft → signed → executing → completed` — controlled from the Gantt toolbar
-(Sign-off button, then Start Execution, then Complete; re-baseline allowed).
+(`#/schedule`: Sign-off button, then Start Execution, then Complete; re-baseline allowed).
 
 ---
 
 ## 4. What each screen does (30-second tour)
 
-| Tab | Screen | One-liner |
+| Route | Screen | One-liner |
 |---|---|---|
-| Dashboard | `dashboard/Dashboard` | Status cards, EVM tiles, S-curve, per-WBS roll-up, action items |
-| Gantt | `GanttChart` | Editable task grid + day-based timeline, KPI strip, lifecycle/VO/backup toolbar |
-| Orders | `orders/OrdersScreen` | THE entry screen: pick type → fill → save; filterable log with approve/delete |
-| Planning | `planning/PlanningScreen` | Month/week/day lookahead targets & assignments |
-| Files | `FileManager` | Per-task document folders; files stored in IndexedDB |
-| Calculator | `calculator/*` | BOQ quantity take-off grids (templates with formulas) |
-| Daily report | `reports/DailyReports` | Daily site log, auto-filled from the day's orders; printable |
-| Monthly report | `reports/MonthlyReport` | Printable full monthly report recomputed from the order ledger |
-| Activity | `activity/ActivityScreen` | Unified audit feed + per-task story + GitHub-style heatmap |
-| Snapshots | `snapshots/SnapshotsScreen` | Restore points (auto + named) |
-| Finance | `finance/FinanceManager` | Site cost ledgers (machinery/materials/petty cash/payroll) |
-| Registries | `registries/RegistriesScreen` | Contractors / teams / workers / current identity |
-| Templates | `templates/TemplatesScreen` | Generate a task tree from parametric templates; rate library |
-| Task details | `taskDetails/TaskDetails` | *(hidden tab — reached by clicking a task in Gantt)* read-first drill-down report per task with edit mode |
+| Home `#/` | `dashboard/Dashboard` | Status cards, EVM tiles, S-curve, per-WBS roll-up, action items |
+| Schedule `#/schedule` | `GanttChart` | Editable task grid + day-based timeline, KPI strip, lifecycle/VO/backup toolbar |
+| Record `#/record` | `orders/OrdersScreen` | THE entry screen: pick type → fill → save; filterable log with approve/delete |
+| Schedule › Lookahead `#/schedule/lookahead` | `planning/PlanningScreen` | Month/week/day lookahead targets & assignments |
+| Library › Files `#/library/files` | `FileManager` | Per-task document folders; files stored in IndexedDB |
+| Library › BOQ `#/library/boq` | `calculator/*` | BOQ quantity take-off grids (templates with formulas) |
+| Reports › Daily `#/reports/daily` | `reports/DailyReports` | Daily site log, auto-filled from the day's orders; printable |
+| Reports › Monthly `#/reports/monthly` | `reports/MonthlyReport` | Printable full monthly report recomputed from the order ledger |
+| Reports › Activity `#/reports/activity` | `activity/ActivityScreen` | Unified audit feed + per-task story + GitHub-style heatmap |
+| Settings `#/settings` | `snapshots/SnapshotsScreen` | Restore points (auto + named) |
+| Finance `#/finance` | `finance/FinanceManager` | Site cost ledgers (machinery/materials/petty cash/payroll) |
+| People `#/people` | `registries/RegistriesScreen` | Contractors / teams / workers / current identity |
+| Library › Templates `#/library/templates` | `templates/TemplatesScreen` | Generate a task tree from parametric templates; rate library |
+| Task `#/schedule/task/:id` | `taskDetails/TaskDetails` | *(opened from the Gantt or Ctrl K search)* read-first drill-down report per task with edit mode |
 
 ---
 
@@ -141,7 +141,9 @@ Project Management Package/          ← repository root
 │   ├── ui-rebuild-plan.md           ← Aubergine UI rebuild, 8 phases (IN PROGRESS)
 │   └── study-folder-analysis.md     ← notes on the Study/ research data
 ├── ProjectManagerApp/               ← THE APP (only folder with real code)
-│   ├── src/App.jsx                  ← the single app shell (tabs, lifecycle, modals)
+│   ├── src/App.jsx                  ← ProjectProvider + router (tiny)
+│   ├── src/state/                   ← project store + pure task/lifecycle logic
+│   ├── src/app/                     ← router, shell layout, one page per route
 │   ├── src/components/              ← one folder per screen (see 05-screens-guide)
 │   ├── src/utils/                   ← pure-logic engines + persistence (see 04-utils-reference)
 │   ├── src/i18n/                    ← ar/en dictionaries (see 06-i18n-guide)

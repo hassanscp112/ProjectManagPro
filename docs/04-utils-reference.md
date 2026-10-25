@@ -166,6 +166,19 @@ DB `ProjectManagerDB` v1, store `files`.
 
 ---
 
+## storeEvents.js — "this store changed" notifications
+
+- `notifyStoreChange(key)` — dispatches a `pm-store-change` window event
+  (no-op outside the browser, so node tests are unaffected)
+- `onStoreChange(handler)` → unsubscribe; handler gets the storage key
+
+Called by `saveOrdersData`, `saveRegistries`, `saveIdentity` and
+`saveAppEvents` after writing; `ProjectProvider` listens and re-reads that
+store immediately. A new persisted store that other screens read should do
+the same.
+
+---
+
 ## TaskRanking.js — task picker ordering
 
 Shared by the legacy orders `TaskPicker` and the new `src/ui/TaskPicker`.

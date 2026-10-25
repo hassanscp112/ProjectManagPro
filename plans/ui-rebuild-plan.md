@@ -1,6 +1,9 @@
 # UI/UX Rebuild Plan — "Aubergine"
 
 **Status:** approved 2026-10-25 · in progress on branch `redesign/aubergine`
+· Phase 0 done · Phase 1 done (sub-routes `/record/log`, `/record/pending`,
+`/schedule/baseline`, `/library/rates`, `/finance/:ledger`, `/people/:kind`
+arrive with their screens in Phases 2, 4 and 6)
 **Design source:** canvas "ProjectManager Redesign" (Desktop Home / Record / Schedule,
 Phone Home / Record, Color system · Aubergine).
 
