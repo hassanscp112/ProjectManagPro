@@ -95,6 +95,6 @@ Some utils (OrderEngine, ActivityLog, PlanningStore, Registries) call
   (stored value, not UI text) — don't "translate" that comparison.
 - Month/weekday names in the Schedule and Lookahead come from `Intl` with
   `ar-IQ-u-nu-latn` (Levantine month names, Latin digits) / `en-GB`.
-- The engine's task **warnings** (`GanttEngine.js`: duplicate WBS, executed >
-  planned, bad relation, dependency cycle) are hardcoded Arabic strings; the
-  Schedule shows them as-is in English too.
+- The engine stays untranslated: its task **warnings** carry a `code` and
+  `params`, which `app/schedule/warningText.js` turns into `schedule.warn*`
+  text (the engine's Arabic `message` is only a fallback).

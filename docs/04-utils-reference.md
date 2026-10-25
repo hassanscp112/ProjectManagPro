@@ -57,9 +57,15 @@ Pipeline explained in [02-architecture.md §3](02-architecture.md). Returns:
   sCurve: [{ date, pv, ev, ac, isFuture }],          // one point per week
   perWbsEvm: [{ wbs, name, taskCount, bac, pv, ev, ac, spi, cpi }],
   expenses, scheduleStartDate, scheduleEndDate, projectDuration,
-  warnings,
+  warnings,   // [{ taskId, wbs, name, code, params, message }]
 }
 ```
+
+Each computed task also carries `warnings: [{ code, params, message }]`.
+Codes: `duplicateWbs {wbs}`, `overExecuted`, `invalidDepType` (coerced to FS),
+`dependencyCycle {cycle}`, `selfDependency`, `missingPredecessor {id}`.
+`message` is an Arabic fallback; the UI shows `code` + `params` in its own
+language (`src/app/schedule/warningText.js`, keys `schedule.warn*`).
 
 Also exports date helpers `addDays(dateStr, days)` and `daysBetween(a, b)`.
 `projectMeta.baseline.tasks` (map by task id) drives scope/exec variance.

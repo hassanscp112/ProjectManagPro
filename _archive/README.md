@@ -17,7 +17,7 @@ with broken Arabic text encoding (unreadable mojibake), which is why they were a
 | `excel_files.txt` | repo root |
 | `excel_info.txt` | repo root |
 | `finance_analysis.txt` | repo root |
-| `analyze_excel.cjs` | `ProjectManagerApp/analyze_excel.cjs` (the script that generated the txt files) |
+| `analyze_excel.cjs` | `ProjectManagerApp/analyze_excel.cjs` (the script that generated the txt files; needs `npm install exceljs` to run again — the app no longer depends on it) |
 
 The source Excel files remain untouched in `Excel Sheets/`.
 

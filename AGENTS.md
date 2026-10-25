@@ -43,7 +43,7 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 3. **Components never call localStorage directly** — persistence only via `src/utils` owners.
 4. **Cleanup = move to `_archive/`** with a note; never delete files.
 5. Don't add manual "actual quantity" inputs — executed qty is order-derived.
-6. `exceljs`/`mathjs` deps are currently unused; no Excel export exists.
+6. There is no Excel export (the unused `exceljs`/`mathjs` deps were removed).
 7. Data loss risk: everything lives in the browser — never instruct clearing storage without exporting a backup first (in-app Backup button).
 
 ## Fast facts (so you never grep for them)

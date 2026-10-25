@@ -44,7 +44,7 @@ The rules that prevent mistakes. Read this before changing anything.
 
 | # | Quirk | Where | Implication |
 |---|-------|-------|-------------|
-| 1 | `exceljs` and `mathjs` are in package.json but **imported nowhere** | package.json | Don't assume Excel export or mathjs exists; removing them is safe if desired |
+| 1 | ~~`exceljs` and `mathjs` in package.json but imported nowhere~~ **removed** | — | No Excel export exists; the archived `analyze_excel.cjs` needs `npm i exceljs` to run again |
 | 2 | `PROJECT_START = '2025-08-02'` is a hardcoded constant | `src/state/projectModel.js` | New projects must edit this |
 | 3 | ~~Topbar breadcrumb is a hardcoded Arabic string~~ **fixed in Phase 1** | — | Project name/contract now `ui.projectName` / `ui.projectContract` |
 | 4 | Payroll compares raw `'مستقطع'` data value | `state/financeModel.js` (`DEDUCTED_STATUS`) | Stored data value — don't translate the comparison |
@@ -55,7 +55,7 @@ The rules that prevent mistakes. Read this before changing anything.
 | 9 | localStorage **quota** (~5 MB) is the only real limit | all | File blobs already live in IndexedDB; big data goes to backup files |
 | 10 | Element columns/BOQ links only on group tasks | `app/schedule/TaskDetailsEdit.jsx` | Leaves are "record only" |
 | 11 | Quick orders are born approved (`approvedBy` = identity) | OrderEngine | Only formal+recorded need the Approve action |
-| 12 | Engine task warnings are hardcoded Arabic | `GanttEngine.js` (`addTaskWarning`) | They show untranslated in English; translate by returning codes + params if needed |
+| 12 | ~~Engine task warnings are hardcoded Arabic~~ **fixed** — warnings carry `code` + `params` | `GanttEngine.js`, `app/schedule/warningText.js` | Shown in the UI language (grid tooltip and the task panel's warning list) |
 
 ## 4. Environment quirks (this machine / workflow)
 
@@ -96,7 +96,7 @@ The rules that prevent mistakes. Read this before changing anything.
 - **Accessibility:** a "Skip to content" link, a window title per page, a
   focus ring on every focusable element (`base.css` fallback), labelled
   fields and icon buttons (checked on every route), status always with words.
-- **Tests:** 18 test files (148 tests), all pure-logic (engines, project model, order form, home model,
+- **Tests:** 18 test files (149 tests), all pure-logic (engines, project model, order form, home model,
   schedule model, lookahead model, reports model, finance / library / people models, task details model,
   task ranking, who selection, ar/en dictionary parity); no component tests.
 - **Printing:** only `.ui-print-sheet` content prints (report pages, finance

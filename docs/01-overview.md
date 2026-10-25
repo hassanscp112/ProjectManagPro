@@ -32,8 +32,8 @@ The core philosophy, from the design blueprint (`plans/ecosystem-plan.md`), is:
 | New UI components | **Radix UI** primitives, **cmdk**, **lucide-react** icons, IBM Plex Sans Arabic (bundled) | `src/ui/` — UI rebuild in progress, see `plans/ui-rebuild-plan.md` |
 | Tests | Node built-in `node:test` | Pure logic only (`npm test`) |
 
-Declared but currently **unused** dependencies: `exceljs`, `mathjs`
-(see quirks doc — do not assume Excel export exists).
+There is no Excel export (the unused `exceljs` / `mathjs` dependencies were
+removed).
 
 ---
 
