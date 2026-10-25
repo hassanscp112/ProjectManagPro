@@ -73,12 +73,14 @@ export const loadSnapshots = () => {
   }
 };
 
+// Returns true when written, false when storage refused (quota / private mode).
 export const saveSnapshots = (data) => {
   try {
     const safe = data && typeof data === 'object' ? data : emptySnapshots();
     localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(safe));
+    return true;
   } catch {
-    // Storage unavailable (quota / private mode) — nothing we can do safely.
+    return false;
   }
 };
 
@@ -143,8 +145,8 @@ export const createNamedSnapshot = (name, tasks, projectMeta, actor) => {
     actor: typeof actor === 'string' ? actor : '',
   };
   data.named = [...data.named, snapshot];
-  saveSnapshots(data);
-  return snapshot;
+  // null = not stored (storage full), so callers relying on it can stop.
+  return saveSnapshots(data) ? snapshot : null;
 };
 
 export const deleteNamedSnapshot = (id) => {
@@ -168,12 +170,21 @@ export const renameNamedSnapshot = (id, newName) => {
 // Write a snapshot's payload straight into the App's two storage keys. The
 // caller is responsible for reloading state afterwards (window reload or an
 // onRestored callback) — the live React tree keeps its in-memory copy.
+// Throws if storage refuses a write; the tasks key is then put back so the
+// two keys never come from different points in time.
 export const restoreSnapshot = ({ tasks, projectMeta } = {}) => {
+  const previousTasks = localStorage.getItem(TASKS_RESTORE_KEY);
   localStorage.setItem(TASKS_RESTORE_KEY, JSON.stringify(Array.isArray(tasks) ? tasks : []));
-  localStorage.setItem(
-    META_RESTORE_KEY,
-    JSON.stringify(projectMeta && typeof projectMeta === 'object' ? projectMeta : {})
-  );
+  try {
+    localStorage.setItem(
+      META_RESTORE_KEY,
+      JSON.stringify(projectMeta && typeof projectMeta === 'object' ? projectMeta : {})
+    );
+  } catch (err) {
+    if (previousTasks === null) localStorage.removeItem(TASKS_RESTORE_KEY);
+    else localStorage.setItem(TASKS_RESTORE_KEY, previousTasks);
+    throw err;
+  }
 };
 
 // Summary strip figures, computed from what is actually stored.

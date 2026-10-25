@@ -18,4 +18,13 @@ export default {
   'settings.snapshotSaved': 'Snapshot saved',
   'settings.restoreTitle': 'Restore this snapshot?',
   'settings.deleteSnapshotTitle': 'Delete this snapshot?',
+  'settings.beforeRestoreName': 'Before restoring {label}',
+  'settings.beforeRestoreFail': 'Could not keep a snapshot of the current data (storage is full), so nothing was restored.',
+  'settings.storageFull': 'Browser storage is full. Download a backup, then delete old snapshots.',
+  'settings.storage': 'Browser storage',
+  'settings.storage_persisted': 'Protected',
+  'settings.storage_best-effort': 'May be cleared by the browser',
+  'settings.storage_unsupported': 'Status unknown',
+  'settings.storageAsk': 'Protect',
+  'settings.storageRefused': 'The browser did not allow it yet. Bookmark this page or install it as an app, then try again — and keep downloading backups.',
 };

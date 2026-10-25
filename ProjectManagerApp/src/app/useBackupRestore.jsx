@@ -3,9 +3,12 @@ import { useI18n } from '../i18n/useI18n.js';
 import { exportAppData, readBackupFile, restoreAppData, validateBackup } from '../utils/DataIO';
 import { ConfirmDialog, useToast } from '../ui/index.js';
 
+// Give the browser a moment to take the safety download before reloading.
+const SAFETY_DOWNLOAD_SETTLE_MS = 800;
+
 /**
- * Backup download + restore (validate → confirm → write → reload), same
- * flow as before. Returns { backup, restore, element } — render element.
+ * Backup download + restore (validate → confirm → safety copy of the current
+ * data → write → reload). Returns { backup, restore, element } — render element.
  */
 export function useBackupRestore() {
   const { t } = useI18n();
@@ -14,9 +17,16 @@ export function useBackupRestore() {
   const pendingRef = useRef(null);
   const [info, setInfo] = useState(null);
 
-  const backup = () => {
-    exportAppData();
-    toast({ title: t('schedule.backupSaved') });
+  const errorText = (err, fallback) => (err?.code ? t(`app.backup.err.${err.code}`) : t(fallback));
+
+  const backup = async () => {
+    try {
+      const { filesSkipped } = await exportAppData();
+      toast({ title: t('schedule.backupSaved') });
+      if (filesSkipped) toast({ title: t('app.backup.filesSkipped'), tone: 'danger' });
+    } catch {
+      toast({ title: t('app.backup.exportFail'), tone: 'danger' });
+    }
   };
 
   const onFile = async (event) => {
@@ -27,14 +37,33 @@ export function useBackupRestore() {
       const parsed = await readBackupFile(file);
       const result = validateBackup(parsed);
       if (!result.ok) {
-        toast({ title: result.reason, tone: 'danger' });
+        toast({ title: t(`app.backup.err.${result.code}`), tone: 'danger' });
         return;
       }
       pendingRef.current = parsed;
       setInfo(result.stats);
     } catch (err) {
-      toast({ title: err.message || t('app.modal.readFail'), tone: 'danger' });
+      toast({ title: errorText(err, 'app.modal.readFail'), tone: 'danger' });
     }
+  };
+
+  const confirmRestore = async () => {
+    // A copy of what is here now, so a wrong backup file can be undone.
+    try {
+      const { filesSkipped } = await exportAppData({ label: 'before-restore' });
+      if (filesSkipped) throw new Error('files skipped');
+    } catch {
+      toast({ title: t('app.backup.safetyFail'), tone: 'danger' });
+      return;
+    }
+    toast({ title: t('app.backup.safetySaved') });
+    try {
+      await restoreAppData(pendingRef.current);
+    } catch (err) {
+      toast({ title: errorText(err, 'app.modal.restoreFail'), tone: 'danger' });
+      return;
+    }
+    setTimeout(() => window.location.reload(), SAFETY_DOWNLOAD_SETTLE_MS);
   };
 
   const element = (
@@ -44,17 +73,16 @@ export function useBackupRestore() {
         open={Boolean(info)}
         onOpenChange={(open) => !open && setInfo(null)}
         title={t('app.modal.restoreTitle')}
-        message={info ? t('app.modal.restoreText', { keys: info.keys, kb: (info.bytes / 1024).toFixed(0) }) : ''}
+        message={
+          info
+            ? `${t('app.modal.restoreText', { keys: info.keys, kb: (info.bytes / 1024).toFixed(0) })} ${
+                info.files === null ? t('app.modal.restoreFilesKept') : t('app.modal.restoreFiles', { n: info.files })
+              }`
+            : ''
+        }
         confirmLabel={t('app.modal.restoreAction')}
         tone="danger"
-        onConfirm={() => {
-          try {
-            restoreAppData(pendingRef.current);
-            window.location.reload();
-          } catch (err) {
-            toast({ title: err.message || t('app.modal.restoreFail'), tone: 'danger' });
-          }
-        }}
+        onConfirm={confirmRestore}
       />
     </>
   );

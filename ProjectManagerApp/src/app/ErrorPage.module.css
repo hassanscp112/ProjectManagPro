@@ -1,0 +1,67 @@
+/* Crash screen (app/ErrorPage.jsx). body has overflow: hidden, so the
+   full-window version scrolls itself. */
+.full {
+  box-sizing: border-box;
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ui-space-4);
+  background: var(--ui-canvas);
+  color: var(--ui-text);
+  font-family: var(--ui-font);
+}
+.inline {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--ui-space-6);
+}
+.card {
+  width: 100%;
+  max-width: 560px;
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ui-space-3);
+}
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--ui-warning-soft);
+  color: var(--ui-warning);
+}
+.title {
+  margin: 0;
+  font-size: var(--ui-fs-lg);
+  font-weight: 700;
+}
+.text {
+  margin: 0;
+  color: var(--ui-text-2);
+}
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+.details {
+  width: 100%;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.details pre {
+  margin: var(--ui-space-2) 0 0;
+  padding: var(--ui-space-3);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-canvas);
+  font-family: var(--ui-font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -68,3 +68,31 @@ export const deleteFile = async (fileId) => {
     request.onerror = (e) => reject(e.target.error);
   });
 };
+
+// Every stored file (all folders) — used by the full backup (DataIO).
+export const getAllFiles = async () => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['files'], 'readonly');
+    const request = transaction.objectStore('files').getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+};
+
+// Replace ALL stored files with `records` ({ id, folderId, name, size, type,
+// blob, createdAt }) in one transaction: if any write fails, nothing changes.
+export const replaceAllFiles = async (records) => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['files'], 'readwrite');
+    const store = transaction.objectStore('files');
+    store.clear();
+    records.forEach((record) => store.put(record));
+
+    transaction.oncomplete = () => resolve(records.length);
+    transaction.onerror = (e) => reject(e.target.error);
+    transaction.onabort = (e) => reject(e.target.error || new Error('aborted'));
+  });
+};

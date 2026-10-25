@@ -1,10 +1,11 @@
-import { CalendarRange, Download, History, Pencil, Plus, RotateCcw, Trash2, Upload, UserRound } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { CalendarRange, Download, History, Pencil, Plus, RotateCcw, ShieldCheck, Trash2, Upload, UserRound } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useI18n } from '../../i18n/useI18n.js';
 import { STATUS_KEYS } from '../../state/projectModel.js';
 import { useProject } from '../../state/projectContext.js';
 import { createNamedSnapshot, deleteNamedSnapshot, loadSnapshots, renameNamedSnapshot, restoreSnapshot, snapshotsStats } from '../../utils/Snapshots.js';
+import { getPersistenceState, requestPersistentStorage } from '../../utils/StoragePersistence.js';
 import { THEMES, applyTheme, loadTheme, saveTheme } from '../../utils/Theme.js';
 import { Button, Card, ConfirmDialog, EmptyState, IconButton, Input, Segmented, StatusBadge, Table, useToast } from '../../ui/index.js';
 import { formatDay, formatTime } from '../record/orderMeta.js';
@@ -34,7 +35,11 @@ function SnapshotsCard() {
 
   const create = (e) => {
     e.preventDefault();
-    createNamedSnapshot(name, tasks, projectMeta, identity?.name || '');
+    const saved = createNamedSnapshot(name, tasks, projectMeta, identity?.name || '');
+    if (!saved) {
+      toast({ title: t('settings.storageFull'), tone: 'danger' });
+      return;
+    }
     setName('');
     refresh();
     toast({ title: t('settings.snapshotSaved') });
@@ -53,7 +58,19 @@ function SnapshotsCard() {
       refresh();
       return;
     }
-    restoreSnapshot({ tasks: snap.tasks || [], projectMeta: snap.projectMeta });
+    // Keep what is here now as a named snapshot first, so the restore can be undone.
+    const before = createNamedSnapshot(t('settings.beforeRestoreName', { label: confirm.label }), tasks, projectMeta, identity?.name || '');
+    if (!before) {
+      toast({ title: t('settings.beforeRestoreFail'), tone: 'danger' });
+      return;
+    }
+    try {
+      restoreSnapshot({ tasks: snap.tasks || [], projectMeta: snap.projectMeta });
+    } catch {
+      toast({ title: t('settings.storageFull'), tone: 'danger' });
+      refresh();
+      return;
+    }
     window.location.reload();
   };
 
@@ -194,6 +211,44 @@ function SnapshotsCard() {
   );
 }
 
+const PERSIST_TONE = { persisted: 'success', 'best-effort': 'warning', unsupported: 'neutral' };
+
+/** Whether the browser may clear this app's storage on its own (utils/StoragePersistence). */
+function StorageProtection() {
+  const { t } = useI18n();
+  const toast = useToast();
+  const [state, setState] = useState(null);
+
+  useEffect(() => {
+    let ignore = false;
+    getPersistenceState().then((next) => !ignore && setState(next));
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const ask = async () => {
+    const next = await requestPersistentStorage();
+    setState(next);
+    if (next !== 'persisted') toast({ title: t('settings.storageRefused') });
+  };
+
+  if (!state) return null;
+  return (
+    <div className={s.row}>
+      <span className={s.label}>{t('settings.storage')}</span>
+      <StatusBadge tone={PERSIST_TONE[state]} icon="dot" size="md">
+        {t(`settings.storage_${state}`)}
+      </StatusBadge>
+      {state === 'best-effort' && (
+        <Button size="sm" icon={ShieldCheck} onClick={ask}>
+          {t('settings.storageAsk')}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 /**
  * /settings — who you are, appearance (theme, language), the project's
  * lifecycle, full backup / restore, and restore points.
@@ -267,6 +322,7 @@ export default function SettingsPage() {
         <Card title={t('settings.backup')} titleAs="h2" padding="md">
           <div className={s.rows}>
             <p className={s.muted}>{t('settings.backupHint')}</p>
+            <StorageProtection />
             <div className={s.buttons}>
               <Button variant="primary" icon={Download} onClick={backupRestore.backup}>
                 {t('schedule.backup')}

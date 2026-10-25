@@ -18,4 +18,13 @@ export default {
   'settings.snapshotSaved': 'حُفظت اللقطة',
   'settings.restoreTitle': 'استعادة هذه اللقطة؟',
   'settings.deleteSnapshotTitle': 'حذف هذه اللقطة؟',
+  'settings.beforeRestoreName': 'قبل استعادة {label}',
+  'settings.beforeRestoreFail': 'تعذّر حفظ لقطة من البيانات الحالية (مساحة التخزين ممتلئة)، لذلك لم تتم الاستعادة.',
+  'settings.storageFull': 'مساحة تخزين المتصفح ممتلئة. نزّل نسخة احتياطية، ثم احذف اللقطات القديمة.',
+  'settings.storage': 'تخزين المتصفح',
+  'settings.storage_persisted': 'محمي',
+  'settings.storage_best-effort': 'قد يمسحه المتصفح',
+  'settings.storage_unsupported': 'الحالة غير معروفة',
+  'settings.storageAsk': 'حماية',
+  'settings.storageRefused': 'لم يسمح المتصفح بذلك بعد. أضف الصفحة إلى المفضلة أو ثبّتها كتطبيق ثم حاول مرة أخرى — واستمر في تنزيل النسخ الاحتياطية.',
 };
