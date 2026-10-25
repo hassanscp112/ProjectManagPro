@@ -1,16 +1,37 @@
-# React + Vite
+# ProjectManagerApp
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Single-page construction project-management app (React 19 + Vite, plain JS)
+for an Iraqi canal rehabilitation contract. Arabic-first (RTL) + English.
+**No backend: all data lives in the browser** (localStorage + IndexedDB).
 
-Currently, two official plugins are available:
+📖 **Full documentation:** [`../docs/README.md`](../docs/README.md) — start with
+`01-overview.md`. Agent entry point: [`../AGENTS.md`](../AGENTS.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Run it
 
-## React Compiler
+```bash
+npm install
+npm run dev        # → http://localhost:5173
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+(Or double-click `run.cmd` in the repository root.)
 
-## Expanding the ESLint configuration
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Dev server with hot reload |
+| `npm run build` | Production build (`dist/`) |
+| `npm run lint` | ESLint |
+| `node --test "src/utils/__tests__/*.test.js"` | Engine unit tests (Node built-in runner) |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Where things are
+
+```
+src/
+├── App.jsx          ← the whole app shell (tabs, lifecycle, modals)
+├── components/      ← one folder per screen (17 components)
+├── utils/           ← engines + persistence (13 modules, tested)
+└── i18n/            ← ar/en dictionaries (15 domain files each)
+```
+
+⚠️ **Back up before clearing browser data** — use the in-app **Backup** button
+(Gantt toolbar) to export a JSON file; **Restore** re-imports it.
