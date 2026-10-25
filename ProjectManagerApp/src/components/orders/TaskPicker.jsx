@@ -1,19 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../../i18n/useI18n.js';
+import { filterTasks, rankLeafTasks } from '../../utils/TaskRanking.js';
 import './TaskPicker.css';
-
-// Numeric WBS segment compare (1.2 before 1.10).
-const wbsCompare = (a, b) => {
-  const av = (a.wbs || '').split('.').map((n) => parseInt(n, 10) || 0);
-  const bv = (b.wbs || '').split('.').map((n) => parseInt(n, 10) || 0);
-  const len = Math.max(av.length, bv.length);
-  for (let i = 0; i < len; i++) {
-    const x = av[i] || 0;
-    const y = bv[i] || 0;
-    if (x !== y) return x - y;
-  }
-  return 0;
-};
 
 /**
  * Searchable leaf-task picker: filters tasks (!isGroup) by wbs/name substring
@@ -28,30 +16,11 @@ const TaskPicker = ({ tasks = [], orders = [], value, onChange, optional = false
 
   // Leaf tasks ranked: recently-ordered first (latest order wins), then WBS order.
   const ranked = useMemo(() => {
-    const lastOrderAt = new Map();
-    (orders || []).forEach((o) => {
-      if (!o || !o.taskId) return;
-      const at = o.recordedAt || '';
-      const prev = lastOrderAt.get(o.taskId);
-      if (!prev || at > prev) lastOrderAt.set(o.taskId, at);
-    });
-    const withOrders = [];
-    const withoutOrders = [];
-    (tasks || []).forEach((t) => {
-      if (!t || t.isGroup) return;
-      if (lastOrderAt.has(t.id)) withOrders.push(t);
-      else withoutOrders.push(t);
-    });
-    withOrders.sort((a, b) => (lastOrderAt.get(b.id) || '').localeCompare(lastOrderAt.get(a.id) || ''));
-    withoutOrders.sort(wbsCompare);
-    return [...withOrders, ...withoutOrders];
+    const { recent, rest } = rankLeafTasks(tasks, orders);
+    return [...recent, ...rest];
   }, [tasks, orders]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return ranked;
-    return ranked.filter((t) => `${t.wbs || ''} ${t.name || ''}`.toLowerCase().includes(q));
-  }, [ranked, query]);
+  const filtered = useMemo(() => filterTasks(ranked, query), [ranked, query]);
 
   // Close the dropdown on any click outside.
   useEffect(() => {
