@@ -11,7 +11,7 @@ contract in Iraq: a canal rehabilitation project
 (*مشروع استصلاح اراضي واسط / عقد ٥ لسنة ٢٠٢٣ / غرب الغراف / ايسر MC7*).
 The site engineer records what actually happened each day (work done, concrete
 tests, materials, fuel, payroll…) as **orders** in one fast entry screen, and
-*every other screen in the app is a live view over that record* — Gantt chart,
+*every other screen in the app is a live view over that record* — schedule,
 dashboard, daily/monthly reports, contractor accountability, activity history.
 The core philosophy, from the design blueprint (`plans/ecosystem-plan.md`), is:
 
@@ -102,8 +102,10 @@ engine produces them; just know these letters appear in the dashboard and
 monthly report.
 
 ### 🔄 Project lifecycle
-`draft → signed → executing → completed` — controlled from the Gantt toolbar
-(`#/schedule`: Sign-off button, then Start Execution, then Complete; re-baseline allowed).
+`draft → signed → executing → completed` — controlled from the Schedule toolbar
+(`#/schedule`: Sign off contract, then Start execution, then Complete; re-baseline
+allowed). After sign-off, contract quantities and prices change only through
+variation orders; `#/schedule/baseline` compares them with the signed baseline.
 
 ---
 
@@ -112,9 +114,10 @@ monthly report.
 | Route | Screen | One-liner |
 |---|---|---|
 | Home `#/` | `app/home/*` | Headline progress / SPI / EV / CPI, needs-attention list, S-curve + EVM figures, progress by section, recent orders |
-| Schedule `#/schedule` | `GanttChart` | Editable task grid + day-based timeline, KPI strip, lifecycle/VO/backup toolbar |
+| Schedule `#/schedule` | `app/schedule/*` | Timeline: task grid + Gantt in one scroller (week/month/quarter), KPI strip, lifecycle/VO/backup toolbar, edit mode with locks; task side panel at `#/schedule/task/:id` |
 | Record `#/record` (+ `/log`, `/pending`) | `app/record/*` | THE entry screen: pick type → fill → save (phone: full-screen flow); order log; pending approvals |
-| Schedule › Lookahead `#/schedule/lookahead` | `planning/PlanningScreen` | Month/week/day lookahead targets & assignments |
+| Schedule › Lookahead `#/schedule/lookahead` | `app/schedule/LookaheadPage` | Month targets vs approved orders, week crews, day plan with completion rate (PPC) |
+| Schedule › Baseline `#/schedule/baseline` | `app/schedule/BaselinePage` | Signed contract quantities/prices vs today, per item and in total |
 | Library › Files `#/library/files` | `FileManager` | Per-task document folders; files stored in IndexedDB |
 | Library › BOQ `#/library/boq` | `calculator/*` | BOQ quantity take-off grids (templates with formulas) |
 | Reports › Daily `#/reports/daily` | `reports/DailyReports` | Daily site log, auto-filled from the day's orders; printable |
@@ -124,7 +127,7 @@ monthly report.
 | Finance `#/finance` | `finance/FinanceManager` | Site cost ledgers (machinery/materials/petty cash/payroll) |
 | People `#/people` | `registries/RegistriesScreen` | Contractors / teams / workers / current identity |
 | Library › Templates `#/library/templates` | `templates/TemplatesScreen` | Generate a task tree from parametric templates; rate library |
-| Task `#/schedule/task/:id` | `taskDetails/TaskDetails` | *(opened from the Gantt or Ctrl K search)* read-first drill-down report per task with edit mode |
+| Task details `#/schedule/task/:id/details` | `taskDetails/TaskDetails` | *(Full details from the task panel)* drill-down per task: element columns, BOQ links, edit mode |
 
 ---
 

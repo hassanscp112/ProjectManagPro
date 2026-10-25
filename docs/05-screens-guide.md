@@ -46,21 +46,58 @@ Read-only project overview.
 - Per-WBS EVM roll-up table (`summary.perWbsEvm`) + Action Items
   (overdue-critical / active / next-7-days, sorted by weight).
 
-## Gantt — `GanttChart.jsx`
+## Schedule — `src/app/schedule/` (rebuilt in Phase 4)
 
-The planning workbench. Split view: **editable data grid + timeline**.
-- Grid columns: WBS, name, dates, durations, quantities, prices… Contract
-  cells (qty/unit/price) **locked** when signed (`isSigned`) or BOQ-linked (🔗);
-  executed qty is read-only when order-derived.
-- Timeline: day-based (12px/day in week view, 3px in month view), year/month/week
-  tiers, today line, leaf bars show actual-progress fill + planned strip,
-  critical tasks get the `critical` class. Bars are anchored right in RTL.
-  **No drag/resize** — dates are edited via grid inputs (deliberate).
-- Two-way scroll sync + ResizeObserver row-height sync between grid and timeline.
-- Row actions: jump to task folder (Files), jump to task details.
-- The Gantt page (`src/app/pages/SchedulePage.jsx`, `#/schedule`) adds: KPI
-  strip, lifecycle buttons, week/month toggle, undo, backup/restore, edit-mode
-  toggle, and the sign-off / VO / restore dialogs (see 02-architecture).
+Three sub-pages (tabs): **Timeline `#/schedule`**, **Lookahead
+`#/schedule/lookahead`**, **Baseline `#/schedule/baseline`**.
+
+**Timeline** (`SchedulePage.jsx` + `Gantt.jsx`):
+- KPI strip (cost, progress, planned, deviation, duration, active items,
+  warnings). Toolbar row 1 = lifecycle: draft → *Sign off contract*; signed →
+  *Start execution*; executing → *Complete*; once signed also *Re-baseline* and
+  *Variation orders* (count). Plus *Undo* (edit mode), *Edit* toggle and a More
+  menu (backup / restore). Row 2 = zoom (week / month / quarter: 12 / 3 / 1 px
+  per day), columns (Schedule: progress, days, start, end; Quantities: qty,
+  executed, unit, price, amount), *Critical only*, search, *Today* (scrolls the
+  today line into view), expand / collapse all.
+- **One scroll container**: the item columns are sticky at the reading start,
+  the timeline scrolls beside them, so rows can't drift apart. Header tiers per
+  zoom; January and the first month carry the year. Group rows draw a span bar;
+  leaf bars show actual progress, late items are red-tinted; today line.
+  **No drag/resize** — dates are edited in the grid (deliberate).
+- **Edit mode**: every cell becomes an input; locks come from `fieldLock()` and
+  show a lock icon with the reason: BOQ-linked qty/unit, contract qty/unit/price
+  after sign-off (change them with a variation order), executed qty from
+  orders, start when a predecessor drives it, relation/lag without a
+  predecessor, rolled-up fields on groups. Predecessor/relation/lag columns
+  appear in edit mode only. Add sub-item / delete per row, add main group at
+  the bottom. Edits send only the changed fields (`onUpdate(id, patch)`).
+- Phones: KPIs and toolbars become sideways-swiping rows; optional columns and
+  WBS hide; the chart keeps one screen of height and the page scrolls.
+
+**Task panel** (`TaskPanel.jsx`, URL `#/schedule/task/:id`; drawer on desktop,
+bottom sheet on phones): status / critical / float / warning chips, progress with
+the planned marker, facts (qty, executed, remaining, price, value, earned value,
+dates, duration, predecessor), quick edit (same locks), sub-items, latest 5
+orders on the item or below it, and actions: *Record work* (opens Record with
+the item preselected — `navigate('/record', { state: { taskId } })`), *Files*,
+*Full details* (`#/schedule/task/:id/details`, the legacy `TaskDetails`
+screen), *Delete* (confirm). A URL whose item no longer exists falls back to
+`#/schedule`.
+
+**Dialogs** (`LifecycleDialogs.jsx`): sign-off / re-baseline (name prefilled
+with the last signer, else the current user) and variation orders (item,
+quantity or unit price, new value, classification, urgency, optional cost and
+schedule impact — cost defaults to the quantity increase × unit price, rounded
+to 2 decimals — reason, approver, contract clause; list of past VOs).
+Delete-item confirmation: `src/app/DeleteTaskDialog.jsx`.
+
+**Baseline** (`BaselinePage.jsx`): when signed — who signed and when, baseline
+vs current contract value, the difference and the number of changed items;
+table of leaves with baseline/current quantity and price and the value change
+(changed rows highlighted, new items badged; *Changed only* on by default).
+Unsigned → an empty state with *Sign off contract*.
+Logic: `src/state/scheduleModel.js`.
 
 ## Record — `src/app/record/` (rebuilt in Phase 2)
 
@@ -90,26 +127,32 @@ formal orders start `recorded`; approving uses the current user's name or asks
 for one (`useApproval.jsx`). Logic: `src/state/orderForm.js`.
 The legacy `components/orders/` screen is no longer routed (archived in Phase 7).
 
-## Planning — `planning/PlanningScreen.jsx`
+## Lookahead — `src/app/schedule/LookaheadPage.jsx` (rebuilt in Phase 4)
 
-Rolling lookahead, three zoom levels (month / week / day):
-- **Month**: quantity targets per task per month.
-- **Week**: crew assignments ("who on which task"), or *Copy Last Week*.
-- **Day**: assignments, *Same as Yesterday* clone (confirm-replace), PPC badge.
-- Execution math: month achievement uses **approved value orders** only
-  (green ≥100%, amber ≥50%). Daily PPC = assignments with ≥1 approved value
-  order ÷ total (green ≥80%, amber ≥50%).
-- WhoPicker modes (count / team / workers) convert losslessly; picking workers
-  that match a team roster preselects that team.
-- Deleted tasks appear as "(deleted)" options. Arabic UI uses Levantine
-  month/weekday names.
+Rolling plan at three levels (Month / Week / Day), with previous / next period
+and *Today*:
+- **Month**: quantity targets per item, grouped in one card per top-level
+  section. Each row: item, target quantity (BOQ unit), executed this month (sum
+  of **approved quantity orders** in that month) with a bar, note. KPIs:
+  targets, target total, executed, achievement (met at 100%, amber ≥ 50%).
+- **Week**: crew assignments (item + `WhoPicker` count / team / workers + note);
+  *Copy last week*.
+- **Day**: the same rows plus, per row, done / not done (done = at least one
+  approved quantity order on the item that day), that day's orders and
+  *Record work*. KPIs: completion rate (PPC = done ÷ assignments; good ≥ 80%),
+  done / total, approved orders that day. *Same as yesterday*.
+- Copying over a non-empty week/day asks first (`ConfirmDialog`); nothing to
+  copy shows a toast. Rows with no item picked are dropped on reload.
+- Storage: `utils/PlanningStore.js` (`pm-plans`). Logic:
+  `src/state/lookaheadModel.js`. Month/weekday names come from `Intl`
+  (`ar-IQ`, Levantine month names).
 
 ## Files — `FileManager.jsx`
 
 Virtual folder tree: root → *Tasks* → one folder per task. Upload via picker or
 drag-drop; download via object URL; delete. Blobs live in IndexedDB
 (`utils/FileDB`). `targetTask` prop auto-navigates to that task's folder
-(used by Gantt's "folder" jump).
+(used by the task panel's *Files* action).
 
 ## Calculator — `calculator/CalculatorView.jsx` (+ `CalculatorGrid`, `TemplateEditor`)
 
@@ -190,16 +233,16 @@ CRUD for **contractors / teams / workers** + the current-identity card.
 Template studio, three tabs:
 1. **Templates** — pick a card → fill variables + start date → live preview
    (items/qty/unit/price/cost/duration; warns on unpriced leaves) → Generate
-   → App appends the tree with renumbered WBS and jumps to Gantt.
+   → App appends the tree with renumbered WBS and jumps to the Timeline.
 2. **Rates** — the IQD unit-price library (search/add/edit/delete).
 3. **Editor** — save current project as a template, or build one from parts:
    variables, elements (part/group/formula/repeats/dependencies FS/SS/FF/SF
    with lag).
 Seed templates keep Arabic names in storage with display-time English mapping.
 
-## Task Details — `taskDetails/TaskDetails.jsx` *(hidden tab)*
+## Task Details — `taskDetails/TaskDetails.jsx` (`#/schedule/task/:id/details`)
 
-Deep drill-down for ONE task — reached from Gantt/"jump to task details" or by
+Deep drill-down for ONE task — reached from the task panel's *Full details* or by
 clicking a child inside itself. **Read-first design**: opens as a read-only
 report (progress, quantities, element map, orders incl. WBS descendants,
 money, evidence, children) — the ✏️ Edit button unlocks structure editing

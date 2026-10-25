@@ -40,7 +40,7 @@ The rules that prevent mistakes. Read this before changing anything.
   `ProjectManagerApp/` (runs every `src/**/__tests__/*.test.js`).
 - CSS comments: never write `*/` inside a comment (e.g. `--text-*/`); the dev
   server tolerates it but the production minifier fails.
-- Undo (Gantt) keeps a 50-step in-memory history with a 1s typing debounce.
+- Undo (Schedule edit mode) keeps a 50-step in-memory history with a 1s typing debounce.
 
 ## 3. Known quirks & traps (verified in code)
 
@@ -53,10 +53,11 @@ The rules that prevent mistakes. Read this before changing anything.
 | 5 | LanguageSwitcher caption is a ternary `ar ? 'عربي' : 'EN'` | LanguageSwitcher.jsx | Breaks for a 3rd language — use `l.label` |
 | 6 | ~~No router~~ **fixed in Phase 1** — hash routes | `src/app/router.jsx` | Refresh and links keep the screen; use `#/…` hrefs or `useNavigate()` |
 | 7 | Snapshots cover tasks + projectMeta ONLY | Snapshots.js | Orders/finance NOT in snapshots (full safety = JSON backup) |
-| 8 | Gantt bars are not draggable by design | GanttChart.jsx | Dates/durations edited via grid inputs |
+| 8 | Gantt bars are not draggable by design | `src/app/schedule/Gantt.jsx` | Dates/durations edited via grid inputs (edit mode) |
 | 9 | localStorage **quota** (~5 MB) is the only real limit | all | File blobs already live in IndexedDB; big data goes to backup files |
 | 10 | Element columns/BOQ links only on group tasks | TaskDetails | Leaves are "record only" |
 | 11 | Quick orders are born approved (`approvedBy` = identity) | OrderEngine | Only formal+recorded need the Approve action |
+| 12 | Engine task warnings are hardcoded Arabic | `GanttEngine.js` (`addTaskWarning`) | They show untranslated in English; translate by returning codes + params if needed |
 
 ## 4. Environment quirks (this machine / workflow)
 
@@ -86,14 +87,16 @@ The rules that prevent mistakes. Read this before changing anything.
   registries screens, EVM + S-curve, monthly report, full backup/restore.
 - **Git:** `main` fully committed (2026-10-25). UI rebuild on branch
   `redesign/aubergine`, merged to `main` phase by phase.
-- **UI rebuild:** Phases 0–3 done — tokens + shared components, project
+- **UI rebuild:** Phases 0–4 done — tokens + shared components, project
   store (`src/state/`), hash router + new shell (`src/app/`), and the rebuilt
-  Record (`src/app/record/`) and Home (`src/app/home/`); other screens are
-  still the legacy ones mounted inside the shell. Next: Phase 4 (Schedule). Plan: `plans/ui-rebuild-plan.md`.
+  Record (`src/app/record/`), Home (`src/app/home/`) and Schedule
+  (`src/app/schedule/`: timeline, task panel, lookahead, baseline, sign-off and
+  VO dialogs); other screens are still the legacy ones mounted inside the
+  shell. Next: Phase 5 (Reports). Plan: `plans/ui-rebuild-plan.md`.
 - **Theme:** the app forces `data-theme="light"` (`main.jsx`) until the theme
   setting ships in Phase 6, because legacy screens are light-only.
-- **Tests:** 11 test files (115 tests), all pure-logic (engines, project model, order form, home model,
-  task ranking, who selection, ar/en dictionary parity); no component tests.
+- **Tests:** 13 test files (125 tests), all pure-logic (engines, project model, order form, home model,
+  schedule model, lookahead model, task ranking, who selection, ar/en dictionary parity); no component tests.
 
 ## 7. Roadmap (agreed next steps, in order)
 

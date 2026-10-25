@@ -15,13 +15,15 @@ src/i18n/
 ├── useI18n.js            ← hook (falls back to Arabic outside a provider)
 ├── LanguageSwitcher.jsx  ← one button per language
 └── dictionaries/
-    ├── ar/               ← 18 domain files: activity, app, calculator, common,
+    ├── ar/               ← 19 domain files: activity, app, calculator, common,
     │                        dashboard, files, finance, gantt, orders, planning,
     │                        registries, reports, snapshots, taskDetails, templates,
     │                        ui (shared src/ui/ components + new navigation),
     │                        record (rebuilt Record area; reuses orders.* labels),
-    │                        home (rebuilt Home; reuses dashboard.* EVM/chart labels)
-    └── en/               ← same 18 files, same keys
+    │                        home (rebuilt Home; reuses dashboard.* EVM/chart labels),
+    │                        schedule (rebuilt Schedule: timeline, panel, lookahead,
+    │                        baseline; reuses gantt.*, app.* and planning.* labels)
+    └── en/               ← same 19 files, same keys
 ```
 
 `npm test` runs `src/i18n/__tests__/dictionaryParity.test.js`, which fails if
@@ -86,4 +88,8 @@ Some utils (OrderEngine, ActivityLog, PlanningStore, Registries) call
 - The **fallback chain ends at Arabic**: a typo'd key shows the key itself.
 - `FinanceManager` payroll status `'مستقطع'` is compared as raw Arabic data
   (stored value, not UI text) — don't "translate" that comparison.
-- `PlanningScreen` Arabic labels use Levantine month/weekday names.
+- Month/weekday names in the Schedule and Lookahead come from `Intl` with
+  `ar-IQ-u-nu-latn` (Levantine month names, Latin digits) / `en-GB`.
+- The engine's task **warnings** (`GanttEngine.js`: duplicate WBS, executed >
+  planned, bad relation, dependency cycle) are hardcoded Arabic strings; the
+  Schedule shows them as-is in English too.

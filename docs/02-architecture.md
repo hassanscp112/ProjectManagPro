@@ -36,7 +36,7 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
   │  MODULE SCREENS (components/) — own their persistence via src/utils owners:   │
   │                                                                               │
   │  Record pages → OrderEngine      → localStorage 'pm-orders'        (notifies) │
-  │  PlanningScreen → PlanningStore  → localStorage 'pm-plans'                    │
+  │  LookaheadPage → PlanningStore   → localStorage 'pm-plans'                    │
   │  RegistriesScreen → Registries   → localStorage 'pm-registries'    (notifies) │
   │  IdentityPicker → Identity       → localStorage 'pm-identity'      (notifies) │
   │  logAppEvent → ActivityLog       → localStorage 'pm-activity'      (notifies) │
@@ -64,9 +64,10 @@ global state library** — React state + localStorage + change notifications.
 |---|---|---|
 | Home | `/` | **Rebuilt (Phase 3)** — `app/home/HomePage.jsx`: headline numbers, needs-attention list, S-curve + EVM figures, progress by section, recent orders |
 | Record | `/record` · `/record/log` · `/record/pending` | **Rebuilt (Phase 2)** — `app/record/`: new order (desktop form + side panel; phone type → form → done), order log, pending approvals |
-| Schedule | `/schedule` | Gantt page (`app/pages/SchedulePage.jsx`: KPI strip, lifecycle/backup toolbar, `GanttChart`, sign-off / VO / restore dialogs) |
-| | `/schedule/lookahead` | `planning/PlanningScreen` |
-| | `/schedule/task/:taskId` | `taskDetails/TaskDetails` (was the hidden tab) |
+| Schedule | `/schedule` · `/schedule/task/:taskId` | **Rebuilt (Phase 4)** — `app/schedule/SchedulePage.jsx` + `Gantt.jsx`: KPI strip, lifecycle/view toolbars, grid + timeline in one scroller; the `:taskId` child route opens `TaskPanel.jsx` (drawer / bottom sheet) over it; sign-off / VO dialogs (`LifecycleDialogs.jsx`), backup/restore (`useBackupRestore.jsx`) |
+| | `/schedule/lookahead` | **Rebuilt (Phase 4)** — `app/schedule/LookaheadPage.jsx` (month / week / day plans) |
+| | `/schedule/baseline` | **Rebuilt (Phase 4)** — `app/schedule/BaselinePage.jsx` (signed vs current contract) |
+| | `/schedule/task/:taskId/details` | `taskDetails/TaskDetails` (legacy, "Full details" from the panel) |
 | Reports | `/reports/daily` · `/reports/monthly` · `/reports/activity` | `DailyReports` · `MonthlyReport` · `ActivityScreen` |
 | Finance | `/finance` | `finance/FinanceManager` |
 | Library | `/library/boq` · `/library/templates` · `/library/files(/:taskId)` | `CalculatorView` · `TemplatesScreen` · `FileManager` |
@@ -77,7 +78,8 @@ global state library** — React state + localStorage + change notifications.
 
 `/reports` and `/library` redirect to their first sub-page; unknown routes go
 Home. Sub-pages show as tabs under the page title (`AREA_TABS` in
-`app/navigation.js`). Not yet split out (later phases): `/schedule/baseline`, `/library/rates`, `/finance/:ledger`,
+`app/navigation.js`; `alsoActive` keeps a tab lit on child routes, e.g. Timeline on
+`/schedule/task/…`). Not yet split out (later phases): `/library/rates`, `/finance/:ledger`,
 `/people/:kind`.
 
 ### ProjectProvider (`src/state/ProjectProvider.jsx`)
@@ -90,17 +92,21 @@ Home. Sub-pages show as tabs under the page title (`AREA_TABS` in
 | Seed data | `INITIAL_TASKS` in `projectModel.js` — used only if storage is empty |
 | Ecosystem stores | `orders / registries / identity / appEvents`, re-read on every route change (`AppLayout`) and live on `pm-store-change` events (`utils/storeEvents.js`) |
 | Engine | `engineResult = useMemo(() => GanttEngine.calculate(...), [tasks, projectMeta, orders])` |
-| Undo | 50-step history; a 1 s typing burst counts as one step; `ganttView` (edit mode, week/month) survives navigation |
+| Undo | 50-step history; a 1 s typing burst counts as one step; `ganttView` (edit mode, zoom, columns, critical-only, search, collapsed groups) survives navigation |
 | Auto snapshot | `writeAutoSnapshot()` on any tasks/meta/identity change (no-op if today's exists) |
 | Task actions | `updateTask`, `addMainTask`, `addSubTask`, `requestDeleteTask` → `confirmDeleteTask` (dialog in `AppLayout`), `setBoqLink`, `linkBoqToExisting` |
 | Lifecycle | `signOff(signedBy)`, `setStatus(status)`, `raiseVariation(draft)` → true when recorded |
 | Templates | `generateFromTemplate(tree, meta)` → appends with renumbered WBS; the page then navigates to `/schedule` |
-| Backup/restore | Gantt page toolbar via `utils/DataIO` (validate → confirm → write → reload) |
+| Backup/restore | Schedule toolbar's More menu via `utils/DataIO` (validate → confirm → write → reload) |
 
 The Record rules (validation, building an order, repeat-last, log filters,
 KPIs) are pure functions in `src/state/orderForm.js`; the Home rules (task
 status, attention list, section progress, SPI/CPI tone, chart helpers) in
-`src/state/homeModel.js`. Both are tested in `src/state/__tests__/`.
+`src/state/homeModel.js`; the Schedule rules (timeline range and header tiers,
+visible rows, field locks, task scope, baseline comparison) in
+`src/state/scheduleModel.js`; the Lookahead rules (sections, month actuals,
+day completion / PPC) in `src/state/lookaheadModel.js`. All are tested in
+`src/state/__tests__/`.
 
 All tree/lifecycle transforms are pure functions in `projectModel.js`
 (`addSubTask`, `deleteTaskCascade`, `toggleBoqLink`, `signOffProject`,
@@ -112,9 +118,8 @@ All tree/lifecycle transforms are pure functions in `projectModel.js`
 | Screen | Props (from `useProject()` in its route page) |
 |---|---|
 | Dashboard | `tasks={engineResult.tasks} summary={engineResult}` |
-| GanttChart | `tasks={engineResult.tasks}` + `onUpdateTask, projectStart, isEditMode, isSigned, viewMode, onAdd*, onDelete, onJumpTo*` (jumps navigate to `/library/files/:id` and `/schedule/task/:id`) |
+| Schedule / Lookahead / Baseline pages | none — read `useProject()`; the Gantt gets rows from `visibleRows()` and calls `onUpdate(id, patch)` with only the changed fields |
 | Record pages | none — read `useProject()` (tasks, orders, lastWhoByType, registries, identity, engineResult); rules in `src/state/orderForm.js` |
-| PlanningScreen | `tasks` (raw), `computedTasks`, `orders`, `registries` |
 | ActivityScreen | `orders, variations, appEvents, tasks, registries` |
 | MonthlyReport | `summary, computedTasks, orders, variations, projectMeta, registries` |
 | SnapshotsScreen | `tasks, projectMeta, identity, onRestored(→reload)` |
@@ -164,13 +169,13 @@ order-derived and read-only.
 
 | Data | Written by | Read by | Storage key |
 |---|---|---|---|
-| Task tree + BOQ | ProjectProvider (edit via Gantt grid / TaskDetails) | everything | `project-manager-gantt-tasks` |
-| Project meta (status/baseline/VOs) | ProjectProvider (Gantt page dialogs) | Monthly, Activity, engine | `project-manager-project-meta` |
+| Task tree + BOQ | ProjectProvider (edit via the Schedule grid / task panel / TaskDetails) | everything | `project-manager-gantt-tasks` |
+| Project meta (status/baseline/VOs) | ProjectProvider (Schedule dialogs) | Monthly, Activity, Baseline, engine | `project-manager-project-meta` |
 | Order ledger | Record pages (OrderEngine `addOrder` / `approveOrder` / `deleteOrder`) | engine, Planning, Reports, Activity | `pm-orders` |
 | Registries | RegistriesScreen | Orders, Planning, Reports, TaskDetails | `pm-registries` |
 | Identity | IdentityPicker | stamps everywhere | `pm-identity` |
 | App events | `logAppEvent` from ProjectProvider/screens | Activity feed | `pm-activity` |
-| Plans | PlanningScreen | itself | `pm-plans` |
+| Plans | LookaheadPage (via PlanningStore) | itself | `pm-plans` |
 | Snapshots | SnapshotsScreen + auto-writer | restore | `pm-snapshots` |
 | Templates / rates | TemplatesScreen | generator | `pm-templates` / `pm-rate-library` |
 | Calculator | CalculatorView | itself | `pm-calculator-templates` |
@@ -198,7 +203,8 @@ ProjectProvider also listens to the `storage` event for the same four keys.
   (`--bg-surface`, `--apple-blue-action`, `--apple-red`, `--apple-green`, …).
 - Layout: `AppShell` = dark sidebar (≥768px) or phone bottom bar + a main
   column that scrolls (legacy CSS locks `html/body` scrolling); full-height
-  pages (Gantt) use `<Page fill>`. The shell root gets `dir` from i18n;
+  pages (Schedule timeline) use `<Page fill>`; on phones `fill` is off and the
+  page scrolls as a whole. The shell root gets `dir` from i18n;
   numeric/chart containers force `dir="ltr"`.
 - No CSS framework; accessible primitives from Radix UI inside `src/ui/`.
 
