@@ -31,8 +31,10 @@ live view over that ledger. Blueprint: `plans/ecosystem-plan.md`.
 npm run dev     # dev server → http://localhost:5173  (root run.cmd also works)
 npm run lint    # ESLint
 npm run build   # production build
-node --test "src/utils/__tests__/*.test.js"   # engine unit tests (no 'test' script defined)
+npm test        # unit tests: engines + ar/en dictionary parity (node:test)
 ```
+
+Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/ui
 
 ## Golden rules (violating these breaks the app or the user's trust)
 
@@ -55,8 +57,12 @@ node --test "src/utils/__tests__/*.test.js"   # engine unit tests (no 'test' scr
 
 ## Current state & next steps
 
-All work is committed (2026-10-25). Next: markups, baseline-diff view,
-validation rules — full list in `docs/07-conventions-quirks-roadmap.md` §6–7.
+**UI rebuild in progress** on branch `redesign/aubergine` — plan, phases and
+decisions in `plans/ui-rebuild-plan.md`. Phase 0 (foundation) is done: design
+tokens (`src/ui/tokens.css`, all names `--ui-*`), shared components in
+`src/ui/` (import from `src/ui/index.js`), CSS Modules per component. New UI
+code uses `src/ui/` components only; legacy screens stay untouched until their
+phase. Roadmap after the rebuild: `docs/07-conventions-quirks-roadmap.md` §6–7.
 
 ## Folders other than the app
 

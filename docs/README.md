@@ -4,7 +4,7 @@ This folder documents **everything** in this repository. It was written so that 
 new person (or a new AI agent) can understand the whole project **without reading
 the source code**.
 
-> **Last verified:** 2026-10-25 · covers the code as committed on 2026-10-25 (no uncommitted work).
+> **Last verified:** 2026-10-25 · covers `main` plus Phase 0 of the UI rebuild (branch `redesign/aubergine`, see `plans/ui-rebuild-plan.md`).
 
 ---
 
@@ -52,7 +52,8 @@ npm run dev        # http://localhost:5173
 | `npm run dev` | Start Vite dev server (hot reload) |
 | `npm run build` | Production build to `dist/` |
 | `npm run lint` | ESLint check |
-| `node --test "src/utils/__tests__/*.test.js"` | Run the engine unit tests (Node built-in test runner) — run from `ProjectManagerApp/` |
+| `npm test` | Unit tests (Node built-in runner): engines + ar/en dictionary parity |
+| `npm run dev` → `/#/dev/ui` | Dev-only review page showing every shared `src/ui/` component |
 
 ⚠️ **All data lives in the browser** (localStorage + IndexedDB). There is no
 server and no database. Clearing browser data = losing the project — use the

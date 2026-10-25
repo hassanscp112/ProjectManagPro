@@ -29,7 +29,8 @@ The core philosophy, from the design blueprint (`plans/ecosystem-plan.md`), is:
 | Spreadsheet grid | **jspreadsheet-ce v5** | Used ONLY in the calculator template editor |
 | Storage | **Browser localStorage** (+ IndexedDB for uploaded files) | No backend, no server, works offline |
 | Language | Arabic (default, RTL) + English (LTR) | Custom lightweight i18n, see [06-i18n-guide.md](06-i18n-guide.md) |
-| Tests | Node built-in `node:test` | Pure logic only (`src/utils/__tests__/`) |
+| New UI components | **Radix UI** primitives, **cmdk**, **lucide-react** icons, IBM Plex Sans Arabic (bundled) | `src/ui/` — UI rebuild in progress, see `plans/ui-rebuild-plan.md` |
+| Tests | Node built-in `node:test` | Pure logic only (`npm test`) |
 
 Declared but currently **unused** dependencies: `exceljs`, `mathjs`
 (see quirks doc — do not assume Excel export exists).
@@ -137,13 +138,16 @@ Project Management Package/          ← repository root
 ├── plans/                           ← design blueprints (read ecoplan first)
 │   ├── ecosystem-plan.md            ← the master vision: "orders as foundation" (IMPLEMENTED)
 │   ├── advanced-lifecycle-plan.md   ← baseline/VO/lifecycle design (IMPLEMENTED)
+│   ├── ui-rebuild-plan.md           ← Aubergine UI rebuild, 8 phases (IN PROGRESS)
 │   └── study-folder-analysis.md     ← notes on the Study/ research data
 ├── ProjectManagerApp/               ← THE APP (only folder with real code)
 │   ├── src/App.jsx                  ← the single app shell (tabs, lifecycle, modals)
 │   ├── src/components/              ← one folder per screen (see 05-screens-guide)
 │   ├── src/utils/                   ← pure-logic engines + persistence (see 04-utils-reference)
 │   ├── src/i18n/                    ← ar/en dictionaries (see 06-i18n-guide)
-│   └── src/utils/__tests__/         ← node:test unit tests
+│   ├── src/ui/                      ← new shared components + design tokens (UI rebuild)
+│   ├── src/dev/                     ← dev-only review page (/#/dev/ui)
+│   └── src/**/__tests__/            ← node:test unit tests (npm test)
 ├── Excel Sheets/                    ← the real contract Excel files (reference input data)
 ├── Study/                           ← research library (PDFs, BOQ datasets) — NOT app code
 └── _archive/                        ← old scripts/outputs, kept per the archive-don't-delete rule

@@ -2,7 +2,7 @@
 
 `ProjectManagerApp/src/utils/` — pure logic + localStorage persistence.
 **No React here.** All modules are plain ES modules; most are covered by
-tests in `__tests__/` (run: `node --test "src/utils/__tests__/*.test.js"` from `ProjectManagerApp/`).
+tests in `__tests__/` (run: `npm test` from `ProjectManagerApp/`).
 
 Dependency order (leaf → top):
 
@@ -163,6 +163,32 @@ DB `ProjectManagerDB` v1, store `files`.
 **Storage:** `pm-identity` = `{name, role}`.
 `loadIdentity()` / `saveIdentity({name, role})` / `hasIdentity()`.
 (App opens the IdentityPicker automatically when `hasIdentity()` is false.)
+
+---
+
+## TaskRanking.js — task picker ordering
+
+Shared by the legacy orders `TaskPicker` and the new `src/ui/TaskPicker`.
+- `wbsCompare(a, b)` — numeric WBS order (`1.2` before `1.10`)
+- `rankLeafTasks(tasks, orders)` → `{ recent, rest }`: leaves with orders,
+  newest `recordedAt` first; the rest in WBS order; groups skipped
+- `filterTasks(tasks, query)` — case-insensitive substring on `"wbs name"`
+
+Pure. Tests: `taskRanking.test.js`.
+
+---
+
+## WhoSelection.js — "who" value helpers
+
+Behind `src/ui/WhoPicker`. A who value is one of
+`{kind:'contractor',contractorId}` · `{kind:'team',teamId}` ·
+`{kind:'workers',workerIds}` · `{kind:'count',count}` · `{kind:'none'}`.
+- `teamSizeOf(team)` — manual `defaultSize`, else member count
+- `switchWhoKind(who, nextKind, teams)` — carries over what still makes sense
+  (workers → count, team → workers roster, workers matching a roster → team)
+- `toggleWhoWorker(who, workerId)` — always returns a workers value
+
+Pure. Tests: `whoSelection.test.js`.
 
 ---
 

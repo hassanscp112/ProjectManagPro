@@ -25,12 +25,21 @@ The rules that prevent mistakes. Read this before changing anything.
 - Plain JavaScript + JSX (no TypeScript). React function components + hooks.
 - Engines in `src/utils/` are pure/immutable where possible
   (`Registries.add*(registries, …)` return NEW objects).
-- Styles: one CSS file per component folder; Apple-ish light theme via CSS
-  variables in `App.css`/`index.css`.
+- Styles (legacy screens): one CSS file per component folder, theme variables
+  in `App.css`/`index.css`.
+- Styles (new UI, `src/ui/`): CSS Modules per component + design tokens in
+  `src/ui/tokens.css`. Every token is named `--ui-*` (never reuse legacy names
+  like `--text-primary`). Use logical properties (`inset-inline-start`,
+  `margin-inline-end`) so RTL and LTR both work. Light/dark come from the
+  tokens; `<html data-theme>` forces a theme, none = follow the OS.
+- New UI components come from `src/ui/index.js`; every color must meet the
+  contrast rules on the "Color system · Aubergine" board (text ≥ 4.5:1,
+  control borders ≥ 3:1, status = icon/word + color).
 - IDs: `crypto.randomUUID()` with timestamp-random fallback (`createTaskId`).
-- Tests: Node built-in runner (`node:test`) for pure logic only
-  (`node --test "src/utils/__tests__/*.test.js"` from `ProjectManagerApp/`).
-  Note: package.json has **no `test` script** — run the command directly.
+- Tests: Node built-in runner (`node:test`) for pure logic — `npm test` from
+  `ProjectManagerApp/` (runs every `src/**/__tests__/*.test.js`).
+- CSS comments: never write `*/` inside a comment (e.g. `--text-*/`); the dev
+  server tolerates it but the production minifier fails.
 - Undo (Gantt) keeps a 50-step in-memory history with a 1s typing debounce.
 
 ## 3. Known quirks & traps (verified in code)
@@ -75,11 +84,17 @@ The rules that prevent mistakes. Read this before changing anything.
 - **Code:** 3+ build rounds shipped — orders foundation, snapshots,
   read-first TaskDetails, i18n ar/en + RTL, planning/activity/templates/
   registries screens, EVM + S-curve, monthly report, full backup/restore.
-- **Git:** all work committed (2026-10-25) as per-feature conventional commits.
-- **Tests:** 5 engine test files (76 tests), all pure-logic; no component tests.
+- **Git:** `main` fully committed (2026-10-25). UI rebuild on branch
+  `redesign/aubergine`, merged to `main` phase by phase.
+- **UI rebuild:** Phase 0 (foundation) done — tokens, shared components,
+  `/#/dev/ui` review page. Next: Phase 1 (store + router + shell). Plan:
+  `plans/ui-rebuild-plan.md`.
+- **Tests:** 8 test files (89 tests), all pure-logic (engines, task ranking,
+  who selection, ar/en dictionary parity); no component tests.
 
 ## 7. Roadmap (agreed next steps, in order)
 
+0. **UI rebuild, Phases 1–7** — see `plans/ui-rebuild-plan.md`.
 1. **Markups/pricing layer** — markup on top of rate library prices.
 2. **Baseline-diff view** — visual comparison current vs baseline beyond the
    existing scope/exec variance numbers.

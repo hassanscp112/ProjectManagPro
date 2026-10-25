@@ -53,6 +53,12 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
 screen owns its own storage and re-persists directly. There is **no global state
 library** — plain React `useState` + localStorage + a refresh-on-tab-switch.
 
+**Entry (`src/main.jsx`):** loads the bundled IBM Plex Sans Arabic font and the
+`src/ui/` tokens + base styles, then renders
+`I18nProvider → UiProvider (Radix direction, tooltips, toasts) → App`.
+In dev, `/#/dev/ui` renders the component review page instead of `App`.
+(Phase 1 of `plans/ui-rebuild-plan.md` replaces tab state with a hash router.)
+
 ---
 
 ## 2. App.jsx — the app shell (`src/App.jsx`, ~1030 lines)

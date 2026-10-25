@@ -15,11 +15,16 @@ src/i18n/
 ├── useI18n.js            ← hook (falls back to Arabic outside a provider)
 ├── LanguageSwitcher.jsx  ← one button per language
 └── dictionaries/
-    ├── ar/               ← 15 domain files: activity, app, calculator, common,
+    ├── ar/               ← 16 domain files: activity, app, calculator, common,
     │                        dashboard, files, finance, gantt, orders, planning,
-    │                        registries, reports, snapshots, taskDetails, templates
-    └── en/               ← same 15 files, same keys
+    │                        registries, reports, snapshots, taskDetails, templates,
+    │                        ui (shared src/ui/ components + new navigation)
+    └── en/               ← same 16 files, same keys
 ```
+
+`npm test` runs `src/i18n/__tests__/dictionaryParity.test.js`, which fails if
+the two folders have different files, different keys in any file, or an empty
+translation.
 
 Each dictionary file exports a **flat** object: `{ 'domain.key': 'text' }`.
 The prefix before the dot is a **naming convention only** — lookup does NOT

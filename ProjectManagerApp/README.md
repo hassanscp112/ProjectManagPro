@@ -21,7 +21,7 @@ npm run dev        # → http://localhost:5173
 | `npm run dev` | Dev server with hot reload |
 | `npm run build` | Production build (`dist/`) |
 | `npm run lint` | ESLint |
-| `node --test "src/utils/__tests__/*.test.js"` | Engine unit tests (Node built-in runner) |
+| `npm test` | Unit tests (Node built-in runner) |
 
 ## Where things are
 
@@ -29,8 +29,10 @@ npm run dev        # → http://localhost:5173
 src/
 ├── App.jsx          ← the whole app shell (tabs, lifecycle, modals)
 ├── components/      ← one folder per screen (17 components)
-├── utils/           ← engines + persistence (13 modules, tested)
-└── i18n/            ← ar/en dictionaries (15 domain files each)
+├── ui/              ← shared components + design tokens (UI rebuild)
+├── dev/             ← dev-only review page (/#/dev/ui)
+├── utils/           ← engines + persistence (15 modules, tested)
+└── i18n/            ← ar/en dictionaries (16 domain files each)
 ```
 
 ⚠️ **Back up before clearing browser data** — use the in-app **Backup** button
