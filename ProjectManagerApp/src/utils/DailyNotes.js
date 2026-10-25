@@ -11,11 +11,13 @@
 // quantities (executed quantities come from orders).
 // ═══════════════════════════════════════════════════════════
 
+import { projectKey } from './Projects.js';
+
 export const DAILY_NOTES_STORAGE_KEY = 'project-manager-daily-reports';
 
 export const loadDailyNotes = () => {
   try {
-    const saved = localStorage.getItem(DAILY_NOTES_STORAGE_KEY);
+    const saved = localStorage.getItem(projectKey(DAILY_NOTES_STORAGE_KEY));
     const list = saved ? JSON.parse(saved) : [];
     return Array.isArray(list) ? list.filter((n) => n && typeof n === 'object' && n.id && n.date) : [];
   } catch {
@@ -25,7 +27,7 @@ export const loadDailyNotes = () => {
 
 export const saveDailyNotes = (notes) => {
   try {
-    localStorage.setItem(DAILY_NOTES_STORAGE_KEY, JSON.stringify(notes));
+    localStorage.setItem(projectKey(DAILY_NOTES_STORAGE_KEY), JSON.stringify(notes));
   } catch {
     // storage full / unavailable — notes stay in memory for this session
   }

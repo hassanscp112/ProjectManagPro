@@ -38,6 +38,7 @@ describe('file entries', () => {
     const record = {
       id: 'f1',
       folderId: 'task_1',
+      projectId: 'p-2',
       name: 'تقرير.pdf',
       size: 3,
       type: 'application/pdf',
@@ -51,6 +52,7 @@ describe('file entries', () => {
     const [back] = decodeFileEntries([entry]);
     assert.equal(back.id, 'f1');
     assert.equal(back.folderId, 'task_1');
+    assert.equal(back.projectId, 'p-2');
     assert.equal(back.name, 'تقرير.pdf');
     assert.equal(back.type, 'application/pdf');
     assert.equal(back.size, 3);
@@ -81,6 +83,13 @@ describe('validateBackup', () => {
     assert.equal(result.ok, true);
     assert.equal(result.stats.keys, 1);
     assert.equal(result.stats.files, null);
+  });
+
+  it("counts other projects' keys as known, but not unknown prefixed keys", () => {
+    const result = validateBackup(
+      backup({ storage: { 'pm-projects': '{}', 'pm-p:p-2:pm-orders': '{}', 'pm-p:p-2:pm-theme': 'x', other: 'y' } })
+    );
+    assert.equal(result.stats.keys, 2);
   });
 
   it('counts files and their decoded size', () => {

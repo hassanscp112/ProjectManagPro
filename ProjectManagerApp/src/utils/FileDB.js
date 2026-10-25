@@ -1,3 +1,10 @@
+// Uploaded files, per project: each record carries projectId (records saved
+// before multi-project support have none and belong to the first project).
+import { LEGACY_PROJECT_ID, currentProject } from './Projects.js';
+
+const openProjectId = () => currentProject()?.id || LEGACY_PROJECT_ID;
+const belongsTo = (record, projectId) => (record.projectId || LEGACY_PROJECT_ID) === projectId;
+
 export const initDB = () => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('ProjectManagerDB', 1);
@@ -30,6 +37,7 @@ export const saveFile = async (folderId, fileObj) => {
     const fileData = {
       id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(),
       folderId,
+      projectId: openProjectId(),
       name: fileObj.name,
       size: fileObj.size,
       type: fileObj.type,
@@ -52,7 +60,8 @@ export const getFiles = async (folderId) => {
     const index = store.index('folderId');
     const request = index.getAll(IDBKeyRange.only(folderId));
 
-    request.onsuccess = () => resolve(request.result);
+    const projectId = openProjectId();
+    request.onsuccess = () => resolve(request.result.filter((r) => belongsTo(r, projectId)));
     request.onerror = (e) => reject(e.target.error);
   });
 };
@@ -81,8 +90,22 @@ export const getAllFiles = async () => {
   });
 };
 
-// Replace ALL stored files with `records` ({ id, folderId, name, size, type,
-// blob, createdAt }) in one transaction: if any write fails, nothing changes.
+// Delete every file of one project (when the project is deleted).
+export const deleteProjectFiles = async (projectId) => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['files'], 'readwrite');
+    const store = transaction.objectStore('files');
+    const request = store.getAll();
+    request.onsuccess = () => request.result.filter((r) => belongsTo(r, projectId)).forEach((r) => store.delete(r.id));
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = (e) => reject(e.target.error);
+  });
+};
+
+// Replace ALL stored files with `records` ({ id, folderId, projectId, name,
+// size, type, blob, createdAt }) in one transaction: if any write fails, nothing changes.
 export const replaceAllFiles = async (records) => {
   const db = await initDB();
   return new Promise((resolve, reject) => {

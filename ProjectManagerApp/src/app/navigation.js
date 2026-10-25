@@ -1,5 +1,8 @@
-// The app's information architecture: 7 areas (+ Settings), their routes
-// and the sub-pages inside each area. Labels are dictionary keys.
+// The app's information architecture. Two levels:
+//   projects level (PORTFOLIO_AREAS): the project list, templates, rates —
+//     shared by every project;
+//   inside a project: 7 areas (+ Settings), their routes and sub-pages.
+// Labels are dictionary keys.
 
 import {
   BookOpen,
@@ -7,8 +10,11 @@ import {
   ClipboardList,
   Ellipsis,
   FileText,
+  FolderKanban,
   House,
+  LayoutTemplate,
   SlidersHorizontal,
+  Tags,
   Users,
   Wallet,
 } from 'lucide-react';
@@ -21,6 +27,13 @@ export const AREAS = [
   { key: 'finance', labelKey: 'ui.navFinance', icon: Wallet, path: '/finance/machinery' },
   { key: 'library', labelKey: 'ui.navLibrary', icon: BookOpen, path: '/library/boq' },
   { key: 'people', labelKey: 'ui.navPeople', icon: Users, path: '/people/contractors' },
+];
+
+/** The level above the projects (routes outside any project). */
+export const PORTFOLIO_AREAS = [
+  { key: 'projects', labelKey: 'projects.navProjects', icon: FolderKanban, path: '/projects' },
+  { key: 'templates', labelKey: 'app.nav.templates', icon: LayoutTemplate, path: '/templates' },
+  { key: 'rates', labelKey: 'templates.tabRates', icon: Tags, path: '/rates' },
 ];
 
 export const SETTINGS_AREA = { key: 'settings', labelKey: 'ui.navSettings', icon: SlidersHorizontal, path: '/settings' };
@@ -53,8 +66,6 @@ export const AREA_TABS = {
   ],
   library: [
     { to: '/library/boq', labelKey: 'app.nav.calc' },
-    { to: '/library/templates', labelKey: 'app.nav.templates' },
-    { to: '/library/rates', labelKey: 'templates.tabRates' },
     { to: '/library/files', labelKey: 'app.nav.files' },
   ],
   people: [

@@ -2,7 +2,6 @@
 // Keys use the '<module>.<name>' convention; both language files must stay in sync.
 export default {
   // ── Header + tabs ──
-  'templates.pageSub': 'حوّل نموذجاً معيارياً (مدرسة، بناية، مول…) إلى شجرة مهام كاملة بالكميات والأسعار والمدد والعلاقات.',
   'templates.tabRates': 'مكتبة الأسعار',
 
   // ── Seeded template display names (storage keeps the Arabic name) ──
@@ -30,7 +29,6 @@ export default {
   'templates.confirmDeleteTemplate': 'حذف هذا النموذج نهائياً؟',
 
   // ── Detail panel: variables form ──
-  'templates.startDate': 'تاريخ البداية',
 
   // ── Warning strip for unpriced items ──
   'templates.warningUnpricedLabel': 'بنود بلا سعر في المكتبة ({count}):',

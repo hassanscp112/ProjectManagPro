@@ -14,6 +14,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import { loadLanguage, translate } from '../i18n/index.js';
+import { projectKey } from './Projects.js';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -207,7 +208,7 @@ const normalizePlans = (raw) => {
 
 export const loadPlans = () => {
   try {
-    const saved = localStorage.getItem(PLANS_STORAGE_KEY);
+    const saved = localStorage.getItem(projectKey(PLANS_STORAGE_KEY));
     if (!saved) return { months: {}, weeks: {}, days: {} };
     return normalizePlans(JSON.parse(saved));
   } catch {
@@ -217,7 +218,7 @@ export const loadPlans = () => {
 
 export const savePlans = (plans) => {
   try {
-    localStorage.setItem(PLANS_STORAGE_KEY, JSON.stringify(plans));
+    localStorage.setItem(projectKey(PLANS_STORAGE_KEY), JSON.stringify(plans));
   } catch {
     // storage full / unavailable — planning continues in memory
   }

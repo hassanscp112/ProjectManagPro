@@ -13,6 +13,8 @@
 // remains the full-file backup.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { projectKey } from './Projects.js';
+
 export const SNAPSHOTS_STORAGE_KEY = 'pm-snapshots';
 
 // Keep the newest MAX_AUTO_SNAPSHOTS daily checkpoints; older ones are pruned.
@@ -56,7 +58,7 @@ const emptySnapshots = () => ({ auto: {}, named: [] });
 // being unavailable all collapse into the empty structure instead of crashing.
 export const loadSnapshots = () => {
   try {
-    const raw = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
+    const raw = localStorage.getItem(projectKey(SNAPSHOTS_STORAGE_KEY));
     if (!raw) return emptySnapshots();
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -77,7 +79,7 @@ export const loadSnapshots = () => {
 export const saveSnapshots = (data) => {
   try {
     const safe = data && typeof data === 'object' ? data : emptySnapshots();
-    localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(safe));
+    localStorage.setItem(projectKey(SNAPSHOTS_STORAGE_KEY), JSON.stringify(safe));
     return true;
   } catch {
     return false;
@@ -173,16 +175,16 @@ export const renameNamedSnapshot = (id, newName) => {
 // Throws if storage refuses a write; the tasks key is then put back so the
 // two keys never come from different points in time.
 export const restoreSnapshot = ({ tasks, projectMeta } = {}) => {
-  const previousTasks = localStorage.getItem(TASKS_RESTORE_KEY);
-  localStorage.setItem(TASKS_RESTORE_KEY, JSON.stringify(Array.isArray(tasks) ? tasks : []));
+  const previousTasks = localStorage.getItem(projectKey(TASKS_RESTORE_KEY));
+  localStorage.setItem(projectKey(TASKS_RESTORE_KEY), JSON.stringify(Array.isArray(tasks) ? tasks : []));
   try {
     localStorage.setItem(
-      META_RESTORE_KEY,
+      projectKey(META_RESTORE_KEY),
       JSON.stringify(projectMeta && typeof projectMeta === 'object' ? projectMeta : {})
     );
   } catch (err) {
-    if (previousTasks === null) localStorage.removeItem(TASKS_RESTORE_KEY);
-    else localStorage.setItem(TASKS_RESTORE_KEY, previousTasks);
+    if (previousTasks === null) localStorage.removeItem(projectKey(TASKS_RESTORE_KEY));
+    else localStorage.setItem(projectKey(TASKS_RESTORE_KEY), previousTasks);
     throw err;
   }
 };
@@ -190,7 +192,7 @@ export const restoreSnapshot = ({ tasks, projectMeta } = {}) => {
 // Summary strip figures, computed from what is actually stored.
 export const snapshotsStats = () => {
   try {
-    const raw = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
+    const raw = localStorage.getItem(projectKey(SNAPSHOTS_STORAGE_KEY));
     const data = loadSnapshots();
     return {
       autoCount: Object.keys(data.auto).length,

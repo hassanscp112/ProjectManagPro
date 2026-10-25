@@ -2,11 +2,11 @@ import { ChevronRight, UserRound } from 'lucide-react';
 import { useI18n } from '../../i18n/useI18n.js';
 import { useProject } from '../../state/projectContext.js';
 import { Card, ListRow } from '../../ui/index.js';
-import { AREAS, AREA_TABS, SETTINGS_AREA, hrefFor } from '../navigation.js';
+import { AREAS, AREA_TABS, PORTFOLIO_AREAS, SETTINGS_AREA, hrefFor } from '../navigation.js';
 import { Page } from '../Page.jsx';
 import s from './MorePage.module.css';
 
-/** Phone "More" tab: every area and sub-page, plus who is using the app. */
+/** Phone "More" tab: every area and sub-page, plus who is using the app and the way back to all projects. */
 export default function MorePage() {
   const { t } = useI18n();
   const { identity, openIdentity } = useProject();
@@ -14,7 +14,7 @@ export default function MorePage() {
   const chevron = <ChevronRight size={18} aria-hidden="true" className="ui-flip-rtl" />;
 
   const rows = [];
-  [...AREAS, SETTINGS_AREA].forEach((area) => {
+  [...AREAS, SETTINGS_AREA, ...PORTFOLIO_AREAS].forEach((area) => {
     const Icon = area.icon;
     const tabs = AREA_TABS[area.key];
     const leading = (

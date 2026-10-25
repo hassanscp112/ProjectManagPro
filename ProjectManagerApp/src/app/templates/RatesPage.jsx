@@ -6,10 +6,10 @@ import { RATE_CATEGORIES, addRate, deleteRate, loadRateLibrary, updateRate } fro
 import { Button, ConfirmDialog, Dialog, EmptyState, Field, IconButton, Input, NumberInput, Select, StatusBadge, Table } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
 import { categoryLabel } from './templateLabels.js';
-import s from './Library.module.css';
+import s from '../library/Library.module.css';
 
 /**
- * /library/rates — the IQD rate library the template generator prices
+ * /rates — the IQD rate library the template generator prices
  * items from. Prices are copied at generation time. Storage: RateLibrary.
  */
 export default function RatesPage() {
@@ -34,7 +34,7 @@ export default function RatesPage() {
   };
 
   return (
-    <Page area="library">
+    <Page area="rates">
       <div className={s.toolbar}>
         <Input type="search" className={s.search} aria-label={t('templates.searchRates')} placeholder={t('templates.searchRates')} value={query} onChange={(e) => setQuery(e.target.value)} />
         <Button variant="primary" icon={Plus} onClick={() => setDraft({ id: null, name: '', unit: 'م2', unitPrice: '', category: RATE_CATEGORIES[0] })}>

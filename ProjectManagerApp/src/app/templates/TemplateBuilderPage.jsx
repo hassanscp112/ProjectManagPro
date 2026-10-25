@@ -6,13 +6,13 @@ import { cleanTemplateDraft } from '../../state/libraryModel.js';
 import { PARTS, saveTemplate } from '../../utils/TemplateEngine.js';
 import { Button, Card, Field, IconButton, Input, NumberInput, Select, useToast } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
-import s from './Library.module.css';
+import s from '../library/Library.module.css';
 
 const DEP_TYPES = ['FS', 'SS', 'FF', 'SF'];
 const partName = (id) => PARTS.find((p) => p.id === id)?.name || '—';
 
 /**
- * /library/templates/new — build a structure template: variables (e.g.
+ * /templates/new — build a structure template: variables (e.g.
  * area, floors) and line items (a part, its section, a quantity formula
  * over the variables, optional "repeats per" and a dependency).
  */
@@ -41,13 +41,13 @@ export default function TemplateBuilderPage() {
     }
     saveTemplate(result.template);
     toast({ title: t('library.templateSaved') });
-    navigate('/library/templates');
+    navigate('/templates');
   };
 
   return (
-    <Page area="library">
+    <Page area="templates">
       <div className={s.toolbar}>
-        <Button icon={dir === 'rtl' ? ArrowRight : ArrowLeft} onClick={() => navigate('/library/templates')}>
+        <Button icon={dir === 'rtl' ? ArrowRight : ArrowLeft} onClick={() => navigate('/templates')}>
           {t('library.backToTemplates')}
         </Button>
         <Button variant="primary" onClick={save}>

@@ -12,14 +12,10 @@ export default {
   // Templates
   'library.newTemplate': 'New template',
   'library.saveProject': 'Save project as template',
-  'library.fromProjectHint': 'Saves the current item tree with its fixed quantities (no variables).',
+  'library.fromProjectHint': 'Saves the chosen project\'s item tree with its fixed quantities (no variables).',
   'library.noTemplates': 'No templates yet — create one with “New template”.',
   'library.preview': 'Items preview',
   'library.unpricedFix': '— add them under Rates so they get priced.',
-  'library.generate': 'Generate {count} items',
-  'library.generateTitle': 'Add these items to the project?',
-  'library.generateBody': '{count} items will be added after the existing sections. You can undo this from the Schedule.',
-  'library.generateConfirm': 'Add to project',
   // Template builder
   'library.backToTemplates': 'Templates',
   'library.saveTemplate': 'Save template',

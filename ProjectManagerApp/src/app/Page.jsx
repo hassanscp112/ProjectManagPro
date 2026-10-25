@@ -3,27 +3,28 @@ import { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { useI18n } from '../i18n/useI18n.js';
 import { STATUS_KEYS } from '../state/projectModel.js';
-import { useProject } from '../state/projectContext.js';
+import { useOptionalProject } from '../state/projectContext.js';
 import { Button, Menu, SearchButton, StatusBadge, TopBar, cx } from '../ui/index.js';
-import { AREAS, AREA_TABS, MORE_AREA, SETTINGS_AREA } from './navigation.js';
+import { AREAS, AREA_TABS, MORE_AREA, PORTFOLIO_AREAS, SETTINGS_AREA } from './navigation.js';
 import { useShell } from './shellContext.js';
 import s from './Page.module.css';
 
 const STATUS_TONE = { draft: 'neutral', signed: 'accent', executing: 'success', completed: 'success' };
 
-/** Search, project status and language — on every page header. */
-function GlobalActions() {
+/** Search, project status (inside a project) and language — on every page header. */
+function GlobalActions({ projectMeta }) {
   const { t, lang, setLang, languages } = useI18n();
-  const { projectMeta } = useProject();
   const { openSearch } = useShell();
   const status = projectMeta?.status || 'draft';
   const current = languages.find((l) => l.code === lang) || languages[0];
   return (
     <>
-      <SearchButton onClick={openSearch} />
-      <StatusBadge tone={STATUS_TONE[status] || 'neutral'} icon="dot" size="md">
-        {STATUS_KEYS[status] ? t(STATUS_KEYS[status]) : status}
-      </StatusBadge>
+      {openSearch && <SearchButton onClick={openSearch} />}
+      {projectMeta && (
+        <StatusBadge tone={STATUS_TONE[status] || 'neutral'} icon="dot" size="md">
+          {STATUS_KEYS[status] ? t(STATUS_KEYS[status]) : status}
+        </StatusBadge>
+      )}
       <Menu
         trigger={
           <Button size="sm" icon={Languages} className={s.langButton} title={t('ui.language')}>
@@ -56,10 +57,11 @@ function AreaTabs({ tabs, counts = {} }) {
   );
 }
 
-const ALL_AREAS = [...AREAS, SETTINGS_AREA, MORE_AREA];
+const ALL_AREAS = [...AREAS, SETTINGS_AREA, MORE_AREA, ...PORTFOLIO_AREAS];
 
 /**
- * Standard page frame: area title + project subtitle + global actions,
+ * Standard page frame: area title + project subtitle + global actions
+ * (on the projects level: the app name instead of the project),
  * the area's sub-page tabs (if any), then the page content.
  * `fill` lets the content take the remaining window height (Gantt).
  * `tabCounts` puts a count on sub-page tabs ({ '/record/pending': 2 }).
@@ -67,20 +69,24 @@ const ALL_AREAS = [...AREAS, SETTINGS_AREA, MORE_AREA];
  */
 export function Page({ area, fill = false, tabCounts, bare = false, children }) {
   const { t } = useI18n();
+  const store = useOptionalProject();
+  const project = store?.project;
   const def = ALL_AREAS.find((a) => a.key === area);
   const tabs = AREA_TABS[area];
   const title = def ? t(def.labelKey) : '';
+  const owner = project ? project.name : t('projects.appName');
+  const subtitle = project ? [project.name, project.contract].filter(Boolean).join(' · ') : t('projects.appTagline');
   // The window / tab title names the area (read first by screen readers).
   useEffect(() => {
-    document.title = title ? `${title} · ${t('ui.projectName')}` : t('ui.projectName');
-  }, [title, t]);
+    document.title = title ? `${title} · ${owner}` : owner;
+  }, [title, owner]);
   return (
     <div className={cx(s.page, fill && s.fill)}>
       {!bare && (
         <TopBar
           title={title}
-          subtitle={`${t('ui.projectName')} · ${t('ui.projectContract')}`}
-          actions={<GlobalActions />}
+          subtitle={subtitle}
+          actions={<GlobalActions projectMeta={store?.projectMeta} />}
         />
       )}
       {tabs && !bare && <AreaTabs tabs={tabs} counts={tabCounts} />}

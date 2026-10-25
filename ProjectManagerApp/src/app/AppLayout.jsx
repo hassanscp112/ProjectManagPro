@@ -6,7 +6,7 @@ import { useProject } from '../state/projectContext.js';
 import { AppShell, BottomNav, CommandPalette, Sidebar, useHotkey } from '../ui/index.js';
 import DeleteTaskDialog from './DeleteTaskDialog.jsx';
 import IdentityDialog from './IdentityDialog.jsx';
-import { AREAS, AREA_TABS, MORE_AREA, SETTINGS_AREA, areaKeyForPath, hrefFor } from './navigation.js';
+import { AREAS, AREA_TABS, MORE_AREA, PORTFOLIO_AREAS, SETTINGS_AREA, areaKeyForPath, hrefFor } from './navigation.js';
 import { ShellContext } from './shellContext.js';
 
 const initialsOf = (name) => {
@@ -20,14 +20,14 @@ const initialsOf = (name) => {
 };
 
 /**
- * The app frame for every route: sidebar (desktop) / bottom bar (phone),
+ * The frame of every route inside a project: sidebar (desktop) / bottom bar (phone),
  * Ctrl K search, and the app-wide dialogs. Pages render in <Outlet />.
  */
 export default function AppLayout() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { identity, openIdentity, pendingApprovals, refreshStores, tasks } = useProject();
+  const { project, identity, openIdentity, pendingApprovals, refreshStores, tasks } = useProject();
   const [searchOpen, setSearchOpen] = useState(false);
   const [immersive, setImmersive] = useState(false);
   const activeKey = areaKeyForPath(pathname);
@@ -50,7 +50,7 @@ export default function AppLayout() {
 
   const searchGroups = useMemo(() => {
     const pages = [];
-    [...AREAS, SETTINGS_AREA].forEach((a) => {
+    [...AREAS, SETTINGS_AREA, ...PORTFOLIO_AREAS].forEach((a) => {
       const tabs = AREA_TABS[a.key];
       if (tabs) tabs.forEach((tab) => pages.push({ id: tab.to, label: `${t(a.labelKey)} · ${t(tab.labelKey)}`, icon: a.icon, path: tab.to }));
       else pages.push({ id: a.path, label: t(a.labelKey), icon: a.icon, path: a.path });
@@ -77,7 +77,13 @@ export default function AppLayout() {
       <AppShell
         sidebar={
           <Sidebar
-            project={{ initial: 'و', name: t('ui.projectName'), subtitle: t('ui.projectContract') }}
+            project={{
+              initial: (project?.name || '').trim().charAt(0) || '؟',
+              name: project?.name || '',
+              subtitle: project?.contract || '',
+              href: hrefFor('/projects'),
+              title: t('projects.allProjects'),
+            }}
             primaryAction={{ label: t('ui.recordOrder'), href: hrefFor('/record') }}
             items={navItems}
             footerItems={[{ key: 'settings', label: t('ui.navSettings'), icon: SETTINGS_AREA.icon, href: hrefFor('/settings') }]}

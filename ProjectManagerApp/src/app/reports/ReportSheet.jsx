@@ -1,4 +1,5 @@
 import { useI18n } from '../../i18n/useI18n.js';
+import { useProject } from '../../state/projectContext.js';
 import { cx } from '../../ui/index.js';
 import s from './Reports.module.css';
 
@@ -9,12 +10,13 @@ import s from './Reports.module.css';
  */
 export function ReportSheet({ title, period, stamp, extra, children, className }) {
   const { t } = useI18n();
+  const { project } = useProject();
   return (
     <article className={cx(s.sheet, 'ui-print-sheet', className)}>
       <header className={s.sheetHead}>
         <div className={s.project}>
-          <strong>{t('ui.projectName')}</strong>
-          <span>{t('ui.projectContract')}</span>
+          <strong>{project?.name}</strong>
+          {project?.contract && <span>{project.contract}</span>}
         </div>
         <h2 className={s.sheetTitle}>{title}</h2>
         <div className={s.sheetMeta}>

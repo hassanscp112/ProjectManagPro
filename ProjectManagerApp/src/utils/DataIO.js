@@ -11,9 +11,14 @@
 // ─────────────────────────────────────────────────────────────
 
 import { getAllFiles, replaceAllFiles } from './FileDB.js';
+import { parseProjectKey } from './Projects.js';
 
-// Every localStorage key the application writes to.
+// Every localStorage key the application writes to. The project-scoped ones
+// (utils/Projects.PROJECT_SCOPED_KEYS) also exist once per extra project as
+// 'pm-p:<projectId>:<key>'; backups include those too.
 export const APP_STORAGE_KEYS = [
+  'pm-projects',                   // the list of projects (global)
+  'pm-last-project',               // last project opened on this device
   'project-manager-gantt-tasks',   // tasks / BOQ
   'project-manager-project-meta',  // baseline + variations + lifecycle status
   'project-manager-finance-data',  // finance ledgers (machinery, materials, …)
@@ -34,7 +39,25 @@ export const APP_STORAGE_KEYS = [
 
 const BACKUP_MAGIC = 'projectmanager-backup';
 // 1 = localStorage only. 2 adds `files` (IndexedDB uploads, base64).
-export const BACKUP_VERSION = 2;
+// 3 = all projects (pm-projects + 'pm-p:<id>:…' keys, files carry projectId);
+//     restoring it replaces ALL app data, older versions only the keys they hold.
+export const BACKUP_VERSION = 3;
+
+// Device preferences a full restore leaves as they are.
+const DEVICE_KEYS = ['pm-language', 'pm-theme', 'pm-last-project'];
+
+/** True for any key this app owns (plain, or a project's prefixed copy). */
+export const isAppStorageKey = (key) => APP_STORAGE_KEYS.includes(key) || parseProjectKey(key) !== null;
+
+/** Every app key currently in localStorage. */
+const storedAppKeys = () => {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (isAppStorageKey(key)) keys.push(key);
+  }
+  return keys;
+};
 
 /** An error the UI can translate: `code` is a key under app.backup.err.* */
 export class BackupError extends Error {
@@ -71,6 +94,7 @@ export const encodeFileRecord = async (record) => ({
   size: record.size,
   type: record.type || '',
   createdAt: record.createdAt,
+  ...(record.projectId ? { projectId: record.projectId } : {}),
   data: bytesToBase64(new Uint8Array(await record.blob.arrayBuffer())),
 });
 
@@ -90,6 +114,7 @@ export const decodeFileEntries = (entries) => {
         type: entry.type || '',
         blob,
         createdAt: entry.createdAt,
+        ...(entry.projectId ? { projectId: entry.projectId } : {}),
       };
     });
   } catch {
@@ -100,14 +125,13 @@ export const decodeFileEntries = (entries) => {
 /* ── export ───────────────────────────────────────────────────────────────── */
 
 /**
- * Gather every known app key currently in localStorage into a plain object.
- * Missing keys are skipped (not stored), so restore only writes what existed.
+ * Gather every app key currently in localStorage (all projects) into a plain
+ * object. Missing keys are skipped (not stored).
  */
 const snapshotStorage = () => {
   const data = {};
-  APP_STORAGE_KEYS.forEach((key) => {
-    const raw = localStorage.getItem(key);
-    if (raw !== null) data[key] = raw; // keep raw string — preserve exact JSON
+  storedAppKeys().forEach((key) => {
+    data[key] = localStorage.getItem(key); // keep raw string — preserve exact JSON
   });
   return data;
 };
@@ -185,7 +209,7 @@ export const validateBackup = (parsed) => {
     return { ok: false, code: 'noStorage' };
   }
 
-  const keys = Object.keys(parsed.storage).filter((k) => APP_STORAGE_KEYS.includes(k));
+  const keys = Object.keys(parsed.storage).filter(isAppStorageKey);
   if (keys.length === 0) {
     return { ok: false, code: 'noKnownKeys' };
   }
@@ -234,9 +258,11 @@ export const readBackupFile = (file) =>
 
 /**
  * Restore a previously-validated backup payload.
- * - localStorage: writes back ONLY the known keys present in the backup and
- *   leaves others intact. If a write fails (quota), every key is put back as
- *   it was and BackupError('writeFail') is thrown.
+ * - localStorage: writes back the app keys present in the backup. A version-3
+ *   backup (all projects) also removes app keys it doesn't hold, so the
+ *   result is exactly the backup (device preferences stay); older backups
+ *   leave other keys intact. If a write fails (quota), every key is put back
+ *   as it was and BackupError('writeFail') is thrown.
  * - files: a backup with a files section replaces ALL stored files; an old
  *   backup without one leaves the stored files untouched. If that fails the
  *   localStorage writes are rolled back too (BackupError('filesWriteFail')).
@@ -266,9 +292,17 @@ export const restoreAppData = async (parsed) => {
 
   const written = [];
   try {
+    if (Number(parsed.version) >= 3) {
+      storedAppKeys()
+        .filter((key) => !(key in parsed.storage) && !DEVICE_KEYS.includes(key))
+        .forEach((key) => {
+          previous[key] = localStorage.getItem(key);
+          localStorage.removeItem(key);
+        });
+    }
     Object.entries(parsed.storage).forEach(([key, rawValue]) => {
-      if (APP_STORAGE_KEYS.includes(key) && typeof rawValue === 'string') {
-        previous[key] = localStorage.getItem(key);
+      if (isAppStorageKey(key) && typeof rawValue === 'string') {
+        if (!(key in previous)) previous[key] = localStorage.getItem(key);
         localStorage.setItem(key, rawValue);
         written.push(key);
       }

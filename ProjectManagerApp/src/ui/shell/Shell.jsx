@@ -45,8 +45,26 @@ function SidebarUser({ user }) {
   );
 }
 
+/** Project name at the top of the sidebar; a link when project.href is set. */
+function ProjectHeader({ project }) {
+  const Tag = project.href ? 'a' : 'div';
+  const extra = project.href ? { href: project.href, title: project.title } : {};
+  return (
+    <Tag {...extra} className={cx(s.project, project.href && s.projectLink)}>
+      <span className={s.logo} aria-hidden="true">
+        {project.initial}
+      </span>
+      <span className={s.projectText}>
+        <span className={s.projectName}>{project.name}</span>
+        {project.subtitle && <span className={s.projectSub}>{project.subtitle}</span>}
+      </span>
+    </Tag>
+  );
+}
+
 /**
  * Desktop navigation. items / footerItems: [{ key, label, icon, href, badge }].
+ * project: { initial, name, subtitle, href?, title? }.
  * Links are plain hrefs (hash routes work without router wiring).
  */
 export function Sidebar({ project, primaryAction, items, footerItems = [], activeKey, user }) {
@@ -66,15 +84,8 @@ export function Sidebar({ project, primaryAction, items, footerItems = [], activ
   return (
     <nav aria-label={t('ui.mainNav')} className={s.sidebar}>
       {project && (
-        <div className={s.project}>
-          <span className={s.logo} aria-hidden="true">
-            {project.initial}
-          </span>
-          <span className={s.projectText}>
-            <span className={s.projectName}>{project.name}</span>
-            {project.subtitle && <span className={s.projectSub}>{project.subtitle}</span>}
-          </span>
-        </div>
+        // With an href the header is a link (to the list of all projects).
+        <ProjectHeader project={project} />
       )}
       {primaryAction && (
         <a href={primaryAction.href} className={s.primary}>

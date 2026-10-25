@@ -25,6 +25,7 @@
 
 import { loadLanguage, translate } from '../i18n/index.js';
 import { notifyStoreChange } from './storeEvents.js';
+import { projectKey } from './Projects.js';
 
 export const ORDERS_STORAGE_KEY = 'pm-orders';
 export const REGISTRIES_STORAGE_KEY = 'pm-registries';
@@ -268,7 +269,7 @@ export const createOrderId = () => {
  */
 export const loadOrdersData = () => {
   try {
-    const raw = localStorage.getItem(ORDERS_STORAGE_KEY);
+    const raw = localStorage.getItem(projectKey(ORDERS_STORAGE_KEY));
     if (!raw) return { orders: [], lastWhoByType: {} };
     const parsed = JSON.parse(raw);
     return {
@@ -292,7 +293,7 @@ export const saveOrdersData = (data) => {
         ? data.lastWhoByType
         : {},
   };
-  localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(shaped));
+  localStorage.setItem(projectKey(ORDERS_STORAGE_KEY), JSON.stringify(shaped));
   notifyStoreChange(ORDERS_STORAGE_KEY);
   return shaped;
 };

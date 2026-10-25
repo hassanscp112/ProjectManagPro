@@ -12,14 +12,10 @@ export default {
   // Templates
   'library.newTemplate': 'قالب جديد',
   'library.saveProject': 'حفظ المشروع كقالب',
-  'library.fromProjectHint': 'يحفظ شجرة الفقرات الحالية بكمياتها الثابتة (بدون متغيرات).',
+  'library.fromProjectHint': 'يحفظ شجرة فقرات المشروع المختار بكمياتها الثابتة (بدون متغيرات).',
   'library.noTemplates': 'لا قوالب بعد — أنشئ واحداً من «قالب جديد».',
   'library.preview': 'معاينة الفقرات',
   'library.unpricedFix': '— أضفها في صفحة الأسعار لتُسعَّر.',
-  'library.generate': 'توليد {count} فقرة',
-  'library.generateTitle': 'إضافة هذه الفقرات إلى المشروع؟',
-  'library.generateBody': 'ستُضاف {count} فقرة بعد الأقسام الحالية. يمكنك التراجع من الجدول الزمني.',
-  'library.generateConfirm': 'إضافة إلى المشروع',
   // Template builder
   'library.backToTemplates': 'القوالب',
   'library.saveTemplate': 'حفظ القالب',

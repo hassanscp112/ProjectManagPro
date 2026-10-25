@@ -14,10 +14,9 @@ import {
   Upload,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useMatch, useNavigate } from 'react-router';
+import { useLocation, useMatch, useNavigate } from 'react-router';
 import { compactCurrency } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
-import { PROJECT_START } from '../../state/projectModel.js';
 import { useProject } from '../../state/projectContext.js';
 import { timelineRange, visibleRows } from '../../state/scheduleModel.js';
 import { todayStr } from '../../utils/OrderEngine.js';
@@ -40,9 +39,17 @@ export default function SchedulePage() {
   const navigate = useNavigate();
   const match = useMatch('/schedule/task/:taskId');
   const panelTaskId = match ? decodeURIComponent(match.params.taskId) : null;
-  const { tasks, engineResult, projectMeta, ganttView, setGanttView, setStatus, updateTask, addMainTask, addSubTask, requestDeleteTask, undo, canUndo } = useProject();
+  const { tasks, engineResult, projectMeta, projectStart, ganttView, setGanttView, setStatus, updateTask, addMainTask, addSubTask, requestDeleteTask, undo, canUndo } = useProject();
   const view = ganttView;
   const setView = useCallback((changes) => setGanttView((v) => ({ ...v, ...changes })), [setGanttView]);
+  const location = useLocation();
+
+  // A project just created ("start planning") opens with editing on.
+  useEffect(() => {
+    if (!location.state?.startPlanning) return;
+    setView({ isEditMode: true });
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, setView, navigate]);
   const [signOffOpen, setSignOffOpen] = useState(false);
   const [voOpen, setVoOpen] = useState(false);
   const backupRestore = useBackupRestore();
@@ -56,7 +63,7 @@ export default function SchedulePage() {
     () => visibleRows(engineResult.tasks, { collapsed, criticalOnly: view.criticalOnly, query: view.query || '' }),
     [engineResult.tasks, collapsed, view.criticalOnly, view.query]
   );
-  const range = useMemo(() => timelineRange(engineResult.tasks, PROJECT_START, today), [engineResult.tasks, today]);
+  const range = useMemo(() => timelineRange(engineResult.tasks, projectStart, today), [engineResult.tasks, projectStart, today]);
   const taskById = useMemo(() => new Map(engineResult.tasks.map((x) => [x.id, x])), [engineResult.tasks]);
 
   // The panel's item was deleted (here, in another tab, or by a restore): drop the stale URL.

@@ -2,7 +2,6 @@
 // Keys use the '<module>.<name>' convention; both language files must stay in sync.
 export default {
   // ── Header + tabs ──
-  'templates.pageSub': 'Turn a standard structure template (school, apartment building, mall…) into a complete task tree with quantities, prices, durations and links.',
   'templates.tabRates': 'Rate Library',
 
   // ── Seeded template display names (storage keeps the Arabic name) ──
@@ -30,7 +29,6 @@ export default {
   'templates.confirmDeleteTemplate': 'Permanently delete this template?',
 
   // ── Detail panel: variables form ──
-  'templates.startDate': 'Start Date',
 
   // ── Warning strip for unpriced items ──
   'templates.warningUnpricedLabel': 'Items with no rate in the library ({count}):',

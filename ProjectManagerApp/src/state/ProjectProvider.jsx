@@ -6,16 +6,15 @@ import { IDENTITY_STORAGE_KEY, hasIdentity, loadIdentity } from '../utils/Identi
 import { ORDERS_STORAGE_KEY, loadOrdersData } from '../utils/OrderEngine';
 import { REGISTRIES_STORAGE_KEY, loadRegistries } from '../utils/Registries';
 import { writeAutoSnapshot } from '../utils/Snapshots';
+import { currentProject, projectKey, projectStartDate } from '../utils/Projects.js';
 import { onStoreChange } from '../utils/storeEvents.js';
 import { ProjectContext } from './projectContext.js';
 import {
   META_STORAGE_KEY,
-  PROJECT_START,
   STATUS_KEYS,
   TASKS_STORAGE_KEY,
   addMainTask,
   addSubTask,
-  appendGeneratedTasks,
   applyVariation,
   countPendingApprovals,
   createTaskId,
@@ -69,11 +68,11 @@ export function ProjectProvider({ children }) {
   const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
-    localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+    localStorage.setItem(projectKey(TASKS_STORAGE_KEY), JSON.stringify(tasks));
   }, [tasks]);
 
   useEffect(() => {
-    localStorage.setItem(META_STORAGE_KEY, JSON.stringify(projectMeta));
+    localStorage.setItem(projectKey(META_STORAGE_KEY), JSON.stringify(projectMeta));
   }, [projectMeta]);
 
   // First change of the day → automatic checkpoint (no-op if today's exists).
@@ -92,10 +91,13 @@ export function ProjectProvider({ children }) {
   // (storeEvents from the utils owners) or in another open tab (the
   // browser's `storage` event; key null = storage cleared).
   useEffect(() => {
+    // Owners announce the base key; the browser's storage event has the
+    // project's own key (utils/Projects.projectKey). Both count.
+    const is = (key, base) => key === null || key === base || key === projectKey(base);
     const reload = (key) => {
-      if (key === null || key === ORDERS_STORAGE_KEY) setOrdersData(loadOrdersData());
+      if (is(key, ORDERS_STORAGE_KEY)) setOrdersData(loadOrdersData());
       if (key === null || key === REGISTRIES_STORAGE_KEY) setRegistries(loadRegistries());
-      if (key === null || key === ACTIVITY_STORAGE_KEY) setAppEvents(loadAppEvents());
+      if (is(key, ACTIVITY_STORAGE_KEY)) setAppEvents(loadAppEvents());
       if (key === null || key === IDENTITY_STORAGE_KEY) setIdentity(loadIdentity());
     };
     const offStore = onStoreChange(reload);
@@ -107,9 +109,11 @@ export function ProjectProvider({ children }) {
     };
   }, []);
 
+  const project = currentProject();
+  const projectStart = projectStartDate(project);
   const engineResult = useMemo(
-    () => GanttEngine.calculate(tasks, PROJECT_START, projectMeta, orders),
-    [tasks, projectMeta, orders]
+    () => GanttEngine.calculate(tasks, projectStart, projectMeta, orders),
+    [tasks, projectStart, projectMeta, orders]
   );
 
   /* ── undo ── */
@@ -140,12 +144,12 @@ export function ProjectProvider({ children }) {
 
   const addMain = () => {
     pushToHistory(tasks);
-    setTasks((prev) => addMainTask(prev, { id: createTaskId(), name: t('app.newMainGroup') }));
+    setTasks((prev) => addMainTask(prev, { id: createTaskId(), name: t('app.newMainGroup'), start: projectStart }));
   };
 
   const addSub = (parentId) => {
     pushToHistory(tasks);
-    setTasks((prev) => addSubTask(prev, parentId, { id: createTaskId(), name: t('app.newSubTask') }));
+    setTasks((prev) => addSubTask(prev, parentId, { id: createTaskId(), name: t('app.newSubTask'), start: projectStart }));
   };
 
   const requestDeleteTask = (taskId) => setTaskToDelete(taskId);
@@ -161,7 +165,7 @@ export function ProjectProvider({ children }) {
   const setBoqLink = (parentTaskId, column, checked) => {
     pushToHistory(tasks);
     const id = createTaskId();
-    setTasks((prev) => toggleBoqLink(prev, parentTaskId, column, checked, { id, name: t('app.newBoqItem') }));
+    setTasks((prev) => toggleBoqLink(prev, parentTaskId, column, checked, { id, name: t('app.newBoqItem'), start: projectStart }));
   };
 
   const linkBoqToExisting = (parentTaskId, column, leafTaskId) => {
@@ -208,23 +212,10 @@ export function ProjectProvider({ children }) {
   };
 
   /** Append a template's tree; returns true when anything was added. */
-  const generateFromTemplate = (generated, meta) => {
-    if (!Array.isArray(generated) || generated.length === 0) return false;
-    pushToHistory(tasks);
-    const result = appendGeneratedTasks(tasks, generated);
-    setTasks(result.tasks);
-    logAppEvent({
-      actor: identity.name,
-      kind: 'template',
-      summary: `${t('app.template.generatedLog')} «${meta?.templateName || ''}» — ${result.added} ${t('app.template.itemsLog')}`,
-      refType: 'template',
-      refId: meta?.templateId || '',
-    });
-    return true;
-  };
-
   const value = {
     // data
+    project,
+    projectStart,
     tasks,
     projectMeta,
     orders,
@@ -264,7 +255,6 @@ export function ProjectProvider({ children }) {
     signOff,
     setStatus,
     raiseVariation,
-    generateFromTemplate,
   };
 
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;

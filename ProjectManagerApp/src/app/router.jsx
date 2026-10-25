@@ -1,10 +1,14 @@
 // Route table (hash URLs: http://localhost:5173/#/schedule/task/2.1.2).
 // Refresh and shared links land on the same screen.
+// Two levels: the projects level (/projects, /templates, /rates — no project
+// open) and everything else, which runs inside the open project (ProjectGate).
 
 import { lazy, Suspense } from 'react';
 import { createHashRouter, Navigate } from 'react-router';
-import AppLayout from './AppLayout.jsx';
 import { RouteErrorPage } from './ErrorPage.jsx';
+import ProjectGate from './ProjectGate.jsx';
+import PortfolioLayout from './portfolio/PortfolioLayout.jsx';
+import ProjectsPage from './portfolio/ProjectsPage.jsx';
 import HomePage from './home/HomePage.jsx';
 import MorePage from './pages/MorePage.jsx';
 import RecordLogPage from './record/RecordLogPage.jsx';
@@ -41,9 +45,10 @@ const screenRoutes = [
   { path: 'finance/:ledger', ...page(() => import('./finance/FinancePage.jsx')) },
   { path: 'library', element: <Navigate to="/library/boq" replace /> },
   { path: 'library/boq', ...page(() => import('./library/BoqPage.jsx')) },
-  { path: 'library/templates', ...page(() => import('./library/TemplatesPage.jsx')) },
-  { path: 'library/templates/new', ...page(() => import('./library/TemplateBuilderPage.jsx')) },
-  { path: 'library/rates', ...page(() => import('./library/RatesPage.jsx')) },
+  // Templates and rates moved up to the projects level; old links still work.
+  { path: 'library/templates', element: <Navigate to="/templates" replace /> },
+  { path: 'library/templates/new', element: <Navigate to="/templates/new" replace /> },
+  { path: 'library/rates', element: <Navigate to="/rates" replace /> },
   { path: 'library/files', ...page(() => import('./library/FilesPage.jsx')) },
   { path: 'library/files/:taskId', ...page(() => import('./library/FilesPage.jsx')) },
   { path: 'people', element: <Navigate to="/people/contractors" replace /> },
@@ -56,9 +61,27 @@ const screenRoutes = [
 // inside the shell, so the navigation still works; a crashing shell shows it
 // full-window.
 const appRoutes = {
-  element: <AppLayout />,
+  element: <ProjectGate />,
   errorElement: <RouteErrorPage />,
   children: [{ errorElement: <RouteErrorPage inline />, children: screenRoutes }],
+};
+
+// The level above every project.
+const portfolioRoutes = {
+  element: <PortfolioLayout />,
+  errorElement: <RouteErrorPage />,
+  children: [
+    {
+      errorElement: <RouteErrorPage inline />,
+      children: [
+        { path: 'projects', element: <ProjectsPage /> },
+        { path: 'projects/new', ...page(() => import('./portfolio/NewProjectPage.jsx')) },
+        { path: 'templates', ...page(() => import('./templates/TemplatesPage.jsx')) },
+        { path: 'templates/new', ...page(() => import('./templates/TemplateBuilderPage.jsx')) },
+        { path: 'rates', ...page(() => import('./templates/RatesPage.jsx')) },
+      ],
+    },
+  ],
 };
 
 // Dev-only component review page (not part of production builds).
@@ -78,6 +101,7 @@ const devRoutes = UiReview
 
 export const router = createHashRouter([
   { path: '/', ...appRoutes },
+  portfolioRoutes,
   ...devRoutes,
   { path: '*', element: <Navigate to="/" replace /> },
 ]);

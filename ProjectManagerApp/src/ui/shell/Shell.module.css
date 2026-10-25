@@ -59,6 +59,17 @@
   padding: var(--ui-space-1) var(--ui-space-2) var(--ui-space-4);
 }
 
+.projectLink {
+  margin-block-end: var(--ui-space-3);
+  padding: var(--ui-space-2);
+  border-radius: var(--ui-r-md);
+  text-decoration: none;
+  transition: background-color var(--ui-dur) var(--ui-ease);
+}
+.projectLink:hover {
+  background: var(--ui-sidebar-active);
+}
+
 .logo {
   flex: none;
   display: flex;

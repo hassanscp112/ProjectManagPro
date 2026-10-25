@@ -4,12 +4,17 @@
 // Moved out of the old App.jsx with identical behavior. Every function
 // takes the current data and returns new data; nothing here touches
 // React or storage (ProjectProvider does that), so all of it is tested
-// in __tests__/projectModel.test.js. Text such as default task names
-// is passed in by the caller (already translated).
+// in __tests__/projectModel.test.js (loadTasks / loadMeta read the storage
+// passed in). Text such as default task names is passed in by the caller
+// (already translated).
 // ─────────────────────────────────────────────────────────────
+
+import { currentProject, keyFor } from '../utils/Projects.js';
 
 export const TASKS_STORAGE_KEY = 'project-manager-gantt-tasks';
 export const META_STORAGE_KEY = 'project-manager-project-meta';
+// Start date of the first (legacy) project; each project has its own
+// startDate (utils/Projects.projectStartDate) — this is only the default.
 export const PROJECT_START = '2025-08-02';
 
 export const DEFAULT_META = { status: 'draft', baseline: null, variations: [] };
@@ -67,26 +72,43 @@ export const INITIAL_TASKS = [
 
 /* ─────────────── Loading / ids ─────────────── */
 
-/** Stored task tree, or the seed tree when storage is empty or broken. */
-export const loadTasks = (storage = globalThis.localStorage) => {
+/**
+ * Stored task tree of a project (default: the open one). The first (legacy)
+ * project falls back to the seed tree when storage is empty or broken; any
+ * other project starts empty.
+ */
+export const loadTasks = (storage = globalThis.localStorage, project = currentProject()) => {
+  const fallback = !project || project.legacy ? INITIAL_TASKS : [];
   try {
-    const saved = storage?.getItem(TASKS_STORAGE_KEY);
-    if (!saved) return INITIAL_TASKS;
+    const saved = storage?.getItem(keyFor(project, TASKS_STORAGE_KEY));
+    if (!saved) return fallback;
     const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_TASKS;
+    if (!Array.isArray(parsed)) return fallback;
+    return parsed.length > 0 || fallback.length === 0 ? parsed : fallback;
   } catch {
-    return INITIAL_TASKS;
+    return fallback;
   }
 };
 
-/** Stored project meta merged over the defaults. */
-export const loadMeta = (storage = globalThis.localStorage) => {
+/** Stored project meta (default: the open project) merged over the defaults. */
+export const loadMeta = (storage = globalThis.localStorage, project = currentProject()) => {
   try {
-    const saved = storage?.getItem(META_STORAGE_KEY);
+    const saved = storage?.getItem(keyFor(project, META_STORAGE_KEY));
     if (!saved) return { ...DEFAULT_META };
     return { ...DEFAULT_META, ...JSON.parse(saved) };
   } catch {
     return { ...DEFAULT_META };
+  }
+};
+
+/** Write a new project's task tree and meta. Returns true when stored. */
+export const saveProjectPlan = (project, { tasks, meta }, storage = globalThis.localStorage) => {
+  try {
+    storage.setItem(keyFor(project, TASKS_STORAGE_KEY), JSON.stringify(tasks));
+    storage.setItem(keyFor(project, META_STORAGE_KEY), JSON.stringify(meta));
+    return true;
+  } catch {
+    return false;
   }
 };
 
@@ -223,7 +245,7 @@ const findBoqInsertIndex = (list, parent) => {
  * checked → create a child leaf (if not linked yet) and link it;
  * unchecked → unlink, keep the leaf with the column's last sum as quantity.
  */
-export const toggleBoqLink = (tasks, parentTaskId, column, checked, { id, name }) => {
+export const toggleBoqLink = (tasks, parentTaskId, column, checked, { id, name, start = PROJECT_START }) => {
   const parent = tasks.find((t) => t.id === parentTaskId);
   if (!parent) return tasks;
 
@@ -236,7 +258,7 @@ export const toggleBoqLink = (tasks, parentTaskId, column, checked, { id, name }
         wbs: nextChildWbs(tasks, parent),
         name: column.name || name,
         isGroup: false,
-        start: parent.manualStart || PROJECT_START,
+        start: parent.manualStart || start,
       }),
       unit: column.unit || '',
       boqLink: { parentId: parent.id, colId: column.id, mode: 'created' },

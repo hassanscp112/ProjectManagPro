@@ -1,5 +1,6 @@
 import { loadLanguage, translate } from '../i18n/index.js';
 import { notifyStoreChange } from './storeEvents.js';
+import { projectKey } from './Projects.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ActivityLog — the app's unified event ledger utilities.
@@ -48,7 +49,7 @@ const fmtNum = (value) => {
 
 export const loadAppEvents = () => {
   try {
-    const raw = localStorage.getItem(ACTIVITY_STORAGE_KEY);
+    const raw = localStorage.getItem(projectKey(ACTIVITY_STORAGE_KEY));
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -62,7 +63,7 @@ export const saveAppEvents = (list) => {
     const arr = Array.isArray(list) ? list : [];
     // Keep the most recent MAX_APP_EVENTS entries (oldest dropped first).
     const capped = arr.length > MAX_APP_EVENTS ? arr.slice(arr.length - MAX_APP_EVENTS) : arr;
-    localStorage.setItem(ACTIVITY_STORAGE_KEY, JSON.stringify(capped));
+    localStorage.setItem(projectKey(ACTIVITY_STORAGE_KEY), JSON.stringify(capped));
     notifyStoreChange(ACTIVITY_STORAGE_KEY);
   } catch {
     // Storage unavailable (quota / private mode) — nothing we can do safely.
