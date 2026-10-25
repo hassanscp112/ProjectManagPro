@@ -12,6 +12,7 @@ import { Page } from '../Page.jsx';
 import OrderRow from '../record/OrderRow.jsx';
 import { formatDay, orderSubject, typeLabel } from '../record/orderMeta.js';
 import { useOrderActions } from '../record/useApproval.jsx';
+import { ltr } from '../bidi.js';
 import SCurve from './SCurve.jsx';
 import s from './Home.module.css';
 
@@ -21,9 +22,6 @@ const DOT = { overdue: s.dotOverdue, active: s.dotActive, upcoming: s.dotUpcomin
 
 const pct1 = (n) => `${(Number(n) || 0).toFixed(1)}%`;
 const idx2 = (n) => (Number(n) || 0).toFixed(2);
-// Numbers with % or a sign inside Arabic sentences: isolate them left-to-right
-// so "21%" doesn't render as "%21" and "-77.9" as "77.9-".
-const ltr = (text) => `⁦${text}⁩`;
 
 /** / — where the project stands and what needs doing, at a glance. */
 export default function HomePage() {
