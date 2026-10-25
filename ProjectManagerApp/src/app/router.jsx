@@ -15,15 +15,15 @@ import RecordPendingPage from './record/RecordPendingPage.jsx';
 import ActivityPage from './reports/ActivityPage.jsx';
 import DailyReportPage from './reports/DailyReportPage.jsx';
 import MonthlyReportPage from './reports/MonthlyReportPage.jsx';
-import {
-  BoqCalculatorPage,
-  FilesPage,
-  FinancePage,
-  PeoplePage,
-  SettingsPage,
-  TaskDetailsPage,
-  TemplatesPage,
-} from './pages/legacyPages.jsx';
+import FinancePage from './finance/FinancePage.jsx';
+import BoqPage from './library/BoqPage.jsx';
+import FilesPage from './library/FilesPage.jsx';
+import RatesPage from './library/RatesPage.jsx';
+import TemplateBuilderPage from './library/TemplateBuilderPage.jsx';
+import TemplatesPage from './library/TemplatesPage.jsx';
+import { TaskDetailsPage } from './pages/legacyPages.jsx';
+import PeoplePage from './people/PeoplePage.jsx';
+import SettingsPage from './settings/SettingsPage.jsx';
 
 const appRoutes = {
   element: <AppLayout />,
@@ -48,13 +48,17 @@ const appRoutes = {
     { path: 'reports/daily', element: <DailyReportPage /> },
     { path: 'reports/monthly', element: <MonthlyReportPage /> },
     { path: 'reports/activity', element: <ActivityPage /> },
-    { path: 'finance', element: <FinancePage /> },
+    { path: 'finance', element: <Navigate to="/finance/machinery" replace /> },
+    { path: 'finance/:ledger', element: <FinancePage /> },
     { path: 'library', element: <Navigate to="/library/boq" replace /> },
-    { path: 'library/boq', element: <BoqCalculatorPage /> },
+    { path: 'library/boq', element: <BoqPage /> },
     { path: 'library/templates', element: <TemplatesPage /> },
+    { path: 'library/templates/new', element: <TemplateBuilderPage /> },
+    { path: 'library/rates', element: <RatesPage /> },
     { path: 'library/files', element: <FilesPage /> },
     { path: 'library/files/:taskId', element: <FilesPage /> },
-    { path: 'people', element: <PeoplePage /> },
+    { path: 'people', element: <Navigate to="/people/contractors" replace /> },
+    { path: 'people/:kind', element: <PeoplePage /> },
     { path: 'settings', element: <SettingsPage /> },
     { path: 'more', element: <MorePage /> },
   ],

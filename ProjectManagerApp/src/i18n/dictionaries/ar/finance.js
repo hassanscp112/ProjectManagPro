@@ -84,4 +84,18 @@ export default {
   'finance.cfgMachineSizes': 'أحجام الآليات',
   'finance.cfgStatuses': 'حالات السلفة',
   'finance.addNewPlaceholder': 'إضافة جديد...',
+  // ── rebuilt Finance (Phase 6) ──
+  'finance.tabMachineryShort': 'الآليات',
+  'finance.tabMaterialsShort': 'المواد',
+  'finance.tabPettyCashShort': 'النثريات',
+  'finance.tabPayrollShort': 'الرواتب',
+  'finance.tabLists': 'القوائم',
+  'finance.addRecord': 'إضافة سجل',
+  'finance.recordSaved': 'حُفظ السجل',
+  'finance.deleteTitle': 'حذف هذا السجل؟',
+  'finance.noRecords': 'لا سجلات مطابقة.',
+  'finance.count': '{n} سجل',
+  'finance.costLine': '{h} ساعة × {rate} = {total}',
+  'finance.liters': '{n} لتر',
+  'finance.removeItem': 'حذف {item}',
 };

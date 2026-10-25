@@ -26,7 +26,7 @@ import { ltr } from '../bidi.js';
 import { Page } from '../Page.jsx';
 import Gantt from './Gantt.jsx';
 import { SignOffDialog, VariationDialog } from './LifecycleDialogs.jsx';
-import { useBackupRestore } from './useBackupRestore.jsx';
+import { useBackupRestore } from '../useBackupRestore.jsx';
 import TaskPanel from './TaskPanel.jsx';
 import s from './Schedule.module.css';
 

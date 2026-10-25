@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
-import { useI18n } from '../../i18n/useI18n.js';
-import { exportAppData, readBackupFile, restoreAppData, validateBackup } from '../../utils/DataIO';
-import { ConfirmDialog, useToast } from '../../ui/index.js';
+import { useI18n } from '../i18n/useI18n.js';
+import { exportAppData, readBackupFile, restoreAppData, validateBackup } from '../utils/DataIO';
+import { ConfirmDialog, useToast } from '../ui/index.js';
 
 /**
  * Backup download + restore (validate → confirm → write → reload), same

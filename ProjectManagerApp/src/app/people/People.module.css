@@ -1,0 +1,89 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+}
+.hint {
+  margin: 0;
+  max-width: 80ch;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.label {
+  font-size: var(--ui-fs-sm);
+  font-weight: 600;
+}
+
+.teams {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--ui-space-4);
+  align-items: start;
+}
+.team {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+}
+.teamHead {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+.teamName {
+  flex: 1 1 auto;
+  font-weight: 700;
+}
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 var(--ui-space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--ui-fs-sm);
+  cursor: pointer;
+}
+.chip:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 1px;
+}
+.chipOn {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-ink);
+  font-weight: 600;
+}
+.sizeRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ui-space-3);
+}
+.sizeRow > :first-child {
+  width: 140px;
+}
+.sizeRow > :last-child {
+  margin-bottom: var(--ui-space-2);
+}
+
+@media (max-width: 767px) {
+  .teams {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

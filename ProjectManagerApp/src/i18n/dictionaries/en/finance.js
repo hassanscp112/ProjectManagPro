@@ -85,4 +85,18 @@ export default {
   'finance.cfgMachineSizes': 'Machine Sizes',
   'finance.cfgStatuses': 'Advance Statuses',
   'finance.addNewPlaceholder': 'Add new...',
+  // ── rebuilt Finance (Phase 6) ──
+  'finance.tabMachineryShort': 'Machinery',
+  'finance.tabMaterialsShort': 'Materials',
+  'finance.tabPettyCashShort': 'Petty cash',
+  'finance.tabPayrollShort': 'Payroll',
+  'finance.tabLists': 'Lists',
+  'finance.addRecord': 'Add record',
+  'finance.recordSaved': 'Record saved',
+  'finance.deleteTitle': 'Delete this record?',
+  'finance.noRecords': 'No records match.',
+  'finance.count': '{n} records',
+  'finance.costLine': '{h} h × {rate} = {total}',
+  'finance.liters': '{n} L',
+  'finance.removeItem': 'Remove {item}',
 };

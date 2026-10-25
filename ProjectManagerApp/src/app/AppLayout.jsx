@@ -6,7 +6,7 @@ import { useI18n } from '../i18n/useI18n.js';
 import { useProject } from '../state/projectContext.js';
 import { AppShell, BottomNav, CommandPalette, Sidebar, useHotkey } from '../ui/index.js';
 import DeleteTaskDialog from './DeleteTaskDialog.jsx';
-import { LegacyIdentityDialog } from './legacy/LegacyDialogs.jsx';
+import IdentityDialog from './IdentityDialog.jsx';
 import { AREAS, AREA_TABS, MORE_AREA, SETTINGS_AREA, areaKeyForPath, hrefFor } from './navigation.js';
 import { ShellContext } from './shellContext.js';
 
@@ -111,7 +111,7 @@ export default function AppLayout() {
       </AppShell>
       <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} groups={searchGroups} />
       <DeleteTaskDialog />
-      <LegacyIdentityDialog />
+      <IdentityDialog />
     </ShellContext.Provider>
   );
 }

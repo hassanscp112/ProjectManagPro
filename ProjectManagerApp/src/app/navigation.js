@@ -18,9 +18,9 @@ export const AREAS = [
   { key: 'record', labelKey: 'ui.navRecord', icon: ClipboardList, path: '/record' },
   { key: 'schedule', labelKey: 'ui.navSchedule', icon: CalendarRange, path: '/schedule' },
   { key: 'reports', labelKey: 'ui.navReports', icon: FileText, path: '/reports/daily' },
-  { key: 'finance', labelKey: 'ui.navFinance', icon: Wallet, path: '/finance' },
+  { key: 'finance', labelKey: 'ui.navFinance', icon: Wallet, path: '/finance/machinery' },
   { key: 'library', labelKey: 'ui.navLibrary', icon: BookOpen, path: '/library/boq' },
-  { key: 'people', labelKey: 'ui.navPeople', icon: Users, path: '/people' },
+  { key: 'people', labelKey: 'ui.navPeople', icon: Users, path: '/people/contractors' },
 ];
 
 export const SETTINGS_AREA = { key: 'settings', labelKey: 'ui.navSettings', icon: SlidersHorizontal, path: '/settings' };
@@ -44,10 +44,23 @@ export const AREA_TABS = {
     { to: '/reports/monthly', labelKey: 'app.nav.monthly' },
     { to: '/reports/activity', labelKey: 'app.nav.activity' },
   ],
+  finance: [
+    { to: '/finance/machinery', labelKey: 'finance.tabMachineryShort' },
+    { to: '/finance/materials', labelKey: 'finance.tabMaterialsShort' },
+    { to: '/finance/pettyCash', labelKey: 'finance.tabPettyCashShort' },
+    { to: '/finance/payroll', labelKey: 'finance.tabPayrollShort' },
+    { to: '/finance/lists', labelKey: 'finance.tabLists' },
+  ],
   library: [
     { to: '/library/boq', labelKey: 'app.nav.calc' },
     { to: '/library/templates', labelKey: 'app.nav.templates' },
+    { to: '/library/rates', labelKey: 'templates.tabRates' },
     { to: '/library/files', labelKey: 'app.nav.files' },
+  ],
+  people: [
+    { to: '/people/contractors', labelKey: 'registries.tabContractors' },
+    { to: '/people/teams', labelKey: 'registries.tabTeams' },
+    { to: '/people/workers', labelKey: 'registries.tabWorkers' },
   ],
 };
 

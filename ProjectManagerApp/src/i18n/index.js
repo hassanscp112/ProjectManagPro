@@ -26,6 +26,9 @@ import arUi from './dictionaries/ar/ui.js';
 import arRecord from './dictionaries/ar/record.js';
 import arHome from './dictionaries/ar/home.js';
 import arSchedule from './dictionaries/ar/schedule.js';
+import arLibrary from './dictionaries/ar/library.js';
+import arPeople from './dictionaries/ar/people.js';
+import arSettings from './dictionaries/ar/settings.js';
 
 import enCommon from './dictionaries/en/common.js';
 import enApp from './dictionaries/en/app.js';
@@ -46,6 +49,9 @@ import enUi from './dictionaries/en/ui.js';
 import enRecord from './dictionaries/en/record.js';
 import enHome from './dictionaries/en/home.js';
 import enSchedule from './dictionaries/en/schedule.js';
+import enLibrary from './dictionaries/en/library.js';
+import enPeople from './dictionaries/en/people.js';
+import enSettings from './dictionaries/en/settings.js';
 
 export const LANGUAGES = [
   { code: 'ar', label: 'العربية', dir: 'rtl' },
@@ -62,6 +68,7 @@ const DICTIONARIES = {
     snapshots: arSnapshots, reports: arReports, taskDetails: arTaskDetails,
     templates: arTemplates, registries: arRegistries,
     finance: arFinance, calculator: arCalculator, files: arFiles, ui: arUi, record: arRecord, home: arHome, schedule: arSchedule,
+    library: arLibrary, people: arPeople, settings: arSettings,
   },
   en: {
     common: enCommon, app: enApp, dashboard: enDashboard, gantt: enGantt,
@@ -69,6 +76,7 @@ const DICTIONARIES = {
     snapshots: enSnapshots, reports: enReports, taskDetails: enTaskDetails,
     templates: enTemplates, registries: enRegistries,
     finance: enFinance, calculator: enCalculator, files: enFiles, ui: enUi, record: enRecord, home: enHome, schedule: enSchedule,
+    library: enLibrary, people: enPeople, settings: enSettings,
   },
 };
 

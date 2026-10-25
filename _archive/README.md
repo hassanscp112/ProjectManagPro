@@ -34,6 +34,14 @@ rebuilt screens. Kept for reference; they import paths that may no longer exist.
 | `Legacy-MonthlyReport.jsx` + `.css` | `ProjectManagerApp/src/components/reports/MonthlyReport.*` (printable monthly sheet) | `src/app/reports/MonthlyReportPage.jsx` (Phase 5) |
 | `Legacy-ActivityScreen.jsx` + `.css` | `ProjectManagerApp/src/components/activity/ActivityScreen.*` (feed / task history / heatmap) | `src/app/reports/ActivityPage.jsx` (Phase 5) |
 | `Legacy-Dashboard.jsx` + `.css`, `Legacy-SCurveChart.jsx` + `.css` | `ProjectManagerApp/src/components/dashboard/*` (old Dashboard tab and its S-curve) | `src/app/home/` (Phase 3); the monthly report now uses `home/SCurve.jsx` |
+| `legacy-components/finance/` | `ProjectManagerApp/src/components/finance/` (FinanceManager: 4 ledgers + lists, wrote localStorage directly) | `src/app/finance/FinancePage.jsx` + `utils/Finance.js` (Phase 6) |
+| `legacy-components/calculator/` | `ProjectManagerApp/src/components/calculator/` (BOQ grids + jspreadsheet editor, wrote localStorage directly) | `src/app/library/BoqPage.jsx`, `BoqTemplateEditor.jsx` + `utils/CalculatorTemplates.js` (Phase 6) |
+| `legacy-components/templates/` | `ProjectManagerApp/src/components/templates/` (templates, rate library, builder) | `src/app/library/TemplatesPage.jsx`, `TemplateBuilderPage.jsx`, `RatesPage.jsx` (Phase 6) |
+| `legacy-components/registries/` | `ProjectManagerApp/src/components/registries/` (RegistriesScreen, IdentityPicker) | `src/app/people/PeoplePage.jsx`, `src/app/IdentityDialog.jsx` (Phase 6) |
+| `legacy-components/snapshots/` | `ProjectManagerApp/src/components/snapshots/` | `src/app/settings/SettingsPage.jsx` (Phase 6) |
+| `legacy-components/FileManager.jsx` + `.css` | `ProjectManagerApp/src/components/FileManager.*` | `src/app/library/FilesPage.jsx` (Phase 6) |
+| `legacy-components/orders/` | `ProjectManagerApp/src/components/orders/` (old Orders screen, unrouted since Phase 2) | `src/app/record/` (Phase 2) |
+| `Phase1-LegacyDialogs.jsx` | `ProjectManagerApp/src/app/legacy/LegacyDialogs.jsx` (identity picker wrapper) | `src/app/IdentityDialog.jsx` (Phase 6) |
 
 ### `.agent/` *(gitignored — 243 MB)*
 "Antigravity Kit" AI-agent toolkit (20 agents / 36 skills / 11 workflows).
