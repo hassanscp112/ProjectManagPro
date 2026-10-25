@@ -1,0 +1,87 @@
+// ar dictionary — module: finance
+export default {
+  // Screen header / summary cards / tabs
+  'finance.title': 'نظام الحسابات والتكاليف',
+  'finance.settings': 'إعدادات النظام',
+  'finance.totalCosts': 'إجمالي التكاليف (المشروع)',
+  'finance.cardMachinery': 'الآليات (شامل الوقود)',
+  'finance.cardMaterials': 'المواد الإنشائية',
+  'finance.cardPettyCash': 'المصاريف اليومية',
+  'finance.cardPayroll': 'الرواتب',
+  'finance.tabMachinery': 'تكاليف الآليات',
+  'finance.tabMaterials': 'التكاليف الإنشائية',
+  'finance.tabPettyCash': 'التكاليف اليومية (نثريات)',
+  'finance.tabPayroll': 'تكاليف الرواتب',
+  'finance.confirmDelete': 'هل أنت متأكد من حذف هذا السجل؟',
+
+  // Shared ledger UI
+  'finance.dateFrom': 'من تاريخ',
+  'finance.dateTo': 'إلى تاريخ',
+  'finance.all': 'الكل',
+  'finance.thAction': 'إجراء',
+  'finance.periodTotal': 'الإجمالي للفترة:',
+
+  // Machinery ledger
+  'finance.addMachineryRecord': 'إضافة سجل آلية شامل',
+  'finance.machineInfo': 'معلومات الآلية',
+  'finance.badge': 'بادج (Badge)',
+  'finance.machineName': 'اسم/رقم الآلية (مثال: D56EX/البصرة)',
+  'finance.machineType': 'نوع الآلية',
+  'finance.machineSize': 'حجم الآلية',
+  'finance.machineHours': 'ساعات اشتغال الآلية',
+  'finance.machineRate': 'أجرة الساعة (للآلية)',
+  'finance.driverInfo': 'معلومات السائق',
+  'finance.driverName': 'اسم السائق',
+  'finance.driverHours': 'ساعات اشتغال السائق',
+  'finance.driverRate': 'أجرة الساعة (للسائق)',
+  'finance.fuelInfo': 'صرفيات الوقود',
+  'finance.fuelLiters': 'عدد اللترات',
+  'finance.fuelPricePerLiter': 'سعر اللتر',
+  'finance.saveFullRecord': 'حفظ السجل الشامل',
+  'finance.thMachine': 'الآلية',
+  'finance.thDriver': 'السائق',
+  'finance.thMachineEarnings': 'وارد الآلية',
+  'finance.thDriverEarnings': 'وارد السائق',
+  'finance.thFuelCost': 'تكلفة الوقود',
+  'finance.thTotalPrice': 'السعر الكلي',
+
+  // Materials ledger
+  'finance.addMaterialRecord': 'إضافة سجل مواد',
+  'finance.receiptNo': 'رقم الوصل',
+  'finance.materialType': 'نوع المادة',
+  'finance.detailsExample': 'التفاصيل (مثال: رمل S1)',
+  'finance.quantityWithUnit': 'الكمية (مع الوحدة)',
+  'finance.qtyPlaceholder': '150 م3',
+  'finance.thMaterial': 'المادة',
+  'finance.thDetails': 'التفاصيل',
+  'finance.saveRecord': 'حفظ السجل',
+
+  // Petty cash ledger
+  'finance.addPettyExpense': 'إضافة مصروف يومي',
+  'finance.expenseType': 'نوع المصروف',
+  'finance.amountIqd': 'المبلغ (د.ع)',
+  'finance.saveExpense': 'حفظ المصروف',
+  'finance.thAmount': 'المبلغ',
+
+  // Payroll ledger
+  'finance.paySalary': 'تسديد راتب',
+  'finance.employeeName': 'اسم الموظف / السائق',
+  'finance.filterEmployee': 'اسم الموظف',
+  'finance.baseSalaryIqd': 'الراتب الأساسي (د.ع)',
+  'finance.advanceAmount': 'مبلغ السلفة',
+  'finance.savePayment': 'حفظ الدفعة',
+  'finance.thBaseSalary': 'الراتب الأساسي',
+  'finance.thAdvanceStatus': 'السلفة (الحالة)',
+  'finance.thNetPaid': 'المبلغ المدفوع (الصافي)',
+
+  // Settings tab
+  'finance.settingsTitle': 'قاعدة البيانات والقوائم المنسدلة',
+  'finance.settingsDesc': 'يمكنك تعديل أسماء الموظفين والآليات وأنواع المصاريف التي تظهر في القوائم المنسدلة في كافة شاشات الإدخال.',
+  'finance.cfgMachines': 'أنواع الآليات',
+  'finance.cfgEmployees': 'أسماء الموظفين والعمال',
+  'finance.cfgMaterials': 'أنواع المواد الإنشائية',
+  'finance.cfgExpenseTypes': 'أنواع المصاريف اليومية',
+  'finance.cfgMachineSizes': 'أحجام الآليات',
+  'finance.cfgStatuses': 'حالات السلفة',
+  'finance.addNewPlaceholder': 'إضافة جديد...',
+};
