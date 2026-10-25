@@ -51,6 +51,7 @@ import {
   WhoPicker,
   useToast,
 } from '../../ui/index.js';
+import { monthLabel, weekdayLabel } from '../dates.js';
 import { formatDay } from '../record/orderMeta.js';
 import { Page } from '../Page.jsx';
 import s from './Lookahead.module.css';
@@ -61,11 +62,6 @@ const TONE_CLASS = { success: s.toneSuccess, warning: s.toneWarning, danger: s.t
 const pct = (rate) => (rate == null ? '—' : `${Math.round(rate * 100)}%`);
 const num = (n) => (Number(n) ? formatNumber(n) : '—');
 
-const locale = (lang) => (lang === 'ar' ? 'ar-IQ-u-nu-latn' : 'en-GB');
-const utcDate = (ymd) => new Date(`${ymd}T00:00:00Z`);
-const monthLabel = (mKey, lang) =>
-  new Intl.DateTimeFormat(locale(lang), { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(utcDate(`${mKey}-01`));
-const weekdayLabel = (ymd, lang) => new Intl.DateTimeFormat(locale(lang), { weekday: 'long', timeZone: 'UTC' }).format(utcDate(ymd));
 
 /** One KPI tile in the strip. */
 function Kpi({ label, value, tone = 'neutral' }) {
