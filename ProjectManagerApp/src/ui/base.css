@@ -89,6 +89,14 @@
   }
 }
 
+/* Scrollbars follow the theme (the legacy global rule is light-only). */
+:where(.ui-root, .ui-portal) ::-webkit-scrollbar-thumb {
+  background: var(--ui-border);
+}
+:where(.ui-root, .ui-portal) ::-webkit-scrollbar-thumb:hover {
+  background: var(--ui-text-2);
+}
+
 /* ── Print ──
    Paper is black on white with small accent touches. `.ui-no-print` hides
    on-screen controls; `.ui-print-sheet` marks what a printable page prints

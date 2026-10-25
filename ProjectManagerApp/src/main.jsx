@@ -10,11 +10,11 @@ import './index.css'
 import App from './App.jsx'
 import { I18nProvider } from './i18n/I18nContext.jsx'
 import { UiProvider } from './ui/UiProvider.jsx'
+import { applyTheme, loadTheme } from './utils/Theme.js'
 
-// Legacy screens are light-only, so the app stays light until the theme
-// setting arrives (Phase 6). Set before the first paint: no dark flash.
-// The dev review page (/#/dev/ui) still switches themes itself.
-document.documentElement.setAttribute('data-theme', 'light')
+// The saved theme (Settings → Appearance), applied before the first paint
+// so there is no flash. The dev review page (/#/dev/ui) switches it itself.
+applyTheme(loadTheme())
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
