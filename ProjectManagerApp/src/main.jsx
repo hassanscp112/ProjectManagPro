@@ -1,4 +1,4 @@
-import { StrictMode, Suspense, lazy } from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@fontsource/ibm-plex-sans-arabic/400.css'
 import '@fontsource/ibm-plex-sans-arabic/500.css'
@@ -11,22 +11,16 @@ import App from './App.jsx'
 import { I18nProvider } from './i18n/I18nContext.jsx'
 import { UiProvider } from './ui/UiProvider.jsx'
 
-// Dev-only component review page: http://localhost:5173/#/dev/ui
-// (stripped from production builds; the router takes this over in Phase 1).
-const isUiReview = import.meta.env.DEV && window.location.hash.startsWith('#/dev/ui')
-const UiReview = isUiReview ? lazy(() => import('./dev/UiReview.jsx')) : null
+// Legacy screens are light-only, so the app stays light until the theme
+// setting arrives (Phase 6). Set before the first paint: no dark flash.
+// The dev review page (/#/dev/ui) still switches themes itself.
+document.documentElement.setAttribute('data-theme', 'light')
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <I18nProvider>
       <UiProvider>
-        {UiReview ? (
-          <Suspense fallback={null}>
-            <UiReview />
-          </Suspense>
-        ) : (
-          <App />
-        )}
+        <App />
       </UiProvider>
     </I18nProvider>
   </StrictMode>,

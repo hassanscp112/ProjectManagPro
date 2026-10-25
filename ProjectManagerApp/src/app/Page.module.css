@@ -1,0 +1,66 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+  min-width: 0;
+}
+
+/* Pages that size to the window (Gantt): take the rest of the main column. */
+.fill {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+  min-width: 0;
+}
+
+.fill .content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Area sub-pages: router links styled like tabs */
+.tabs {
+  display: flex;
+  gap: var(--ui-space-1);
+  border-bottom: 1px solid var(--ui-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-h-md);
+  padding: 0 var(--ui-space-4);
+  color: var(--ui-text-2);
+  font-size: var(--ui-fs-md);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.tab:hover {
+  color: var(--ui-text);
+}
+.tab[aria-current='page'] {
+  color: var(--ui-accent-ink);
+  font-weight: 600;
+}
+.tab[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  inset-inline: var(--ui-space-2);
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--ui-accent);
+}
+
+.langButton {
+  min-width: 44px;
+}

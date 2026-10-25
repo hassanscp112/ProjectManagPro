@@ -71,4 +71,11 @@ export default {
   'ui.navSettings': 'الإعدادات',
   'ui.navScheduleShort': 'الجدول',
   'ui.recordOrder': 'تسجيل أمر',
+  'ui.goTo': 'انتقال إلى',
+  'ui.sectionNav': 'أقسام الصفحة',
+
+  // Project identity (shown in the sidebar and page headers)
+  'ui.projectName': 'استصلاح أراضي واسط',
+  'ui.projectContract': 'عقد 5 / 2023 · غرب الغراف · أيسر MC7',
+  'ui.userUnset': 'من يستخدم التطبيق؟',
 };

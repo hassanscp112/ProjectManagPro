@@ -71,4 +71,11 @@ export default {
   'ui.navSettings': 'Settings',
   'ui.navScheduleShort': 'Schedule',
   'ui.recordOrder': 'Record order',
+  'ui.goTo': 'Go to',
+  'ui.sectionNav': 'Page sections',
+
+  // Project identity (shown in the sidebar and page headers)
+  'ui.projectName': 'Wasit Land Reclamation',
+  'ui.projectContract': 'Contract 5/2023 · West Gharraf · MC7 left bank',
+  'ui.userUnset': 'Who is using the app?',
 };
