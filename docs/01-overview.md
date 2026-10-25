@@ -120,9 +120,9 @@ variation orders; `#/schedule/baseline` compares them with the signed baseline.
 | Schedule › Baseline `#/schedule/baseline` | `app/schedule/BaselinePage` | Signed contract quantities/prices vs today, per item and in total |
 | Library › Files `#/library/files` | `FileManager` | Per-task document folders; files stored in IndexedDB |
 | Library › BOQ `#/library/boq` | `calculator/*` | BOQ quantity take-off grids (templates with formulas) |
-| Reports › Daily `#/reports/daily` | `reports/DailyReports` | Daily site log, auto-filled from the day's orders; printable |
-| Reports › Monthly `#/reports/monthly` | `reports/MonthlyReport` | Printable full monthly report recomputed from the order ledger |
-| Reports › Activity `#/reports/activity` | `activity/ActivityScreen` | Unified audit feed + per-task story + GitHub-style heatmap |
+| Reports › Daily `#/reports/daily` | `app/reports/DailyReportPage` | A day (or a period) on site: work done and expenses built from the orders, plus site notes; printable |
+| Reports › Monthly `#/reports/monthly` | `app/reports/MonthlyReportPage` | Printable monthly report recomputed from the order ledger |
+| Reports › Activity `#/reports/activity` | `app/reports/ActivityPage` | Audit feed, one item's whole story, 12-month activity heatmap (`?view=task` / `?view=heatmap`) |
 | Settings `#/settings` | `snapshots/SnapshotsScreen` | Restore points (auto + named) |
 | Finance `#/finance` | `finance/FinanceManager` | Site cost ledgers (machinery/materials/petty cash/payroll) |
 | People `#/people` | `registries/RegistriesScreen` | Contractors / teams / workers / current identity |

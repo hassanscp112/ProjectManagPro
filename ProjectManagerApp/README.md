@@ -28,7 +28,7 @@ npm run dev        # → http://localhost:5173
 ```
 src/
 ├── App.jsx          ← project store + router (tiny)
-├── app/             ← routes, shell layout, one page per route (record/, home/, schedule/ = rebuilt)
+├── app/             ← routes, shell layout, one page per route (record/, home/, schedule/, reports/ = rebuilt)
 ├── state/           ← ProjectProvider + pure project/order logic (tested)
 ├── components/      ← legacy screens, replaced phase by phase
 ├── ui/              ← shared components + design tokens (UI rebuild)

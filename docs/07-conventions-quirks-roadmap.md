@@ -87,16 +87,20 @@ The rules that prevent mistakes. Read this before changing anything.
   registries screens, EVM + S-curve, monthly report, full backup/restore.
 - **Git:** `main` fully committed (2026-10-25). UI rebuild on branch
   `redesign/aubergine`, merged to `main` phase by phase.
-- **UI rebuild:** Phases 0–4 done — tokens + shared components, project
+- **UI rebuild:** Phases 0–5 done — tokens + shared components, project
   store (`src/state/`), hash router + new shell (`src/app/`), and the rebuilt
-  Record (`src/app/record/`), Home (`src/app/home/`) and Schedule
+  Record (`src/app/record/`), Home (`src/app/home/`), Schedule
   (`src/app/schedule/`: timeline, task panel, lookahead, baseline, sign-off and
-  VO dialogs); other screens are still the legacy ones mounted inside the
-  shell. Next: Phase 5 (Reports). Plan: `plans/ui-rebuild-plan.md`.
+  VO dialogs) and Reports (`src/app/reports/`: daily, monthly, activity; print
+  styles); Finance, Library, People and Settings are still the legacy screens
+  mounted inside the shell. Next: Phase 6. Plan: `plans/ui-rebuild-plan.md`.
 - **Theme:** the app forces `data-theme="light"` (`main.jsx`) until the theme
   setting ships in Phase 6, because legacy screens are light-only.
-- **Tests:** 13 test files (125 tests), all pure-logic (engines, project model, order form, home model,
-  schedule model, lookahead model, task ranking, who selection, ar/en dictionary parity); no component tests.
+- **Tests:** 14 test files (132 tests), all pure-logic (engines, project model, order form, home model,
+  schedule model, lookahead model, reports model, task ranking, who selection, ar/en dictionary parity); no component tests.
+- **Printing:** only `.ui-print-sheet` content prints (report pages). The
+  legacy Finance CSS still hides `body *` in print; `.ui-print-sheet` overrides
+  it, and the rule goes away with the Finance rebuild (Phase 6).
 
 ## 7. Roadmap (agreed next steps, in order)
 

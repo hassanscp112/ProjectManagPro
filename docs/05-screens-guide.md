@@ -32,20 +32,6 @@ Where the project stands and what needs doing, at a glance (`#/`):
   left-to-right isolate (U+2066…U+2069) so they don't reverse.
 Logic: `src/state/homeModel.js`.
 
-## Dashboard (legacy) — `dashboard/Dashboard.jsx` (+ `SCurveChart.jsx`)
-
-No longer routed; `SCurveChart` is still used by the legacy Monthly Report
-until Phase 5. Archived in Phase 7.
-
-Read-only project overview.
-- Status cards + EVM tiles (BAC/PV/EV/AC/SPI/CPI/EAC/VAC from `summary.evm`;
-  SPI/CPI tone: ≥1 good, ≥0.9 warn, else bad)
-- **S-curve chart** — pure inline SVG (no chart library): 3 polylines
-  (PV blue, EV green, AC orange), dashed "today" line, nice-number axis
-  (`1/2/5×10ⁿ`), compact units (B/M/K vs Arabic). Container forced LTR.
-- Per-WBS EVM roll-up table (`summary.perWbsEvm`) + Action Items
-  (overdue-critical / active / next-7-days, sorted by weight).
-
 ## Schedule — `src/app/schedule/` (rebuilt in Phase 4)
 
 Three sub-pages (tabs): **Timeline `#/schedule`**, **Lookahead
@@ -167,39 +153,49 @@ Quantity take-off tool:
   source. Saves raw formulas (from `sheet.options.data`, not evaluated values).
   Sheet container forced LTR.
 
-## Daily Reports — `reports/DailyReports.jsx`
+## Reports — `src/app/reports/` (rebuilt in Phase 5)
 
-Daily site log = **manual entries + auto-generated "work done" section**.
-- The auto section is derived live from the order ledger (`buildDayOrdersModel`
-  groups value orders by task; values each as Σ qty × task.unitPrice; counts
-  pending formal orders).
-- Engineer name prefilled once from identity. Print via `window.print()`
-  (one block per day in the selected range).
+All three are live views over the order ledger. Printable pages render a
+`ReportSheet` (project name and contract, title, period, "issued" stamp, then
+sections); **Print** refreshes the stamp and calls `window.print()`. On paper
+only the sheet prints — shell, tabs and controls (`.ui-no-print`) are hidden —
+black on white with thin plum rules (`@media print` in `src/ui/base.css`,
+`Shell.module.css`, `Reports.module.css`). `.ui-print-sheet` stays visible even
+though the legacy Finance CSS hides `body *` when printing.
 
-## Monthly Report — `reports/MonthlyReport.jsx`
+**Daily `#/reports/daily`** — *Day* (date with previous / next / Today) or
+*Period* (from–to, notes filtered by engineer). Per day: figures (orders, work
+value, expenses, pending), **Work done** (quantity orders grouped by item with
+who did it, valued at the contract unit price), **Recorded expenses**, and
+**Site notes**. The side card adds a note (engineer prefilled from the
+identity, optional item, the note). Notes never record quantities (golden rule
+5); old notes that have one show it as "Quantity noted". Deleting a note asks
+first. Storage: `utils/DailyNotes.js`.
 
-Printable monthly report, **recomputed live from the order ledger on every
-render**; printing freezes a stamped copy (`generatedAt`).
-Sections: header/status, exec KPIs (progress, deviation, SPI/CPI, cost),
-S-curve (reuses `SCurveChart`), BOQ progress per top-level WBS (approved value
-orders, current − prior months), month's order log, variations, per-contractor
-quantities + internal crews, financial summary (value − expenses), signatures.
-Month selector defaults to **previous** month. Timezone-safe local dates;
-change-arrows flip for RTL.
+**Monthly `#/reports/monthly`** — month with previous / next (defaults to the
+**previous** month). Sections: summary figures (as of today — said under them),
+S-curve (`home/SCurve.jsx`), BOQ progress per top-level section (approved
+quantity orders before vs within the month, remaining, %), the month's orders,
+variation orders (old → new follows the reading direction), quantities per
+contractor plus internal crews, money summary (work value − expenses per
+category, net), signature lines. The project name comes from `ui.projectName`
+/ `ui.projectContract` (the legacy sheet had it hardcoded in Arabic).
 
-## Activity — `activity/ActivityScreen.jsx`
+**Activity `#/reports/activity`** — three views kept in the URL (`?view=task`,
+`?view=heatmap`):
+1. **Feed** — orders, variation orders and app events, newest first; kind
+   chips, date range, recorded-by search, 100 at a time. Expense rows show the
+   category in words.
+2. **Item history** — pick an item → totals (contract vs executed, variance,
+   values, entries / approved) and its entries oldest first.
+3. **Heatmap** — approved work value per day over 12 months, Saturday →
+   Friday weeks, plum ramp (5 steps), a ring on days with orders but no
+   approved value; whole project or one contractor; 90-day recorded / empty
+   days; click a day for its entries (variation orders only in whole-project
+   scope). Opens scrolled to the latest weeks.
 
-Audit & history, three tabs:
-1. **Feed** — unified (orders + variations + app events), newest first; filter
-   chips (all/value/expense/variation/event), date range, actor search,
-   Load More (100/page).
-2. **Task story** — pick a leaf task → chronological events + totals
-   (contract vs executed, signed variance).
-3. **Heatmap** — GitHub-style, IQD of approved value orders per day,
-   Sat→Fri weeks, last 12 months, whole-project or per-contractor scope;
-   click a day → ascending detail. Includes a 90-day "empty days" radar
-   (site works 7 days/week, so empty = unrecorded).
-Note: variations have no contractor attribution → appear only in whole-project day details.
+Logic: `src/state/reportsModel.js`; month / weekday names and the issue stamp:
+`src/app/dates.js`.
 
 ## Snapshots — `snapshots/SnapshotsScreen.jsx`
 

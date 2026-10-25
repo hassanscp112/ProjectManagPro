@@ -19,7 +19,7 @@ There is **no server and no database**. Everything is stored in the browser:
 | 3 | `project-manager-finance-data` | FinanceManager | cost ledger entries |
 | 4 | `project-manager-finance-config` | FinanceManager | editable dropdown lists |
 | 5 | `pm-calculator-templates` | CalculatorView | BOQ calculator templates |
-| 6 | `project-manager-daily-reports` | DailyReports | daily log entries |
+| 6 | `project-manager-daily-reports` | DailyNotes | daily site notes |
 | 7 | `pm-orders` | OrderEngine | order ledger + lastWhoByType |
 | 8 | `pm-registries` | Registries | contractors / teams / workers |
 | 9 | `pm-identity` | Identity | current user {name, role} |
@@ -233,7 +233,7 @@ subtitle, tone, refTaskId, payload}`.
 | Key | Shape |
 |-----|-------|
 | `pm-calculator-templates` | `[{ id, name, columns: [{ id, label, source: 'input'\|'design'\|'formula', formula }], rows: [{ …, values: { [colId]: number } }] }]` |
-| `project-manager-daily-reports` | daily log entries (manual part of the report; the "work done" section is derived live from orders) |
+| `project-manager-daily-reports` | site notes `[{ id, date, engineer, taskId, taskName, taskWbs, details, timestamp, quantity? }]` — the manual part of the daily report (the "work done" part is derived live from orders). `quantity` exists only on notes written before Phase 5 and is shown read-only; new notes don't record quantities |
 | `project-manager-finance-data` | ledger rows per tab (machinery / materials / petty cash / payroll). Payroll status `'مستقطع'` is a stored data value — see quirks doc |
 | `project-manager-finance-config` | editable dropdown option lists for the finance forms |
 

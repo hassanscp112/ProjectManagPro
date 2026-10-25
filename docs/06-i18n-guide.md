@@ -22,7 +22,9 @@ src/i18n/
     │                        record (rebuilt Record area; reuses orders.* labels),
     │                        home (rebuilt Home; reuses dashboard.* EVM/chart labels),
     │                        schedule (rebuilt Schedule: timeline, panel, lookahead,
-    │                        baseline; reuses gantt.*, app.* and planning.* labels)
+    │                        baseline; reuses gantt.*, app.* and planning.* labels).
+    │                        The rebuilt Reports reuse reports.* / activity.* and
+    │                        add their new keys there ("rebuilt … (Phase 5)" blocks)
     └── en/               ← same 19 files, same keys
 ```
 
@@ -54,8 +56,8 @@ Some utils (OrderEngine, ActivityLog, PlanningStore, Registries) call
 - `I18nProvider` sets `document.documentElement.dir` + `.lang` on change and
   persists to localStorage key **`pm-language`**.
 - `isRTL` / `dir` come from `LANGUAGES` entries (`ar: rtl`, `en: ltr`).
-- Numeric/chart containers override locally: `SCurveChart` and the jspreadsheet
-  editor container force `dir="ltr"`.
+- Numeric/chart containers override locally: the S-curve (`home/SCurve.jsx`,
+  time runs left → right) and the jspreadsheet editor container.
 
 ## 4. How to add a new UI string ⭐
 

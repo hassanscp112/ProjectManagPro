@@ -59,13 +59,16 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 ## Current state & next steps
 
 **UI rebuild in progress** on branch `redesign/aubergine` — plan, phases and
-decisions in `plans/ui-rebuild-plan.md`. Phases 0–4 are done: Phase 1 moved
+decisions in `plans/ui-rebuild-plan.md`. Phases 0–5 are done: Phase 1 moved
 state into `src/state/`, added the hash router and the new shell, and mounts the
 existing screens unchanged inside it; Phase 2 rebuilt Record (`src/app/record/`,
 rules in `src/state/orderForm.js`); Phase 3 rebuilt Home (`src/app/home/`,
 rules in `src/state/homeModel.js`); Phase 4 rebuilt the Schedule
 (`src/app/schedule/`: timeline, task panel, lookahead, baseline, sign-off and VO
-dialogs; rules in `src/state/scheduleModel.js` and `lookaheadModel.js`). Phase 0: design tokens (`src/ui/tokens.css`, all names `--ui-*`), shared components in
+dialogs; rules in `src/state/scheduleModel.js` and `lookaheadModel.js`); Phase 5
+rebuilt Reports (`src/app/reports/`: daily with site notes via
+`utils/DailyNotes.js`, monthly, activity; print styles; rules in
+`src/state/reportsModel.js`). Phase 0: design tokens (`src/ui/tokens.css`, all names `--ui-*`), shared components in
 `src/ui/` (import from `src/ui/index.js`), CSS Modules per component. New UI
 code uses `src/ui/` components only; legacy screens stay untouched until their
 phase. Roadmap after the rebuild: `docs/07-conventions-quirks-roadmap.md` §6–7.

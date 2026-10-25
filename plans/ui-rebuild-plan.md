@@ -1,7 +1,7 @@
 # UI/UX Rebuild Plan — "Aubergine"
 
 **Status:** approved 2026-10-25 · in progress on branch `redesign/aubergine`
-· Phases 0–4 done (sub-routes `/library/rates`, `/finance/:ledger`,
+· Phases 0–5 done (sub-routes `/library/rates`, `/finance/:ledger`,
 `/people/:kind` arrive with their screens in Phase 6)
 **Design source:** canvas "ProjectManager Redesign" (Desktop Home / Record / Schedule,
 Phone Home / Record, Color system · Aubergine).
@@ -56,7 +56,7 @@ Phone bottom bar: Home · Schedule · [+ Record] · Reports · More.
 | 3 | Home | Headline numbers, restyled S-curve, attention list from engine critical/overdue tasks, progress by section, recent orders with Approve | M |
 | 4 | Schedule | Rebuilt Gantt (week/month/quarter, today, critical filter, search, undo); task side panel replaces hidden TaskDetails tab; Lookahead sub-tab; sign-off and VO dialogs | XL |
 | 5 | Reports | Daily, Monthly, Activity (heatmap in plum ramp); print = black/white with small plum touches | L |
-| 6 | Finance · Library · People · Settings | All remaining screens; fixes the 3 screens that write localStorage directly (Calculator, Finance, DailyReports) | L |
+| 6 | Finance · Library · People · Settings | All remaining screens; fixes the screens that write localStorage directly (Calculator, Finance; DailyReports was fixed in Phase 5 via `utils/DailyNotes.js`) | L |
 | 7 | Polish + cleanup | Dark and phone passes, keyboard/screen-reader pass, per-route lazy loading (bundle is 1.15 MB today), old components to `_archive/`, all `docs/` updated, closes quirks #3, #5, #6 | M |
 
 **Gate for every phase:** lint, unit tests and build pass; manual check at 1440 px

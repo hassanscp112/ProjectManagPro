@@ -44,7 +44,7 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
   │  SnapshotsScreen → Snapshots     → localStorage 'pm-snapshots'                │
   │  FileManager     → FileDB        → IndexedDB 'ProjectManagerDB'               │
   │  CalculatorView  → (own state)   → localStorage 'pm-calculator-templates'     │
-  │  DailyReports                    → localStorage 'project-manager-daily-reports'
+  │  DailyReportPage → DailyNotes    → localStorage 'project-manager-daily-reports'
   │  FinanceManager                  → 'project-manager-finance-data'/'-config'   │
   └───────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -68,7 +68,7 @@ global state library** — React state + localStorage + change notifications.
 | | `/schedule/lookahead` | **Rebuilt (Phase 4)** — `app/schedule/LookaheadPage.jsx` (month / week / day plans) |
 | | `/schedule/baseline` | **Rebuilt (Phase 4)** — `app/schedule/BaselinePage.jsx` (signed vs current contract) |
 | | `/schedule/task/:taskId/details` | `taskDetails/TaskDetails` (legacy, "Full details" from the panel) |
-| Reports | `/reports/daily` · `/reports/monthly` · `/reports/activity` | `DailyReports` · `MonthlyReport` · `ActivityScreen` |
+| Reports | `/reports/daily` · `/reports/monthly` · `/reports/activity` | **Rebuilt (Phase 5)** — `app/reports/`: `DailyReportPage`, `MonthlyReportPage`, `ActivityPage` (view in `?view=`); printable sheets share `ReportSheet.jsx` |
 | Finance | `/finance` | `finance/FinanceManager` |
 | Library | `/library/boq` · `/library/templates` · `/library/files(/:taskId)` | `CalculatorView` · `TemplatesScreen` · `FileManager` |
 | People | `/people` | `registries/RegistriesScreen` |
@@ -105,8 +105,9 @@ status, attention list, section progress, SPI/CPI tone, chart helpers) in
 `src/state/homeModel.js`; the Schedule rules (timeline range and header tiers,
 visible rows, field locks, task scope, baseline comparison) in
 `src/state/scheduleModel.js`; the Lookahead rules (sections, month actuals,
-day completion / PPC) in `src/state/lookaheadModel.js`. All are tested in
-`src/state/__tests__/`.
+day completion / PPC) in `src/state/lookaheadModel.js`; the Reports rules (day report, monthly
+report, feed filters, item story, heatmap) in `src/state/reportsModel.js`.
+All are tested in `src/state/__tests__/`.
 
 All tree/lifecycle transforms are pure functions in `projectModel.js`
 (`addSubTask`, `deleteTaskCascade`, `toggleBoqLink`, `signOffProject`,
@@ -117,15 +118,12 @@ All tree/lifecycle transforms are pure functions in `projectModel.js`
 
 | Screen | Props (from `useProject()` in its route page) |
 |---|---|
-| Dashboard | `tasks={engineResult.tasks} summary={engineResult}` |
 | Schedule / Lookahead / Baseline pages | none — read `useProject()`; the Gantt gets rows from `visibleRows()` and calls `onUpdate(id, patch)` with only the changed fields |
 | Record pages | none — read `useProject()` (tasks, orders, lastWhoByType, registries, identity, engineResult); rules in `src/state/orderForm.js` |
-| ActivityScreen | `orders, variations, appEvents, tasks, registries` |
-| MonthlyReport | `summary, computedTasks, orders, variations, projectMeta, registries` |
+| Report pages | none — read `useProject()`; rules in `src/state/reportsModel.js` |
 | SnapshotsScreen | `tasks, projectMeta, identity, onRestored(→reload)` |
 | TaskDetails | `task, allTasks, computedTasks, isSigned, orders, registries, identity` + 7 callbacks |
 | FileManager | `tasks` (computed), `targetTask` (from `:taskId`) |
-| DailyReports | `tasks, orders, registries, identity` |
 | TemplatesScreen | `onGenerate, tasks` |
 | RegistriesScreen | `onChange(→setRegistries)` |
 | CalculatorView / FinanceManager | none (fully self-owned) |
@@ -179,7 +177,7 @@ order-derived and read-only.
 | Snapshots | SnapshotsScreen + auto-writer | restore | `pm-snapshots` |
 | Templates / rates | TemplatesScreen | generator | `pm-templates` / `pm-rate-library` |
 | Calculator | CalculatorView | itself | `pm-calculator-templates` |
-| Daily reports | DailyReports | itself | `project-manager-daily-reports` |
+| Daily site notes | DailyReportPage (via `utils/DailyNotes.js`) | itself | `project-manager-daily-reports` |
 | Finance ledgers | FinanceManager | itself | `project-manager-finance-data` / `-config` |
 | Uploaded files | FileManager | itself | IndexedDB `ProjectManagerDB` |
 | Language | LanguageSwitcher | i18n provider | `pm-language` |
@@ -216,6 +214,6 @@ ProjectProvider also listens to the `storage` event for the same four keys.
 |---|---|
 | A new screen | Build it from `src/ui/` components; add a route in `src/app/router.jsx` (and an area or `AREA_TABS` entry in `app/navigation.js`); wrap it in `<Page area=…>`; labels in both dictionaries |
 | A new order type | Extend `ORDER_TYPES`/`ORDER_TYPE_LIST` in `OrderEngine.js` + dictionary labels in `orders.*` (see [04-utils-reference.md](04-utils-reference.md)) |
-| A new computed metric | Add to `GanttEngine.calculate()` return; consume in Dashboard/MonthlyReport |
+| A new computed metric | Add to `GanttEngine.calculate()` return; consume in Home / the monthly report |
 | A new stored entity | New util module with its own `STORAGE_KEY` + load/save; register the key in `DataIO.APP_STORAGE_KEYS` (so backup covers it!) |
 | A new UI string | Both `dictionaries/ar/` and `dictionaries/en/` — never hardcode text ([06-i18n-guide.md](06-i18n-guide.md)) |

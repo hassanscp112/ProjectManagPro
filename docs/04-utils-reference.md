@@ -45,7 +45,7 @@ Tests: `orderEngine.test.js`.
 ## GanttEngine.js — the calculator
 
 **No storage.** `GanttEngine.calculate(tasks, projectStartDate, projectMeta, orders)`
-(static) → the single `engineResult` consumed by App/Dashboard/MonthlyReport.
+(static) → the single `engineResult` consumed by the store, Home and the reports.
 Pipeline explained in [02-architecture.md §3](02-architecture.md). Returns:
 
 ```js
@@ -104,6 +104,13 @@ Pure, no storage. Tests: `criticalPath.test.js`.
 - `resolveWho(registries, who, lang)` — who → display label
 
 ---
+
+## DailyNotes.js — daily report site notes
+
+`DAILY_NOTES_STORAGE_KEY = 'project-manager-daily-reports'`. `loadDailyNotes()`
+(drops malformed rows), `saveDailyNotes(notes)`, `createDailyNote({ date,
+engineer, task, details })` → a new note (no quantity: executed quantities come
+from orders). Same key and shape as the legacy DailyReports screen.
 
 ## PlanningStore.js — lookahead plans
 
