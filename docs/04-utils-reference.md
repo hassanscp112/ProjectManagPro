@@ -200,7 +200,7 @@ the same.
 
 ## TaskRanking.js — task picker ordering
 
-Shared by the legacy orders `TaskPicker` and the new `src/ui/TaskPicker`.
+Used by `src/ui/TaskPicker`.
 - `wbsCompare(a, b)` — numeric WBS order (`1.2` before `1.10`)
 - `rankLeafTasks(tasks, orders)` → `{ recent, rest }`: leaves with orders,
   newest `recordedAt` first; the rest in WBS order; groups skipped

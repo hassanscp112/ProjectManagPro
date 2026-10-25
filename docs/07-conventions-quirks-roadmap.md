@@ -25,8 +25,6 @@ The rules that prevent mistakes. Read this before changing anything.
 - Plain JavaScript + JSX (no TypeScript). React function components + hooks.
 - Engines in `src/utils/` are pure/immutable where possible
   (`Registries.add*(registries, …)` return NEW objects).
-- Styles (legacy screens): one CSS file per component folder, theme variables
-  in `App.css`/`index.css`.
 - Styles (new UI, `src/ui/`): CSS Modules per component + design tokens in
   `src/ui/tokens.css`. Every token is named `--ui-*` (never reuse legacy names
   like `--text-primary`). Use logical properties (`inset-inline-start`,
@@ -50,12 +48,12 @@ The rules that prevent mistakes. Read this before changing anything.
 | 2 | `PROJECT_START = '2025-08-02'` is a hardcoded constant | `src/state/projectModel.js` | New projects must edit this |
 | 3 | ~~Topbar breadcrumb is a hardcoded Arabic string~~ **fixed in Phase 1** | — | Project name/contract now `ui.projectName` / `ui.projectContract` |
 | 4 | Payroll compares raw `'مستقطع'` data value | `state/financeModel.js` (`DEDUCTED_STATUS`) | Stored data value — don't translate the comparison |
-| 5 | LanguageSwitcher caption is a ternary `ar ? 'عربي' : 'EN'` | LanguageSwitcher.jsx | Breaks for a 3rd language — use `l.label` |
+| 5 | ~~LanguageSwitcher caption is a ternary~~ **fixed in Phase 7** — the old switcher is archived; language menus use `l.label` | — | A 3rd language needs no UI change |
 | 6 | ~~No router~~ **fixed in Phase 1** — hash routes | `src/app/router.jsx` | Refresh and links keep the screen; use `#/…` hrefs or `useNavigate()` |
 | 7 | Snapshots cover tasks + projectMeta ONLY | Snapshots.js | Orders/finance NOT in snapshots (full safety = JSON backup) |
 | 8 | Gantt bars are not draggable by design | `src/app/schedule/Gantt.jsx` | Dates/durations edited via grid inputs (edit mode) |
 | 9 | localStorage **quota** (~5 MB) is the only real limit | all | File blobs already live in IndexedDB; big data goes to backup files |
-| 10 | Element columns/BOQ links only on group tasks | TaskDetails | Leaves are "record only" |
+| 10 | Element columns/BOQ links only on group tasks | `app/schedule/TaskDetailsEdit.jsx` | Leaves are "record only" |
 | 11 | Quick orders are born approved (`approvedBy` = identity) | OrderEngine | Only formal+recorded need the Approve action |
 | 12 | Engine task warnings are hardcoded Arabic | `GanttEngine.js` (`addTaskWarning`) | They show untranslated in English; translate by returning codes + params if needed |
 
@@ -83,30 +81,26 @@ The rules that prevent mistakes. Read this before changing anything.
 ## 6. Current state (as of 2026-10-25)
 
 - **Code:** 3+ build rounds shipped — orders foundation, snapshots,
-  read-first TaskDetails, i18n ar/en + RTL, planning/activity/templates/
+  read-first task details, i18n ar/en + RTL, planning/activity/templates/
   registries screens, EVM + S-curve, monthly report, full backup/restore.
 - **Git:** `main` fully committed (2026-10-25). UI rebuild on branch
   `redesign/aubergine`, merged to `main` phase by phase.
-- **UI rebuild:** Phases 0–5 done — tokens + shared components, project
-  store (`src/state/`), hash router + new shell (`src/app/`), and the rebuilt
-  Record (`src/app/record/`), Home (`src/app/home/`), Schedule
-  (`src/app/schedule/`: timeline, task panel, lookahead, baseline, sign-off and
-  VO dialogs) and Reports (`src/app/reports/`: daily, monthly, activity; print
-  styles); Finance, Library, People and Settings are still the legacy screens
-  mounted inside the shell. Phase 6 rebuilt Finance (`src/app/finance/`),
-  Library (`src/app/library/`), People (`src/app/people/`) and Settings
-  (`src/app/settings/`) and the identity dialog; the only legacy screen left
-  is the full task details page. Next: Phase 7 (polish + cleanup).
+- **UI rebuild:** done (Phases 0–7, `plans/ui-rebuild-plan.md`). Every screen
+  lives in `src/app/<area>/` on the shared components in `src/ui/`; the old
+  `src/components/` screens and global CSS are in `_archive/ui-rebuild/`.
+  Home and Record load with the app; the other areas are lazy routes
+  (initial JS ≈ 650 kB, was 1.5 MB in one file; the jspreadsheet BOQ editor
+  loads only with the BOQ page).
 - **Theme:** Settings → Appearance (Light / Dark / Device), stored in
-  `pm-theme`, applied in `main.jsx`. The legacy full task details page is
-  light-only, so it sets `data-theme="light"` while open and restores the
-  theme on leaving.
-- **Tests:** 17 test files (143 tests), all pure-logic (engines, project model, order form, home model,
-  schedule model, lookahead model, reports model, finance / library / people models, task ranking, who selection, ar/en dictionary parity); no component tests.
-- **Printing:** only `.ui-print-sheet` content prints (report pages). The
-  legacy Finance CSS still hides `body *` in print; `.ui-print-sheet` overrides
-  it; the old Finance CSS is archived since Phase 6, but the override stays
-  for the remaining legacy CSS.
+  `pm-theme`, applied in `main.jsx`. Paper always prints light.
+- **Accessibility:** a "Skip to content" link, a window title per page, a
+  focus ring on every focusable element (`base.css` fallback), labelled
+  fields and icon buttons (checked on every route), status always with words.
+- **Tests:** 18 test files (148 tests), all pure-logic (engines, project model, order form, home model,
+  schedule model, lookahead model, reports model, finance / library / people models, task details model,
+  task ranking, who selection, ar/en dictionary parity); no component tests.
+- **Printing:** only `.ui-print-sheet` content prints (report pages, finance
+  tables); shell and `.ui-no-print` controls are hidden.
 
 ## 7. Roadmap (agreed next steps, in order)
 
@@ -117,7 +111,7 @@ The rules that prevent mistakes. Read this before changing anything.
 3. **Validation rules** — stronger order/entry validation (ranges, duplicates).
 4. Deferred-quirks list: see §3 above; pick from there when doing cleanup.
 5. Optional: 3rd language = one dictionary folder + LANGUAGES entry
-   (plus the LanguageSwitcher fix, §3 #5).
+   (no UI change needed).
 
 ---
 

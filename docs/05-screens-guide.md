@@ -1,9 +1,8 @@
 # 05 — Screens & Components Guide
 
-One section per screen. Routes and props tables are in
-[02-architecture.md §2](02-architecture.md); screens are mounted by route pages in
-`src/app/pages/`. Component folders live under
-`ProjectManagerApp/src/components/`.
+One section per screen. Routes are in [02-architecture.md §2](02-architecture.md);
+every screen lives in `ProjectManagerApp/src/app/<area>/` and is built from the
+shared components in `src/ui/`.
 
 **Golden pattern:** screens never call `localStorage` directly — persistence
 always goes through `src/utils` helpers.
@@ -67,8 +66,7 @@ the planned marker, facts (qty, executed, remaining, price, value, earned value,
 dates, duration, predecessor), quick edit (same locks), sub-items, latest 5
 orders on the item or below it, and actions: *Record work* (opens Record with
 the item preselected — `navigate('/record', { state: { taskId } })`), *Files*,
-*Full details* (`#/schedule/task/:id/details`, the legacy `TaskDetails`
-screen), *Delete* (confirm). A URL whose item no longer exists falls back to
+*Full details* (`#/schedule/task/:id/details`, see Task Details below), *Delete* (confirm). A URL whose item no longer exists falls back to
 `#/schedule`.
 
 **Dialogs** (`LifecycleDialogs.jsx`): sign-off / re-baseline (name prefilled
@@ -111,7 +109,7 @@ Three sub-pages (tabs; Pending shows a count, as does the sidebar item):
 Rules (unchanged): quick orders are approved on save by the current user;
 formal orders start `recorded`; approving uses the current user's name or asks
 for one (`useApproval.jsx`). Logic: `src/state/orderForm.js`.
-The legacy `components/orders/` screen is no longer routed (archived in Phase 7).
+The old Orders screen is archived (`_archive/ui-rebuild/legacy-components/orders/`).
 
 ## Lookahead — `src/app/schedule/LookaheadPage.jsx` (rebuilt in Phase 4)
 
@@ -173,8 +171,8 @@ All three are live views over the order ledger. Printable pages render a
 sections); **Print** refreshes the stamp and calls `window.print()`. On paper
 only the sheet prints — shell, tabs and controls (`.ui-no-print`) are hidden —
 black on white with thin plum rules (`@media print` in `src/ui/base.css`,
-`Shell.module.css`, `Reports.module.css`). `.ui-print-sheet` stays visible even
-though the legacy Finance CSS hides `body *` when printing.
+`Shell.module.css`, `Reports.module.css`). Paper always uses the light tokens,
+whatever the screen theme.
 
 **Daily `#/reports/daily`** — *Day* (date with previous / next / Today) or
 *Period* (from–to, notes filtered by engineer). Per day: figures (orders, work
@@ -254,19 +252,32 @@ Storage: `utils/Finance.js`; rules: `src/state/financeModel.js`.
   restored, renamed, deleted; automatic daily ones (last 14) restored. Restore
   asks first and reloads. Snapshots cover tasks + project meta only.
 
-## Task Details — `taskDetails/TaskDetails.jsx` (`#/schedule/task/:id/details`)
+## Task Details — `src/app/schedule/TaskDetailsPage.jsx` (rebuilt in Phase 7)
 
-Deep drill-down for ONE task — reached from the task panel's *Full details* or by
-clicking a child inside itself. **Read-first design**: opens as a read-only
-report (progress, quantities, element map, orders incl. WBS descendants,
-money, evidence, children) — the ✏️ Edit button unlocks structure editing
-(sub-tasks, element columns with waste factor + BOQ link/unlink, elements grid).
-Switching tasks always resets to read mode.
-- Element sort in read mode: in_progress → on_hold → not_started → completed
-  (+ hide/show-completed toggle).
-- Linked BOQ columns show contract/executed/remaining from the linked leaf with
-  reconciliation delta; unlinked show column sum × waste factor.
-- Locks: signed contract locks qty/unit/price; 🔗 children lock contract qty;
-  executed qty locked when order-derived (`orderSource.manual === false`).
-- BOQ link/unlink only on **group** tasks (leaves are "record only"); elements
-  need ≥1 column; deletes confirm via `window.confirm`.
+`#/schedule/task/:id/details` — the full page behind the task panel's *Full
+details*. Header: back to the item panel, WBS + name, badges (group / work
+item, signed, elements, linked BOQ items), dates and duration, and a
+View / Edit switch (opening another item returns to View).
+
+**View** (`TaskDetailsRead.jsx`) — overall progress (groups roll up from their
+children); one card per **quantity type** (element column): contract,
+executed, remaining and a bar — linked columns read their BOQ leaf and show
+the reconciliation (element sum vs contract), unlinked ones show the column
+sum × waste factor; the **elements map** sorted in progress → on hold → not
+started → completed (completed hidden behind a toggle); the latest 10
+**orders** on the item or below it (Approve inline) with a per-contractor
+roll-up; **money** (contract, executed, variance, linked expenses);
+**evidence** (tests, completions, a link to the item's files); and the
+**sub-items** table (name opens the sub-item's panel, or its details for
+groups).
+
+**Edit** (`TaskDetailsEdit.jsx`) — sub-items (name; quantity / executed /
+unit / price with the same locks as the Schedule grid and the same lock
+texts, `lockText.js`); **quantity types** (name, unit, waste %, total with
+waste, BOQ: *New BOQ item*, *Link to an existing item…*, *Unlink*; BOQ links
+only on groups — leaves are "record only"); **elements** (name, station,
+status, a value per type, notes, totals). Deleting a type or element asks
+first; deleting a type also unlinks it. Signed contracts show a note: contract
+quantities and prices stay locked.
+Rules: `src/state/taskDetailsModel.js`; BOQ linking: `projectModel`
+(`toggleBoqLink`, `linkExistingBoq`).

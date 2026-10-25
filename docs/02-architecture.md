@@ -28,12 +28,13 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
  │ navigation.js 7 areas + tabs      bar, Ctrl K search, app-wide  │
  │ Page.jsx     title + global       dialogs (delete, identity)    │
  │              actions + area tabs                                │
- │ pages/       one route component per screen (Phase 1: mounts the│
- │              existing components/ screens unchanged)            │
+ │ <area>/      one folder per area (record, home, schedule,       │
+ │              reports, finance, library, people, settings);       │
+ │              Home + Record load with the app, the rest lazily   │
  └─────────────────────────────────────────────────────────────────┘
 
   ┌───────────────────────────────────────────────────────────────────────────────┐
-  │  MODULE SCREENS (components/) — own their persistence via src/utils owners:   │
+  │  PAGES (src/app/<area>/) — persist through src/utils owners:                  │
   │                                                                               │
   │  Record pages → OrderEngine      → localStorage 'pm-orders'        (notifies) │
   │  LookaheadPage → PlanningStore   → localStorage 'pm-plans'                    │
@@ -68,7 +69,7 @@ global state library** — React state + localStorage + change notifications.
 | Schedule | `/schedule` · `/schedule/task/:taskId` | **Rebuilt (Phase 4)** — `app/schedule/SchedulePage.jsx` + `Gantt.jsx`: KPI strip, lifecycle/view toolbars, grid + timeline in one scroller; the `:taskId` child route opens `TaskPanel.jsx` (drawer / bottom sheet) over it; sign-off / VO dialogs (`LifecycleDialogs.jsx`), backup/restore (`useBackupRestore.jsx`) |
 | | `/schedule/lookahead` | **Rebuilt (Phase 4)** — `app/schedule/LookaheadPage.jsx` (month / week / day plans) |
 | | `/schedule/baseline` | **Rebuilt (Phase 4)** — `app/schedule/BaselinePage.jsx` (signed vs current contract) |
-| | `/schedule/task/:taskId/details` | `taskDetails/TaskDetails` (legacy, "Full details" from the panel) |
+| | `/schedule/task/:taskId/details` | **Rebuilt (Phase 7)** — `app/schedule/TaskDetailsPage.jsx` (read report + Edit: sub-items, quantity types with BOQ links, elements) |
 | Reports | `/reports/daily` · `/reports/monthly` · `/reports/activity` | **Rebuilt (Phase 5)** — `app/reports/`: `DailyReportPage`, `MonthlyReportPage`, `ActivityPage` (view in `?view=`); printable sheets share `ReportSheet.jsx` |
 | Finance | `/finance/:ledger` (`machinery` · `materials` · `pettyCash` · `payroll` · `lists`) | **Rebuilt (Phase 6)** — `app/finance/FinancePage.jsx` |
 | Library | `/library/boq` (`?grid=`) · `/library/templates` (`?t=`) · `/library/templates/new` · `/library/rates` · `/library/files(/:taskId)` (`?folder=`) | **Rebuilt (Phase 6)** — `app/library/` |
@@ -122,7 +123,6 @@ All tree/lifecycle transforms are pure functions in `projectModel.js`
 | Schedule / Lookahead / Baseline pages | none — read `useProject()`; the Gantt gets rows from `visibleRows()` and calls `onUpdate(id, patch)` with only the changed fields |
 | Record pages | none — read `useProject()` (tasks, orders, lastWhoByType, registries, identity, engineResult); rules in `src/state/orderForm.js` |
 | Report pages | none — read `useProject()`; rules in `src/state/reportsModel.js` |
-| TaskDetails | `task, allTasks, computedTasks, isSigned, orders, registries, identity` + 7 callbacks |
 | Finance / Library / People / Settings pages | none — read `useProject()` (People saves through `saveRegistries` + `setRegistries`); rules in `src/state/financeModel.js`, `libraryModel.js`, `peopleModel.js` |
 
 ---
@@ -164,10 +164,10 @@ order-derived and read-only.
 
 | Data | Written by | Read by | Storage key |
 |---|---|---|---|
-| Task tree + BOQ | ProjectProvider (edit via the Schedule grid / task panel / TaskDetails) | everything | `project-manager-gantt-tasks` |
+| Task tree + BOQ | ProjectProvider (edit via the Schedule grid / task panel / full task details) | everything | `project-manager-gantt-tasks` |
 | Project meta (status/baseline/VOs) | ProjectProvider (Schedule dialogs) | Monthly, Activity, Baseline, engine | `project-manager-project-meta` |
 | Order ledger | Record pages (OrderEngine `addOrder` / `approveOrder` / `deleteOrder`) | engine, Planning, Reports, Activity | `pm-orders` |
-| Registries | PeoplePage | Orders, Planning, Reports, TaskDetails | `pm-registries` |
+| Registries | PeoplePage | Orders, Planning, Reports, task details | `pm-registries` |
 | Identity | IdentityDialog (first launch, sidebar user, Settings) | stamps everywhere | `pm-identity` |
 | App events | `logAppEvent` from ProjectProvider/screens | Activity feed | `pm-activity` |
 | Plans | LookaheadPage (via PlanningStore) | itself | `pm-plans` |
@@ -178,7 +178,7 @@ order-derived and read-only.
 | Daily site notes | DailyReportPage (via `utils/DailyNotes.js`) | itself | `project-manager-daily-reports` |
 | Finance ledgers | FinancePage (via `utils/Finance.js`) | itself | `project-manager-finance-data` / `-config` |
 | Uploaded files | FilesPage (via `utils/FileDB.js`) | itself | IndexedDB `ProjectManagerDB` |
-| Language | LanguageSwitcher | i18n provider | `pm-language` |
+| Language | Page header language menu / Settings | i18n provider | `pm-language` |
 
 Synchronization: `saveOrdersData`, `saveRegistries`, `saveIdentity` and
 `saveAppEvents` call `notifyStoreChange(key)` (`utils/storeEvents.js`), and
@@ -193,12 +193,13 @@ ProjectProvider also listens to the `storage` event for the same four keys.
 - New UI (`src/ui/`, `src/app/`): CSS Modules + `--ui-*` tokens
   (`src/ui/tokens.css`), logical properties for RTL/LTR — see
   [07 §2](07-conventions-quirks-roadmap.md).
-- Legacy screens (`components/`): own `*.css` next to the `.jsx`; legacy
-  globals in `src/App.css` (imported by `AppLayout`) and `src/index.css`.
-- Design language: Apple-ish light theme, CSS variables
-  (`--bg-surface`, `--apple-blue-action`, `--apple-red`, `--apple-green`, …).
+- Global CSS is only `src/ui/tokens.css` + `src/ui/base.css` (reset, page
+  lock, scrollbars, focus ring, skip link, print); the old `App.css` /
+  `index.css` are archived (Phase 7).
+- Design language: "Aubergine" — light / dark / device themes from the tokens.
 - Layout: `AppShell` = dark sidebar (≥768px) or phone bottom bar + a main
-  column that scrolls (legacy CSS locks `html/body` scrolling); full-height
+  column that scrolls (`base.css` locks `html/body` scrolling); a "Skip to
+  content" link is the first Tab stop; each page sets the window title; full-height
   pages (Schedule timeline) use `<Page fill>`; on phones `fill` is off and the
   page scrolls as a whole. The shell root gets `dir` from i18n;
   numeric/chart containers force `dir="ltr"`.

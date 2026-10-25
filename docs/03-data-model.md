@@ -53,7 +53,7 @@ There is **no server and no database**. Everything is stored in the browser:
   depType: 'FS' | 'SS' | 'FF' | 'SF',
   lag: 7,                        // days, can be negative (overlap)
 
-  // quantity take-off (group tasks, editable in TaskDetails edit mode):
+  // quantity take-off (group tasks, editable in the full task details page, Edit view):
   elementColumns: [{ id, name, unit, wasteFactor, linkedTaskId|null }],
   elements: [{ id, name, status, values: { [columnId]: number } }],
   // element.status: 'not_started' | 'in_progress' | 'completed' | 'on_hold'

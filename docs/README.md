@@ -4,7 +4,7 @@ This folder documents **everything** in this repository. It was written so that 
 new person (or a new AI agent) can understand the whole project **without reading
 the source code**.
 
-> **Last verified:** 2026-10-25 · covers `main` plus Phase 0 of the UI rebuild (branch `redesign/aubergine`, see `plans/ui-rebuild-plan.md`).
+> **Last verified:** 2026-10-25 · covers the app after the complete UI rebuild (Phases 0–7, see `plans/ui-rebuild-plan.md`).
 
 ---
 

@@ -58,23 +58,15 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 
 ## Current state & next steps
 
-**UI rebuild in progress** on branch `redesign/aubergine` — plan, phases and
-decisions in `plans/ui-rebuild-plan.md`. Phases 0–6 are done: Phase 1 moved
-state into `src/state/`, added the hash router and the new shell, and mounts the
-existing screens unchanged inside it; Phase 2 rebuilt Record (`src/app/record/`,
-rules in `src/state/orderForm.js`); Phase 3 rebuilt Home (`src/app/home/`,
-rules in `src/state/homeModel.js`); Phase 4 rebuilt the Schedule
-(`src/app/schedule/`: timeline, task panel, lookahead, baseline, sign-off and VO
-dialogs; rules in `src/state/scheduleModel.js` and `lookaheadModel.js`); Phase 5
-rebuilt Reports (`src/app/reports/`: daily with site notes via
-`utils/DailyNotes.js`, monthly, activity; print styles; rules in
-`src/state/reportsModel.js`); Phase 6 rebuilt Finance, Library, People and
-Settings (`src/app/finance|library|people|settings/`; theme setting in
-`utils/Theme.js`; rules in `financeModel.js`, `libraryModel.js`,
-`peopleModel.js`). Only the full task details page is still legacy. Phase 0: design tokens (`src/ui/tokens.css`, all names `--ui-*`), shared components in
-`src/ui/` (import from `src/ui/index.js`), CSS Modules per component. New UI
-code uses `src/ui/` components only; legacy screens stay untouched until their
-phase. Roadmap after the rebuild: `docs/07-conventions-quirks-roadmap.md` §6–7.
+**UI rebuild complete** ("Aubergine", `plans/ui-rebuild-plan.md`, Phases
+0–7, merged phase by phase from `redesign/aubergine`). Every screen lives in
+`src/app/<area>/` (record, home, schedule, reports, finance, library, people,
+settings) and is built only from `src/ui/` components (design tokens
+`src/ui/tokens.css`, all names `--ui-*`; CSS Modules per component). Screen
+rules are pure, tested modules in `src/state/` (`orderForm`, `homeModel`,
+`scheduleModel`, `lookaheadModel`, `reportsModel`, `financeModel`,
+`libraryModel`, `peopleModel`, `taskDetailsModel`). Old screens and global CSS
+are archived in `_archive/ui-rebuild/`. Roadmap: `docs/07-conventions-quirks-roadmap.md` §6–7.
 
 ## Folders other than the app
 

@@ -13,9 +13,8 @@ src/i18n/
 ├── I18nContext.jsx       ← React provider: { t, lang, setLang, isRTL, dir, languages }
 ├── context.js            ← createContext (plain JS — no JSX, importable from utils!)
 ├── useI18n.js            ← hook (falls back to Arabic outside a provider)
-├── LanguageSwitcher.jsx  ← one button per language
 └── dictionaries/
-    ├── ar/               ← 22 domain files: activity, app, calculator, common,
+    ├── ar/               ← 23 domain files: activity, app, calculator, common,
     │                        dashboard, files, finance, gantt, orders, planning,
     │                        registries, reports, snapshots, taskDetails, templates,
     │                        ui (shared src/ui/ components + new navigation),
@@ -27,8 +26,11 @@ src/i18n/
     │                        add their new keys there ("rebuilt … (Phase 5)" blocks);
     │                        library, people, settings (rebuilt in Phase 6; reuse
     │                        calculator.*, templates.*, files.*, registries.*,
-    │                        snapshots.*; new Finance keys sit in finance.js)
-    └── en/               ← same 22 files, same keys
+    │                        snapshots.*; new Finance keys sit in finance.js),
+    │                        details (rebuilt full task details; reuses
+    │                        taskDetails.*). Keys no code used were removed in
+    │                        Phase 7 (264 per language).
+    └── en/               ← same 23 files, same keys
 ```
 
 `npm test` runs `src/i18n/__tests__/dictionaryParity.test.js`, which fails if
@@ -72,15 +74,13 @@ Some utils (OrderEngine, ActivityLog, PlanningStore, Registries) call
 
 ## 5. How to add a third language ⭐
 
-1. Create `dictionaries/<code>/` mirroring `ar/` — the same 15 files, the same keys.
+1. Create `dictionaries/<code>/` mirroring `ar/` — the same 23 files, the same keys.
 2. In `src/i18n/index.js`:
    - import the new dictionary modules;
    - add `{ code, label, dir }` to `LANGUAGES`;
    - add the language to `DICTIONARIES` with the same domain mapping.
-3. Fix `LanguageSwitcher.jsx`: its caption is a hardcoded ternary
-   (`l.code === 'ar' ? 'عربي' : 'EN'`) — switch it to `l.label` or the new
-   language button will wrongly read "EN".
-4. Everything else (provider, persistence, direction) follows automatically.
+3. Everything else (the language menu in the page header and Settings list
+   `LANGUAGES` by their `label`), (provider, persistence, direction) follows automatically.
 
 ## 6. Formatting helpers (`src/i18n/index.js`)
 

@@ -128,7 +128,7 @@ variation orders; `#/schedule/baseline` compares them with the signed baseline.
 | People `#/people/:kind` | `app/people/PeoplePage` | Contractors / teams / workers |
 | Library › Templates `#/library/templates` (+ `/new`) | `app/library/TemplatesPage` | Generate a task tree from parametric templates; build templates |
 | Library › BOQ `#/library/boq` · Rates `#/library/rates` | `app/library/BoqPage`, `RatesPage` | Quantity take-off grids; the IQD rate library |
-| Task details `#/schedule/task/:id/details` | `taskDetails/TaskDetails` | *(Full details from the task panel)* drill-down per task: element columns, BOQ links, edit mode |
+| Task details `#/schedule/task/:id/details` | `app/schedule/TaskDetailsPage` | *(Full details from the task panel)* drill-down per task: element columns, BOQ links, edit mode |
 
 ---
 
@@ -142,13 +142,12 @@ Project Management Package/          ← repository root
 ├── plans/                           ← design blueprints (read ecoplan first)
 │   ├── ecosystem-plan.md            ← the master vision: "orders as foundation" (IMPLEMENTED)
 │   ├── advanced-lifecycle-plan.md   ← baseline/VO/lifecycle design (IMPLEMENTED)
-│   ├── ui-rebuild-plan.md           ← Aubergine UI rebuild, 8 phases (IN PROGRESS)
+│   ├── ui-rebuild-plan.md           ← Aubergine UI rebuild, 8 phases (DONE)
 │   └── study-folder-analysis.md     ← notes on the Study/ research data
 ├── ProjectManagerApp/               ← THE APP (only folder with real code)
 │   ├── src/App.jsx                  ← ProjectProvider + router (tiny)
 │   ├── src/state/                   ← project store + pure task/lifecycle logic
-│   ├── src/app/                     ← router, shell layout, one page per route
-│   ├── src/components/              ← one folder per screen (see 05-screens-guide)
+│   ├── src/app/                     ← router, shell layout, one folder per area (see 05-screens-guide)
 │   ├── src/utils/                   ← pure-logic engines + persistence (see 04-utils-reference)
 │   ├── src/i18n/                    ← ar/en dictionaries (see 06-i18n-guide)
 │   ├── src/ui/                      ← new shared components + design tokens (UI rebuild)
