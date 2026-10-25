@@ -1,4 +1,4 @@
-| Task `#/schedule/task/:id` | | Library › Templates `#/library/templates` | | People `#/people` | | Finance `#/finance` | | Settings `#/settings` | | Reports › Activity `#/reports/activity` | | Reports › Monthly `#/reports/monthly` | | Reports › Daily `#/reports/daily` | | Library › BOQ `#/library/boq` | | Library › Files `#/library/files` | | Schedule › Lookahead `#/schedule/lookahead` | | Record `#/record` | | Schedule `#/schedule` | | Home `#/` | # 01 — What Is This Project?
+# 01 — What Is This Project?
 
 A plain-language overview. No code knowledge needed to read this file.
 
@@ -111,7 +111,7 @@ monthly report.
 
 | Route | Screen | One-liner |
 |---|---|---|
-| Home `#/` | `dashboard/Dashboard` | Status cards, EVM tiles, S-curve, per-WBS roll-up, action items |
+| Home `#/` | `app/home/*` | Headline progress / SPI / EV / CPI, needs-attention list, S-curve + EVM figures, progress by section, recent orders |
 | Schedule `#/schedule` | `GanttChart` | Editable task grid + day-based timeline, KPI strip, lifecycle/VO/backup toolbar |
 | Record `#/record` (+ `/log`, `/pending`) | `app/record/*` | THE entry screen: pick type → fill → save (phone: full-screen flow); order log; pending approvals |
 | Schedule › Lookahead `#/schedule/lookahead` | `planning/PlanningScreen` | Month/week/day lookahead targets & assignments |

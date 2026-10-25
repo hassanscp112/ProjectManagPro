@@ -10,7 +10,32 @@ always goes through `src/utils` helpers.
 
 ---
 
-## Dashboard — `dashboard/Dashboard.jsx` (+ `SCurveChart.jsx`)
+## Home — `src/app/home/` (rebuilt in Phase 3)
+
+Where the project stands and what needs doing, at a glance (`#/`):
+- **Headline numbers:** actual vs planned progress (bar with planned marker),
+  SPI with deviation, EV of BAC, CPI with actual cost. Tones: ≥ 1.00 on track,
+  ≥ 0.90 watch, below behind — judged on the value as shown (2 decimals).
+  Phone: progress on top, SPI + CPI side by side, EV below; plus a
+  "repeat last order" card that opens Record with the form prefilled
+  (`navigate('/record', { state: { repeatLast: true } })`).
+- **Needs your attention:** counts (late / in progress / starting soon / done)
+  and up to 6 tasks — overdue, then active, then starting within 7 days,
+  critical first; each opens `#/schedule/task/:id`. Progress is floored
+  (99.99% shows 99%, never "100% done" on an unfinished task).
+- **S-curve** (`SCurve.jsx`): PV dashed, EV solid, AC dotted; time runs left →
+  right in both languages; earned/actual stop at today; month labels in the UI
+  language; plus the six EVM figures (BAC, PV, EV, AC, EAC, VAC).
+- **Progress by section:** each top-level WBS with EV / BAC bar and its SPI/CPI.
+- **Recently recorded:** last 5 orders with Approve.
+- Numbers with `%` or a sign inside Arabic sentences are wrapped in a
+  left-to-right isolate (U+2066…U+2069) so they don't reverse.
+Logic: `src/state/homeModel.js`.
+
+## Dashboard (legacy) — `dashboard/Dashboard.jsx` (+ `SCurveChart.jsx`)
+
+No longer routed; `SCurveChart` is still used by the legacy Monthly Report
+until Phase 5. Archived in Phase 7.
 
 Read-only project overview.
 - Status cards + EVM tiles (BAC/PV/EV/AC/SPI/CPI/EAC/VAC from `summary.evm`;

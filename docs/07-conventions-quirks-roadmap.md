@@ -86,13 +86,13 @@ The rules that prevent mistakes. Read this before changing anything.
   registries screens, EVM + S-curve, monthly report, full backup/restore.
 - **Git:** `main` fully committed (2026-10-25). UI rebuild on branch
   `redesign/aubergine`, merged to `main` phase by phase.
-- **UI rebuild:** Phases 0–2 done — tokens + shared components, project
+- **UI rebuild:** Phases 0–3 done — tokens + shared components, project
   store (`src/state/`), hash router + new shell (`src/app/`), and the rebuilt
-  Record area (`src/app/record/`); other screens are still the legacy ones
-  mounted inside the shell. Next: Phase 3 (Home). Plan: `plans/ui-rebuild-plan.md`.
+  Record (`src/app/record/`) and Home (`src/app/home/`); other screens are
+  still the legacy ones mounted inside the shell. Next: Phase 4 (Schedule). Plan: `plans/ui-rebuild-plan.md`.
 - **Theme:** the app forces `data-theme="light"` (`main.jsx`) until the theme
   setting ships in Phase 6, because legacy screens are light-only.
-- **Tests:** 10 test files (109 tests), all pure-logic (engines, project model, order form,
+- **Tests:** 11 test files (115 tests), all pure-logic (engines, project model, order form, home model,
   task ranking, who selection, ar/en dictionary parity); no component tests.
 
 ## 7. Roadmap (agreed next steps, in order)

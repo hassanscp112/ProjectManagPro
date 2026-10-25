@@ -62,7 +62,7 @@ global state library** — React state + localStorage + change notifications.
 
 | Area | Route | Screen (Phase 1: existing component) |
 |---|---|---|
-| Home | `/` | `dashboard/Dashboard` |
+| Home | `/` | **Rebuilt (Phase 3)** — `app/home/HomePage.jsx`: headline numbers, needs-attention list, S-curve + EVM figures, progress by section, recent orders |
 | Record | `/record` · `/record/log` · `/record/pending` | **Rebuilt (Phase 2)** — `app/record/`: new order (desktop form + side panel; phone type → form → done), order log, pending approvals |
 | Schedule | `/schedule` | Gantt page (`app/pages/SchedulePage.jsx`: KPI strip, lifecycle/backup toolbar, `GanttChart`, sign-off / VO / restore dialogs) |
 | | `/schedule/lookahead` | `planning/PlanningScreen` |
@@ -98,8 +98,9 @@ Home. Sub-pages show as tabs under the page title (`AREA_TABS` in
 | Backup/restore | Gantt page toolbar via `utils/DataIO` (validate → confirm → write → reload) |
 
 The Record rules (validation, building an order, repeat-last, log filters,
-KPIs) are pure functions in `src/state/orderForm.js`, tested in
-`src/state/__tests__/orderForm.test.js`.
+KPIs) are pure functions in `src/state/orderForm.js`; the Home rules (task
+status, attention list, section progress, SPI/CPI tone, chart helpers) in
+`src/state/homeModel.js`. Both are tested in `src/state/__tests__/`.
 
 All tree/lifecycle transforms are pure functions in `projectModel.js`
 (`addSubTask`, `deleteTaskCascade`, `toggleBoqLink`, `signOffProject`,

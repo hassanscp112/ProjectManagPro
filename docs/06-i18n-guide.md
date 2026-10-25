@@ -15,12 +15,13 @@ src/i18n/
 ├── useI18n.js            ← hook (falls back to Arabic outside a provider)
 ├── LanguageSwitcher.jsx  ← one button per language
 └── dictionaries/
-    ├── ar/               ← 17 domain files: activity, app, calculator, common,
+    ├── ar/               ← 18 domain files: activity, app, calculator, common,
     │                        dashboard, files, finance, gantt, orders, planning,
     │                        registries, reports, snapshots, taskDetails, templates,
     │                        ui (shared src/ui/ components + new navigation),
-    │                        record (rebuilt Record area; reuses orders.* labels)
-    └── en/               ← same 17 files, same keys
+    │                        record (rebuilt Record area; reuses orders.* labels),
+    │                        home (rebuilt Home; reuses dashboard.* EVM/chart labels)
+    └── en/               ← same 18 files, same keys
 ```
 
 `npm test` runs `src/i18n/__tests__/dictionaryParity.test.js`, which fails if
