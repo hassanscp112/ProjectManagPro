@@ -146,6 +146,8 @@ test('applyVariation changes the field and derives the cost impact from the quan
     { old: 100, nu: 120, cost: 120000, cls: 'qty', urgency: 'medium', days: null }
   );
   assert.equal(applyVariation(tasks, { ...draft, taskId: 'missing' }, { id: 'x', date: 'now' }), null);
+  const noisy = applyVariation([{ id: 'n', quantity: 95590.6, unitPrice: 6000 }], { ...draft, taskId: 'n', newValue: '100000' }, { id: 'y', date: 'now' });
+  assert.equal(noisy.vo.estCostImpact, 26456400);
   assert.equal(applyVariation(tasks, { ...draft, field: 'unitPrice', newValue: '6500' }, { id: 'x', date: 'now' }).vo.type, 'price');
 });
 

@@ -345,9 +345,10 @@ export const applyVariation = (tasks, draft, { id, date }) => {
   const oldValue = task[field];
   const parsedNew = newValue === '' ? '' : Number(newValue);
   // Cost impact fallback: the quantity increase at contract price.
+  // Rounded to 2 decimals so float noise (…399.999999966) never gets stored.
   const derivedCostImpact =
     estCostImpact === '' && field === 'quantity' && Number.isFinite(Number(newValue))
-      ? Math.max(0, Number(newValue) - Number(oldValue)) * (Number(task.unitPrice) || 0)
+      ? Math.round(Math.max(0, Number(newValue) - Number(oldValue)) * (Number(task.unitPrice) || 0) * 100) / 100
       : null;
   return {
     tasks: tasks.map((t) => (t.id === taskId ? { ...t, [field]: parsedNew } : t)),
