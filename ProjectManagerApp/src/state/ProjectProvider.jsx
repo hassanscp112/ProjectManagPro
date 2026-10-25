@@ -80,17 +80,24 @@ export function ProjectProvider({ children }) {
     setAppEvents(loadAppEvents());
   }, []);
 
-  // Live refresh when a utils owner writes one of the ecosystem stores.
-  useEffect(
-    () =>
-      onStoreChange((key) => {
-        if (key === ORDERS_STORAGE_KEY) setOrdersData(loadOrdersData());
-        else if (key === REGISTRIES_STORAGE_KEY) setRegistries(loadRegistries());
-        else if (key === ACTIVITY_STORAGE_KEY) setAppEvents(loadAppEvents());
-        else if (key === IDENTITY_STORAGE_KEY) setIdentity(loadIdentity());
-      }),
-    []
-  );
+  // Live refresh when one of the ecosystem stores changes: in this tab
+  // (storeEvents from the utils owners) or in another open tab (the
+  // browser's `storage` event; key null = storage cleared).
+  useEffect(() => {
+    const reload = (key) => {
+      if (key === null || key === ORDERS_STORAGE_KEY) setOrdersData(loadOrdersData());
+      if (key === null || key === REGISTRIES_STORAGE_KEY) setRegistries(loadRegistries());
+      if (key === null || key === ACTIVITY_STORAGE_KEY) setAppEvents(loadAppEvents());
+      if (key === null || key === IDENTITY_STORAGE_KEY) setIdentity(loadIdentity());
+    };
+    const offStore = onStoreChange(reload);
+    const onStorage = (e) => reload(e.key);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      offStore();
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   const engineResult = useMemo(
     () => GanttEngine.calculate(tasks, PROJECT_START, projectMeta, orders),

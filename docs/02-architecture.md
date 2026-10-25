@@ -181,8 +181,8 @@ order-derived and read-only.
 Synchronization: `saveOrdersData`, `saveRegistries`, `saveIdentity` and
 `saveAppEvents` call `notifyStoreChange(key)` (`utils/storeEvents.js`), and
 ProjectProvider re-reads that store at once; it also re-reads orders /
-registries / events on every route change. Across browser tabs, nothing syncs
-yet (the legacy OrdersScreen listened to the `storage` event).
+registries / events on every route change. Across browser tabs,
+ProjectProvider also listens to the `storage` event for the same four keys.
 
 ---
 
