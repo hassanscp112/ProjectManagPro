@@ -189,7 +189,9 @@ Team `defaultSize` convention: when it equals the member count it displays as
 
 ⚠️ Snapshots cover **tasks + projectMeta only** — not orders/finance/reports.
 `restoreSnapshot()` writes back into `project-manager-gantt-tasks` and
-`project-manager-project-meta`, then the app page-reloads.
+`project-manager-project-meta` (if the second write fails the first is put
+back), then the app page-reloads. Settings first keeps the current data as a
+named snapshot "Before restoring …" and refuses to restore if it can't.
 
 ---
 
@@ -245,24 +247,35 @@ subtitle, tone, refTaskId, payload}`.
 - DB `ProjectManagerDB` v1, object store **`files`** (keyPath `id`, index `folderId`).
 - Record: `{ id, folderId, name, size, type, blob, createdAt }`.
 - Folder tree itself is virtual — root → per-task folders derived from the task list.
-- Managed only through `utils/FileDB.js` (`initDB/saveFile/getFiles/deleteFile`).
+- Managed only through `utils/FileDB.js` (`initDB/saveFile/getFiles/deleteFile`,
+  plus `getAllFiles/replaceAllFiles` for the backup).
+- Included in the backup file since version 2 (§12).
 
 ---
 
 ## 12. Backup file format (DataIO)
 
-`exportAppData()` downloads `project-backup-YYYY-MM-DD_HH-MM.json`:
+`exportAppData()` downloads `project-backup-YYYY-MM-DD_HH-MM.json`
+(`project-backup-before-restore-…json` for the automatic safety copy):
 
 ```js
 {
   magic: 'projectmanager-backup',
-  version: 1,
+  version: 2,                    // 1 = no files section
   exportedAt: 'ISO',
   app: 'ProjectManagerApp',
-  storage: { '<localStorageKey>': '<raw JSON string, exactly as stored>' }
-}
+  storage: { '<localStorageKey>': '<raw JSON string, exactly as stored>' },
+  files: [ { id, folderId, name, size, type, createdAt, data: '<base64>' } ]
+}                                // files left out if IndexedDB couldn't be read
 ```
 
-`validateBackup()` checks magic/version and returns stats (keys + bytes);
-`restoreAppData()` writes every key back and the app reloads. Restore is
-all-or-nothing (overwrites current data — the confirmation modal shows key/KB counts).
+`validateBackup()` checks magic/version (a newer version is refused) and
+returns stats (keys, bytes, files — `null` for a version-1 backup). Errors are
+codes (`BackupError.code`) shown via `app.backup.err.*`.
+
+Restore (`useBackupRestore.jsx`): confirm → **download a safety backup of the
+current data first** (restore is cancelled if that fails) → `restoreAppData()`
+→ reload. `restoreAppData()` writes the known keys in the backup (others are
+left as they are) and, when the backup has a `files` section, replaces ALL
+stored files in one IndexedDB transaction; a version-1 backup leaves the files
+alone. If any write fails, the localStorage keys are put back as they were.

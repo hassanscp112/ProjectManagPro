@@ -28,7 +28,7 @@ live view over that ledger. Blueprint: `plans/ecosystem-plan.md`.
 ## Commands (run from `ProjectManagerApp/`)
 
 ```bash
-npm run dev     # dev server → http://localhost:5173  (root run.cmd also works)
+npm run dev     # dev server → http://localhost:5173, port fixed (data is per origin)  (root run.cmd also works)
 npm run lint    # ESLint
 npm run build   # production build
 npm test        # unit tests: engines + ar/en dictionary parity (node:test)
@@ -53,7 +53,8 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 - Engine: `GanttEngine.calculate(tasks, PROJECT_START, projectMeta, orders)` → schedule + costs + progress + critical path + EVM + S-curve. `PROJECT_START = '2025-08-02'` (hardcoded in `src/state/projectModel.js`).
 - Order ledger keys: `pm-orders`; 9 types; families value/expense; tiers quick (auto-approved)/formal (needs Approve).
 - Screens persist their own stores via `src/utils`; orders/registries/identity/activity owners announce writes (`utils/storeEvents.js`) and the provider re-reads them instantly (also on every navigation).
-- 16 localStorage keys + IndexedDB `ProjectManagerDB` — full table in `docs/03-data-model.md`.
+- 16 localStorage keys + IndexedDB `ProjectManagerDB` — full table in `docs/03-data-model.md`. Backups (format v2) hold both; restore downloads a safety copy first.
+- For automated browser checks run on another port (`npm run dev -- --port 5180`) — never test restore/clear on 5173, where the real data lives.
 - i18n: flat `'domain.key'` dictionaries, fallback ar→key, direction from `LANGUAGES`, persisted in `pm-language`.
 
 ## Current state & next steps

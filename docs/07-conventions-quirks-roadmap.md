@@ -53,6 +53,7 @@ The rules that prevent mistakes. Read this before changing anything.
 | 7 | Snapshots cover tasks + projectMeta ONLY | Snapshots.js | Orders/finance NOT in snapshots (full safety = JSON backup) |
 | 8 | Gantt bars are not draggable by design | `src/app/schedule/Gantt.jsx` | Dates/durations edited via grid inputs (edit mode) |
 | 9 | localStorage **quota** (~5 MB) is the only real limit | all | File blobs already live in IndexedDB; big data goes to backup files |
+| 13 | Data belongs to the origin (`http://localhost:5173`) | `vite.config.js` | The dev port is pinned (`strictPort`): if 5173 is busy, `npm run dev` fails instead of opening an empty app on another port |
 | 10 | Element columns/BOQ links only on group tasks | `app/schedule/TaskDetailsEdit.jsx` | Leaves are "record only" |
 | 11 | Quick orders are born approved (`approvedBy` = identity) | OrderEngine | Only formal+recorded need the Approve action |
 | 12 | ~~Engine task warnings are hardcoded Arabic~~ **fixed** — warnings carry `code` + `params` | `GanttEngine.js`, `app/schedule/warningText.js` | Shown in the UI language (grid tooltip and the task panel's warning list) |
@@ -65,7 +66,10 @@ The rules that prevent mistakes. Read this before changing anything.
   to disk instead of piping Arabic through heredocs.
 - **Browser automation:** Playwright element clicks can time out — use DOM
   `evaluate` clicks instead; verify app state via DOM queries, not screenshots.
-- Dev server: `npm run dev` → http://localhost:5173 (run.cmd opens it).
+- Dev server: `npm run dev` → http://localhost:5173 (run.cmd opens it). The
+  port is fixed — stop the other server if it says the port is in use. For
+  automated checks use another port (`npm run dev -- --port 5180`) so the real
+  data on 5173 is never touched.
 - `Study/` contains a nested ~500 MB third-party repo clone
   (OpenConstructionERP, AGPL) — excluded from agent context via `.zcodeignore`;
   do not commit or copy it.
@@ -96,9 +100,12 @@ The rules that prevent mistakes. Read this before changing anything.
 - **Accessibility:** a "Skip to content" link, a window title per page, a
   focus ring on every focusable element (`base.css` fallback), labelled
   fields and icon buttons (checked on every route), status always with words.
-- **Tests:** 18 test files (149 tests), all pure-logic (engines, project model, order form, home model,
+- **Data safety:** backups include uploaded files (format v2); restore
+  downloads a safety copy first; persistent storage requested at startup;
+  crash screens offer a backup download.
+- **Tests:** 19 test files (156 tests), all pure-logic (engines, project model, order form, home model,
   schedule model, lookahead model, reports model, finance / library / people models, task details model,
-  task ranking, who selection, ar/en dictionary parity); no component tests.
+  task ranking, who selection, backup encoding, ar/en dictionary parity); no component tests.
 - **Printing:** only `.ui-print-sheet` content prints (report pages, finance
   tables); shell and `.ui-no-print` controls are hidden.
 

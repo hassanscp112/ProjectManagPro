@@ -246,11 +246,13 @@ Storage: `utils/Finance.js`; rules: `src/state/financeModel.js`.
   applied before the first paint in `main.jsx`) and language.
 - **Project lifecycle** — the status, and a link to the Schedule where the
   lifecycle actions are.
-- **Backup & restore** — full JSON backup / restore (`useBackupRestore.jsx`,
-  shared with the Schedule's More menu).
+- **Backup & restore** — full JSON backup / restore incl. uploaded files
+  (`useBackupRestore.jsx`, shared with the Schedule's More menu). Restore
+  downloads a safety backup of the current data first. The "Browser storage"
+  row shows whether the browser may clear the data (Protect asks again).
 - **Snapshots** — counts and size; create a named snapshot; named ones can be
   restored, renamed, deleted; automatic daily ones (last 14) restored. Restore
-  asks first and reloads. Snapshots cover tasks + project meta only.
+  asks first, keeps the current data as a "Before restoring …" snapshot, and reloads. Snapshots cover tasks + project meta only.
 
 ## Task Details — `src/app/schedule/TaskDetailsPage.jsx` (rebuilt in Phase 7)
 

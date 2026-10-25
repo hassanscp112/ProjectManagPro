@@ -99,7 +99,8 @@ Home. Sub-pages show as tabs under the page title (`AREA_TABS` in
 | Task actions | `updateTask`, `addMainTask`, `addSubTask`, `requestDeleteTask` → `confirmDeleteTask` (dialog in `AppLayout`), `setBoqLink`, `linkBoqToExisting` |
 | Lifecycle | `signOff(signedBy)`, `setStatus(status)`, `raiseVariation(draft)` → true when recorded |
 | Templates | `generateFromTemplate(tree, meta)` → appends with renumbered WBS; the page then navigates to `/schedule` |
-| Backup/restore | Schedule toolbar's More menu via `utils/DataIO` (validate → confirm → write → reload) |
+| Backup/restore | Schedule toolbar's More menu and Settings via `utils/DataIO` (validate → confirm → safety download → write keys + files → reload) |
+| Crashes | `app/ErrorPage.jsx`: a screen crash shows the error page inside the shell (router `errorElement` on a pathless route); a shell crash shows it full-window; `AppErrorBoundary` in `App.jsx` catches the project store. All offer a backup download |
 
 The Record rules (validation, building an order, repeat-last, log filters,
 KPIs) are pure functions in `src/state/orderForm.js`; the Home rules (task

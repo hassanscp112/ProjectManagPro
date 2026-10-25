@@ -86,8 +86,9 @@ Pure, no storage. Tests: `criticalPath.test.js`.
 **Storage:** `pm-snapshots`; restore writes `project-manager-gantt-tasks` + `project-manager-project-meta`.
 - `writeAutoSnapshot(tasks, projectMeta, actor, dateStr?)` — no-op if today's already saved; caps auto list at `MAX_AUTO_SNAPSHOTS = 14`
 - `createNamedSnapshot(name, tasks, projectMeta, actor)` / `deleteNamedSnapshot(id)` / `renameNamedSnapshot(id, newName)`
-- `restoreSnapshot({tasks, projectMeta})`
-- `loadSnapshots()` / `saveSnapshots(data)` / `hasAutoForDate(dateStr)` / `snapshotsStats()`
+- `createNamedSnapshot` returns the snapshot, or `null` when storage refused it
+- `restoreSnapshot({tasks, projectMeta})` — throws if storage refuses (tasks key put back)
+- `loadSnapshots()` / `saveSnapshots(data)` (→ true/false) / `hasAutoForDate(dateStr)` / `snapshotsStats()`
 
 ---
 
@@ -179,7 +180,16 @@ No storage, no imports. Excel-style evaluation for calculator rows:
 ## FileDB.js — IndexedDB for uploads
 
 DB `ProjectManagerDB` v1, store `files`.
-`initDB()` → `saveFile(folderId, fileObj)` / `getFiles(folderId)` / `deleteFile(fileId)`.
+`initDB()` → `saveFile(folderId, fileObj)` / `getFiles(folderId)` / `deleteFile(fileId)`;
+`getAllFiles()` / `replaceAllFiles(records)` (one transaction) for the backup.
+
+---
+
+## StoragePersistence.js — keep the browser from clearing data
+
+`requestPersistentStorage()` (called once in `main.jsx`) and
+`getPersistenceState()` → `'persisted' | 'best-effort' | 'unsupported'`.
+Shown in Settings → Backup & restore with a Protect button.
 
 ---
 
@@ -234,7 +244,11 @@ Pure. Tests: `whoSelection.test.js`.
 
 `APP_STORAGE_KEYS` — the canonical list of all 16 keys (see
 [03-data-model §1](03-data-model.md)). **Adding a key anywhere = adding it here.**
-- `exportAppData()` — downloads JSON backup (format in 03-data-model §12)
-- `readBackupFile(file)` → parsed JSON (throws on bad file)
-- `validateBackup(parsed)` → `{ok, reason?, stats?{keys, bytes}}`
-- `restoreAppData(parsed)` — writes all keys, returns list written
+- `exportAppData({label?})` → `{filename, fileCount, filesSkipped}` — async; downloads the JSON backup incl. uploaded files (format in 03-data-model §12)
+- `buildBackupPayload()` → `{payload, filesSkipped}`
+- `readBackupFile(file)` → parsed JSON (rejects with `BackupError`)
+- `validateBackup(parsed)` → `{ok, code?, stats?{keys, bytes, files}}`
+- `restoreAppData(parsed)` — async; writes keys (rolled back on failure) and replaces files when the backup has them; returns keys written; throws `BackupError`
+- `BackupError` (`.code` → `app.backup.err.<code>`), `bytesToBase64` / `base64ToBytes` / `encodeFileRecord` / `decodeFileEntries`
+
+Tests: `dataIO.test.js`.
