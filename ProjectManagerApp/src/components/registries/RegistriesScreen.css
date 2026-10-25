@@ -1,0 +1,483 @@
+/* ═══════════════════════════════════════════════════════════
+   Registries — shared "Who" roster (contractors / teams / workers).
+   Visual language mirrors the TaskDetails (td-*) house style.
+   ═══════════════════════════════════════════════════════════ */
+
+.registries-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 4px 40px;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+/* ---------- Header ---------- */
+.reg-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.reg-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--apple-black);
+  line-height: 1.3;
+}
+
+.reg-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ---------- Summary strip ---------- */
+.reg-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.reg-sum-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  box-shadow: var(--shadow-level-1);
+}
+
+.reg-sum-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.reg-sum-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--apple-black);
+  font-family: var(--font-mono);
+}
+
+.reg-identity-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--apple-black);
+  line-height: 1.3;
+}
+
+.reg-identity-role {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ---------- Tabs ---------- */
+.reg-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+
+.reg-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.reg-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.reg-tab.active {
+  background: var(--apple-blue-action);
+  color: #fff;
+}
+
+.reg-tab-count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.reg-tab.active .reg-tab-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* ---------- Sections ---------- */
+.reg-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reg-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.reg-section-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--apple-black);
+}
+
+.reg-count {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.reg-btn {
+  background: var(--apple-blue-action);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.reg-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.reg-btn:disabled {
+  background: var(--border-soft);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.reg-btn.ghost {
+  background: var(--bg-surface);
+  color: var(--apple-blue-action);
+  border: 1px solid var(--apple-blue-action);
+}
+
+.reg-btn.ghost:hover:not(:disabled) {
+  background: var(--bg-showcase);
+  opacity: 1;
+}
+
+.reg-btn.xs {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+/* ---------- Empty states ---------- */
+.reg-empty {
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 22px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+/* ---------- Tables ---------- */
+.reg-table-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  box-shadow: var(--shadow-level-1);
+}
+
+.reg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 560px;
+}
+
+.reg-table.workers {
+  min-width: 780px;
+}
+
+.reg-table thead th {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: right;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.reg-table tbody td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--bg-hover);
+  vertical-align: middle;
+}
+
+.reg-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.reg-rownum {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-align: center;
+  width: 36px;
+}
+
+.reg-num {
+  text-align: center;
+}
+
+/* ---------- Inline inputs (house style) ---------- */
+.reg-input,
+.reg-select {
+  width: 100%;
+  min-width: 80px;
+  background: var(--bg-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.reg-input:hover,
+.reg-select:hover {
+  border-color: var(--border-soft);
+}
+
+.reg-input:focus,
+.reg-select:focus {
+  outline: none;
+  border-color: var(--apple-blue-action);
+}
+
+.reg-select {
+  cursor: pointer;
+}
+
+.reg-input-num {
+  text-align: center;
+  font-family: var(--font-mono);
+  max-width: 100px;
+}
+
+.reg-input-notes {
+  min-width: 140px;
+}
+
+.reg-input-phone {
+  font-family: var(--font-mono);
+}
+
+/* ---------- Icon buttons ---------- */
+.reg-icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  transition: background 0.15s, color 0.15s;
+}
+
+.reg-icon-btn:hover {
+  background: var(--bg-hover);
+}
+
+.reg-icon-btn.danger:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+/* ---------- Team cards ---------- */
+.reg-team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
+}
+
+.reg-team-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-level-1);
+}
+
+.reg-team-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reg-team-name {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.reg-team-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.reg-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.reg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reg-chip {
+  background: var(--bg-app);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.reg-chip:hover {
+  border-color: var(--border-mid);
+  color: var(--text-primary);
+}
+
+.reg-chip.active {
+  background: var(--apple-blue-action);
+  border-color: var(--apple-blue-action);
+  color: #fff;
+}
+
+/* Foreman gets an orange signal ring (house signal-orange accent) */
+.reg-chip.foreman:not(.active) {
+  border-color: var(--apple-orange);
+  color: #B45309;
+}
+
+.reg-chip.foreman.active {
+  border-color: var(--apple-orange);
+}
+
+.reg-members-hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--radius-xs);
+  padding: 8px 10px;
+  line-height: 1.7;
+}
+
+.reg-size-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reg-size-control .reg-input-num {
+  width: 90px;
+  max-width: 90px;
+}
+
+.reg-size-mode {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--apple-blue-action);
+  background: var(--bg-showcase);
+  padding: 3px 9px;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.reg-size-reset {
+  background: var(--bg-surface);
+  color: var(--apple-blue-action);
+  border: 1px solid var(--apple-blue-action);
+  border-radius: var(--radius-xs);
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.reg-size-reset:hover {
+  background: var(--bg-showcase);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+  .reg-team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reg-tabs {
+    align-self: stretch;
+  }
+
+  .reg-tab {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ---------- LTR (English) — flip physical alignments that assumed RTL ---------- */
+[dir="ltr"] .reg-table thead th {
+  text-align: left;
+}

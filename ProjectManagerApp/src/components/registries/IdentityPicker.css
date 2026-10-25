@@ -1,0 +1,23 @@
+/* ═══════════════════════════════════════════════════════════
+   IdentityPicker — tiny additions on top of the global modal
+   styles (modal-overlay/modal-content/… in App.css).
+   ═══════════════════════════════════════════════════════════ */
+
+/* Two-field form reads better right-aligned (matches .vo-form). */
+.identity-modal .modal-input {
+  text-align: right;
+}
+
+.identity-modal .apple-btn.primary:disabled {
+  background: var(--border-soft);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 1;
+}
+
+/* LTR (English) — the RTL right-alignment above only applies to Arabic. */
+[dir="ltr"] .identity-modal .modal-input {
+  text-align: left;
+}
