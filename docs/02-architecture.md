@@ -7,18 +7,22 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
 ## 1. The big picture (one diagram)
 
 ```
- main.jsx ─ fonts + src/ui tokens/base css ─ applyTheme(loadTheme())
+ main.jsx ─ fonts + src/ui tokens/base css ─ applyTheme(loadTheme()) ─ ensureProjects()
    └─ I18nProvider → UiProvider (Radix direction, tooltips, toasts) → App
-        └─ App.jsx = ProjectProvider + RouterProvider (hash URLs)
+        └─ App.jsx = AppErrorBoundary + RouterProvider (hash URLs)
+             ├─ projects level: PortfolioLayout → /projects, /projects/new,
+             │                  /templates, /templates/new, /rates  (no project open)
+             └─ inside a project: ProjectGate → ProjectProvider key=project.id
+                                  → AppLayout → every other route
 
  ┌──────────────── src/state/ProjectProvider.jsx ─────────────────┐
  │ owns: tasks, projectMeta (persisted here on every change)       │
  │ mirrors: orders, registries, identity, appEvents (read from     │
  │          their utils owners; refreshed on every navigation AND  │
  │          live via storeEvents when an owner writes)             │
- │ engineResult = GanttEngine.calculate(tasks, PROJECT_START,      │
+ │ engineResult = GanttEngine.calculate(tasks, projectStart,       │
  │                                      projectMeta, orders)       │
- │ actions: task edits, BOQ links, sign-off, status, VO, templates,│
+ │ actions: task edits, BOQ links, sign-off, status, VO,           │
  │          delete (with confirm), undo (50 steps), auto-snapshot  │
  │ pure logic lives in src/state/projectModel.js (tested)          │
  └──────────────────────────┬──────────────────────────────────────┘
@@ -41,7 +45,8 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
   │  PeoplePage    → Registries      → localStorage 'pm-registries'    (notifies) │
   │  IdentityDialog → Identity       → localStorage 'pm-identity'      (notifies) │
   │  logAppEvent → ActivityLog       → localStorage 'pm-activity'      (notifies) │
-  │  Templates/Rates pages → TemplateEngine/RateLibrary → 'pm-templates'/'pm-rate-library'
+  │  ProjectsPage / NewProjectPage → Projects → localStorage 'pm-projects'       │
+ │  Templates/Rates pages → TemplateEngine/RateLibrary → 'pm-templates'/'pm-rate-library'
   │  SettingsPage  → Snapshots       → localStorage 'pm-snapshots'                │
   │  SettingsPage  → Theme           → localStorage 'pm-theme'                    │
   │  FilesPage     → FileDB          → IndexedDB 'ProjectManagerDB'               │
@@ -50,6 +55,13 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
   │  FinancePage   → Finance         → 'project-manager-finance-data'/'-config'   │
   └───────────────────────────────────────────────────────────────────────────────┘
 ```
+
+**Projects:** project-scoped stores (tasks, meta, orders, plans, finance,
+daily notes, BOQ grids, activity, snapshots) exist once per project; their
+owners call `projectKey(base)` (`utils/Projects.js`) at every read/write, so
+the open project decides the key. Shared stores (people, identity, templates,
+rates, language, theme, the project list) use fixed keys. Files carry a
+`projectId`. See [03-data-model §0](03-data-model.md).
 
 **The one rule to remember:** task tree and project meta are owned by
 `ProjectProvider`; every other store is owned by its `src/utils` module and
@@ -64,6 +76,9 @@ global state library** — React state + localStorage + change notifications.
 
 | Area | Route | Screen (Phase 1: existing component) |
 |---|---|---|
+| **Projects level** | `/projects` | `app/portfolio/ProjectsPage.jsx` — all projects (status, value, progress, dates); open, edit details, delete (backup downloaded first). The landing page when no project is open |
+| | `/projects/new` | `app/portfolio/NewProjectPage.jsx` — details + start from a template / blank / copy of a project → opens the Schedule in edit mode |
+| | `/templates` (`?t=`) · `/templates/new` · `/rates` | `app/templates/` — shared templates (→ *New project from this template*), template builder, rate library |
 | Home | `/` | **Rebuilt (Phase 3)** — `app/home/HomePage.jsx`: headline numbers, needs-attention list, S-curve + EVM figures, progress by section, recent orders |
 | Record | `/record` · `/record/log` · `/record/pending` | **Rebuilt (Phase 2)** — `app/record/`: new order (desktop form + side panel; phone type → form → done), order log, pending approvals |
 | Schedule | `/schedule` · `/schedule/task/:taskId` | **Rebuilt (Phase 4)** — `app/schedule/SchedulePage.jsx` + `Gantt.jsx`: KPI strip, lifecycle/view toolbars, grid + timeline in one scroller; the `:taskId` child route opens `TaskPanel.jsx` (drawer / bottom sheet) over it; sign-off / VO dialogs (`LifecycleDialogs.jsx`), backup/restore (`useBackupRestore.jsx`) |
@@ -72,14 +87,19 @@ global state library** — React state + localStorage + change notifications.
 | | `/schedule/task/:taskId/details` | **Rebuilt (Phase 7)** — `app/schedule/TaskDetailsPage.jsx` (read report + Edit: sub-items, quantity types with BOQ links, elements) |
 | Reports | `/reports/daily` · `/reports/monthly` · `/reports/activity` | **Rebuilt (Phase 5)** — `app/reports/`: `DailyReportPage`, `MonthlyReportPage`, `ActivityPage` (view in `?view=`); printable sheets share `ReportSheet.jsx` |
 | Finance | `/finance/:ledger` (`machinery` · `materials` · `pettyCash` · `payroll` · `lists`) | **Rebuilt (Phase 6)** — `app/finance/FinancePage.jsx` |
-| Library | `/library/boq` (`?grid=`) · `/library/templates` (`?t=`) · `/library/templates/new` · `/library/rates` · `/library/files(/:taskId)` (`?folder=`) | **Rebuilt (Phase 6)** — `app/library/` |
+| Library | `/library/boq` (`?grid=`) · `/library/files(/:taskId)` (`?folder=`) | **Rebuilt (Phase 6)** — `app/library/`; the old `/library/templates` and `/library/rates` links redirect to the projects level |
 | People | `/people/:kind` (`contractors` · `teams` · `workers`) | **Rebuilt (Phase 6)** — `app/people/PeoplePage.jsx` |
 | Settings | `/settings` | **Rebuilt (Phase 6)** — `app/settings/SettingsPage.jsx` |
 | (phone) | `/more` | `app/pages/MorePage.jsx` — every area + identity |
 | (dev) | `/dev/ui` | `dev/UiReview.jsx`, dev builds only |
 
 `/reports` and `/library` redirect to their first sub-page; unknown routes go
-Home. Sub-pages show as tabs under the page title (`AREA_TABS` in
+Home. `ProjectGate` decides which project a project route runs in: the one
+open in this tab (sessionStorage), else — for a deep link in a new tab — the
+last one opened on this device; `#/` with no open project goes to
+`/projects`. Opening a project from the list calls `openProject(id)` and
+navigates to `/`; the store remounts per project (`key`), so nothing carries
+over. Sub-pages show as tabs under the page title (`AREA_TABS` in
 `app/navigation.js`; `alsoActive` keeps a tab lit on child routes, e.g. Timeline on
 `/schedule/task/…`). Not yet split out (later phases): `/library/rates`, `/finance/:ledger`,
 `/people/:kind`.
@@ -90,15 +110,14 @@ Home. Sub-pages show as tabs under the page title (`AREA_TABS` in
 |---|---|
 | Task tree | `useState(loadTasks)` → saved to `project-manager-gantt-tasks` on every change |
 | Project meta | `status` (`draft/signed/executing/completed`), `baseline`, `variations[]` → `project-manager-project-meta` |
-| Project start | `PROJECT_START = '2025-08-02'` in `src/state/projectModel.js` (still hardcoded) |
-| Seed data | `INITIAL_TASKS` in `projectModel.js` — used only if storage is empty |
+| Project | `project` (the open project's record) and `projectStart` (its start date, `Projects.projectStartDate`) are in the context |
+| Seed data | `INITIAL_TASKS` in `projectModel.js` — only for the first (legacy) project when its storage is empty; other projects start empty |
 | Ecosystem stores | `orders / registries / identity / appEvents`, re-read on every route change (`AppLayout`) and live on `pm-store-change` events (`utils/storeEvents.js`) |
 | Engine | `engineResult = useMemo(() => GanttEngine.calculate(...), [tasks, projectMeta, orders])` |
 | Undo | 50-step history; a 1 s typing burst counts as one step; `ganttView` (edit mode, zoom, columns, critical-only, search, collapsed groups) survives navigation |
 | Auto snapshot | `writeAutoSnapshot()` on any tasks/meta/identity change (no-op if today's exists) |
 | Task actions | `updateTask`, `addMainTask`, `addSubTask`, `requestDeleteTask` → `confirmDeleteTask` (dialog in `AppLayout`), `setBoqLink`, `linkBoqToExisting` |
 | Lifecycle | `signOff(signedBy)`, `setStatus(status)`, `raiseVariation(draft)` → true when recorded |
-| Templates | `generateFromTemplate(tree, meta)` → appends with renumbered WBS; the page then navigates to `/schedule` |
 | Backup/restore | Schedule toolbar's More menu and Settings via `utils/DataIO` (validate → confirm → safety download → write keys + files → reload) |
 | Crashes | `app/ErrorPage.jsx`: a screen crash shows the error page inside the shell (router `errorElement` on a pathless route); a shell crash shows it full-window; `AppErrorBoundary` in `App.jsx` catches the project store. All offer a backup download |
 
@@ -109,7 +128,9 @@ status, attention list, section progress, SPI/CPI tone, chart helpers) in
 visible rows, field locks, task scope, baseline comparison) in
 `src/state/scheduleModel.js`; the Lookahead rules (sections, month actuals,
 day completion / PPC) in `src/state/lookaheadModel.js`; the Reports rules (day report, monthly
-report, feed filters, item story, heatmap) in `src/state/reportsModel.js`.
+report, feed filters, item story, heatmap) in `src/state/reportsModel.js`; the projects level
+(new-project checks, blank / copied task trees, card summaries, template
+preview) in `src/state/portfolioModel.js`.
 All are tested in `src/state/__tests__/`.
 
 All tree/lifecycle transforms are pure functions in `projectModel.js`

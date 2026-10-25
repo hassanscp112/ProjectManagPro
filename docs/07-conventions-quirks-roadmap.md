@@ -45,7 +45,7 @@ The rules that prevent mistakes. Read this before changing anything.
 | # | Quirk | Where | Implication |
 |---|-------|-------|-------------|
 | 1 | ~~`exceljs` and `mathjs` in package.json but imported nowhere~~ **removed** | — | No Excel export exists; the archived `analyze_excel.cjs` needs `npm i exceljs` to run again |
-| 2 | `PROJECT_START = '2025-08-02'` is a hardcoded constant | `src/state/projectModel.js` | New projects must edit this |
+| 2 | ~~`PROJECT_START` is a hardcoded constant~~ **fixed** — each project has its own `startDate` | `utils/Projects.projectStartDate` | `PROJECT_START` remains only as the first project's default |
 | 3 | ~~Topbar breadcrumb is a hardcoded Arabic string~~ **fixed in Phase 1** | — | Project name/contract now `ui.projectName` / `ui.projectContract` |
 | 4 | Payroll compares raw `'مستقطع'` data value | `state/financeModel.js` (`DEDUCTED_STATUS`) | Stored data value — don't translate the comparison |
 | 5 | ~~LanguageSwitcher caption is a ternary~~ **fixed in Phase 7** — the old switcher is archived; language menus use `l.label` | — | A 3rd language needs no UI change |
@@ -53,6 +53,7 @@ The rules that prevent mistakes. Read this before changing anything.
 | 7 | Snapshots cover tasks + projectMeta ONLY | Snapshots.js | Orders/finance NOT in snapshots (full safety = JSON backup) |
 | 8 | Gantt bars are not draggable by design | `src/app/schedule/Gantt.jsx` | Dates/durations edited via grid inputs (edit mode) |
 | 9 | localStorage **quota** (~5 MB) is the only real limit | all | File blobs already live in IndexedDB; big data goes to backup files |
+| 14 | The first project keeps the plain (unprefixed) keys | `utils/Projects.js` (`legacy: true`) | Never read a project store with a fixed key — always `projectKey(KEY)` (or `keyFor(project, KEY)`), or you get the first project's data |
 | 13 | Data belongs to the origin (`http://localhost:5173`) | `vite.config.js` | The dev port is pinned (`strictPort`): if 5173 is busy, `npm run dev` fails instead of opening an empty app on another port |
 | 10 | Element columns/BOQ links only on group tasks | `app/schedule/TaskDetailsEdit.jsx` | Leaves are "record only" |
 | 11 | Quick orders are born approved (`approvedBy` = identity) | OrderEngine | Only formal+recorded need the Approve action |
@@ -100,12 +101,15 @@ The rules that prevent mistakes. Read this before changing anything.
 - **Accessibility:** a "Skip to content" link, a window title per page, a
   focus ring on every focusable element (`base.css` fallback), labelled
   fields and icon buttons (checked on every route), status always with words.
+- **Projects:** several projects with a level above them (`#/projects`):
+  create from a template / blank / copy, open, edit, delete. Per-project
+  stores via `Projects.projectKey`; templates, rates and people shared.
 - **Data safety:** backups include uploaded files (format v2); restore
   downloads a safety copy first; persistent storage requested at startup;
   crash screens offer a backup download.
-- **Tests:** 19 test files (156 tests), all pure-logic (engines, project model, order form, home model,
+- **Tests:** 21 test files (171 tests), all pure-logic (engines, project model, order form, home model,
   schedule model, lookahead model, reports model, finance / library / people models, task details model,
-  task ranking, who selection, backup encoding, ar/en dictionary parity); no component tests.
+  task ranking, who selection, backup encoding, projects and the projects-level model, ar/en dictionary parity); no component tests.
 - **Printing:** only `.ui-print-sheet` content prints (report pages, finance
   tables); shell and `.ui-no-print` controls are hidden.
 

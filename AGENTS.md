@@ -6,8 +6,10 @@ file already answers.** Docs last verified 2026-10-25.
 
 ## What this repo is (30 seconds)
 
-A **React 19 + Vite** single-page app (`ProjectManagerApp/`) for managing a
-real Iraqi canal-construction contract. No backend, no database (hash-URL router) —
+A **React 19 + Vite** single-page app (`ProjectManagerApp/`) for managing
+construction projects (the first one is a real Iraqi canal contract). A
+projects level (`#/projects`) lists them and creates new ones from a
+template, blank, or a copy; templates, rates and people are shared. No backend, no database (hash-URL router) —
 **all data in browser localStorage** (+ IndexedDB for file blobs), Arabic-first
 (RTL) with English. Core design: site reality is entered once as **"orders"**
 in one screen; every other screen (schedule, dashboard, reports, activity) is a
@@ -38,7 +40,7 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 
 ## Golden rules (violating these breaks the app or the user's trust)
 
-1. **New localStorage key ⇒ register it in `DataIO.APP_STORAGE_KEYS`** or backups lose it.
+1. **New localStorage key ⇒ register it in `DataIO.APP_STORAGE_KEYS`** or backups lose it. If it belongs to one project, also add it to `Projects.PROJECT_SCOPED_KEYS` and always access it as `projectKey(KEY)`.
 2. **UI text goes in BOTH `src/i18n/dictionaries/ar/` and `…/en/`** — never hardcode.
 3. **Components never call localStorage directly** — persistence only via `src/utils` owners.
 4. **Cleanup = move to `_archive/`** with a note; never delete files.
@@ -50,7 +52,8 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 
 - Project store: `src/state/ProjectProvider.jsx` (+ pure `projectModel.js`) — tasks, meta, lifecycle (draft→signed→executing→completed), sign-off baseline, Variation Orders, undo; read it with `useProject()`.
 - Shell + routes: `src/app/` (`router.jsx` hash URLs, `AppLayout.jsx`, `Page.jsx`, `pages/`). Every screen has a URL, e.g. `#/schedule/task/2.1.2`; route table in `docs/02-architecture.md` §2.
-- Engine: `GanttEngine.calculate(tasks, PROJECT_START, projectMeta, orders)` → schedule + costs + progress + critical path + EVM + S-curve. `PROJECT_START = '2025-08-02'` (hardcoded in `src/state/projectModel.js`).
+- Engine: `GanttEngine.calculate(tasks, projectStart, projectMeta, orders)` → schedule + costs + progress + critical path + EVM + S-curve. `projectStart` = the open project's `startDate` (in `useProject()`).
+- Projects: `src/utils/Projects.js` — list in `pm-projects`, open project per tab (sessionStorage), per-project keys `pm-p:<id>:<key>`; the first (legacy) project keeps the plain keys. Routes inside a project go through `app/ProjectGate.jsx`; the projects level is `app/portfolio/` + `app/templates/`.
 - Order ledger keys: `pm-orders`; 9 types; families value/expense; tiers quick (auto-approved)/formal (needs Approve).
 - Screens persist their own stores via `src/utils`; orders/registries/identity/activity owners announce writes (`utils/storeEvents.js`) and the provider re-reads them instantly (also on every navigation).
 - 16 localStorage keys + IndexedDB `ProjectManagerDB` — full table in `docs/03-data-model.md`. Backups (format v2) hold both; restore downloads a safety copy first.
@@ -58,6 +61,10 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 - i18n: flat `'domain.key'` dictionaries, fallback ar→key, direction from `LANGUAGES`, persisted in `pm-language`.
 
 ## Current state & next steps
+
+**Multi-project** (2026-10-25): projects level, new project from template /
+blank / copy, per-project storage, backup format v3 (all projects). See
+`docs/03-data-model.md` §0.
 
 **UI rebuild complete** ("Aubergine", `plans/ui-rebuild-plan.md`, Phases
 0–7, merged phase by phase from `redesign/aubergine`). Every screen lives in

@@ -41,6 +41,14 @@ removed).
 
 These words appear everywhere in the code and UI. Learn them once here.
 
+### 🗂️ Projects
+The app holds several projects. Each has its own schedule, orders, plans,
+finance, reports, files and restore points; **templates, rates and people
+(contractors / teams / workers) are shared**. The projects list (`#/projects`)
+is the level above them: open a project, or create one from a template, a
+blank tree, or a copy of another project. The original canal contract is the
+first project.
+
 ### 🧱 WBS / Task tree
 The project is a tree of tasks identified by WBS numbers (`1`, `1.1`, `1.1.1`).
 - **Group task** (`isGroup: true`) = a section heading (e.g. "اولا / الحفريات").
@@ -113,6 +121,8 @@ variation orders; `#/schedule/baseline` compares them with the signed baseline.
 
 | Route | Screen | One-liner |
 |---|---|---|
+| Projects `#/projects` (+ `/new`) | `app/portfolio/*` | The level above every project: all projects with status and progress; create one from a template, blank, or a copy; edit, delete |
+| Templates `#/templates` (+ `/new`) · Rates `#/rates` | `app/templates/*` | Shared parametric templates (start a new project from one) and the IQD rate library |
 | Home `#/` | `app/home/*` | Headline progress / SPI / EV / CPI, needs-attention list, S-curve + EVM figures, progress by section, recent orders |
 | Schedule `#/schedule` | `app/schedule/*` | Timeline: task grid + Gantt in one scroller (week/month/quarter), KPI strip, lifecycle/VO/backup toolbar, edit mode with locks; task side panel at `#/schedule/task/:id` |
 | Record `#/record` (+ `/log`, `/pending`) | `app/record/*` | THE entry screen: pick type → fill → save (phone: full-screen flow); order log; pending approvals |
@@ -126,8 +136,6 @@ variation orders; `#/schedule/baseline` compares them with the signed baseline.
 | Settings `#/settings` | `app/settings/SettingsPage` | You (identity), theme and language, lifecycle status, backup / restore, restore points |
 | Finance `#/finance/:ledger` | `app/finance/FinancePage` | Site cost ledgers (machinery / materials / petty cash / payroll) + their dropdown lists |
 | People `#/people/:kind` | `app/people/PeoplePage` | Contractors / teams / workers |
-| Library › Templates `#/library/templates` (+ `/new`) | `app/library/TemplatesPage` | Generate a task tree from parametric templates; build templates |
-| Library › BOQ `#/library/boq` · Rates `#/library/rates` | `app/library/BoqPage`, `RatesPage` | Quantity take-off grids; the IQD rate library |
 | Task details `#/schedule/task/:id/details` | `app/schedule/TaskDetailsPage` | *(Full details from the task panel)* drill-down per task: element columns, BOQ links, edit mode |
 
 ---

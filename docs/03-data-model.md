@@ -2,34 +2,65 @@
 
 There is **no server and no database**. Everything is stored in the browser:
 
-- **localStorage** — all structured data (16 keys, listed first)
+- **localStorage** — all structured data (18 keys, listed first)
 - **IndexedDB** (`ProjectManagerDB`) — uploaded file blobs only
 
 > If you add a new localStorage key, you MUST register it in
-> `DataIO.APP_STORAGE_KEYS` or backups will silently miss it.
+> `DataIO.APP_STORAGE_KEYS` or backups will silently miss it. If it belongs
+> to one project, also add it to `Projects.PROJECT_SCOPED_KEYS` and read /
+> write it through `projectKey(KEY)`.
+
+---
+
+## 0. Projects — one set of keys per project
+
+`pm-projects` lists the projects:
+
+```js
+{ projects: [ { id, name, contract, location, startDate: 'YYYY-MM-DD', createdAt, legacy? } ] }
+```
+
+- **Project-scoped keys** (`Projects.PROJECT_SCOPED_KEYS`, marked *P* below):
+  each project has its own copy at `pm-p:<projectId>:<key>`.
+- The **first project** (`id: 'project-1'`, `legacy: true`) is the data that
+  existed before multi-project support: it keeps the plain keys, so nothing
+  had to move. `ensureProjects()` (startup) creates its entry when plain
+  project data exists and the list has no legacy entry.
+- **Shared keys** (people, identity, templates, rates, language, theme, the
+  list itself) are the same for every project.
+- The project open in a tab is `sessionStorage['pm-active-project']`;
+  `pm-last-project` remembers the last one opened (deep links in a new tab).
+- Files (IndexedDB) carry `projectId`; records without one belong to the
+  first project.
+- `deleteProject(id)` removes the entry and every *P* key of that project;
+  the Projects page downloads a full backup first and also deletes its files.
 
 ---
 
 ## 1. Master table of localStorage keys
 
-| # | Key | Owner module | What it holds |
-|---|-----|--------------|---------------|
-| 1 | `project-manager-gantt-tasks` | ProjectProvider | Task tree (raw array) |
-| 2 | `project-manager-project-meta` | ProjectProvider | status / baseline / variations |
-| 3 | `project-manager-finance-data` | Finance | cost ledger entries |
-| 4 | `project-manager-finance-config` | Finance | editable dropdown lists |
-| 5 | `pm-calculator-templates` | CalculatorTemplates | BOQ calculator templates |
-| 6 | `project-manager-daily-reports` | DailyNotes | daily site notes |
-| 7 | `pm-orders` | OrderEngine | order ledger + lastWhoByType |
-| 8 | `pm-registries` | Registries | contractors / teams / workers |
-| 9 | `pm-identity` | Identity | current user {name, role} |
-| 10 | `pm-plans` | PlanningStore | lookahead targets/assignments |
-| 11 | `pm-rate-library` | RateLibrary | IQD unit-price catalog |
-| 12 | `pm-templates` | TemplateEngine | project structure templates |
-| 13 | `pm-activity` | ActivityLog | app event log (cap 2000) |
-| 14 | `pm-snapshots` | Snapshots | auto (14 days) + named snapshots |
-| 15 | `pm-language` | i18n | `'ar'` \| `'en'` |
-| 16 | `pm-theme` | Theme | `'light'` \| `'dark'` \| `'system'` (default light) |
+*P* = one copy per project (§0); the rest are shared.
+
+| # | Key | Scope | Owner module | What it holds |
+|---|-----|-------|--------------|---------------|
+| 1 | `project-manager-gantt-tasks` | P | ProjectProvider | Task tree (raw array) |
+| 2 | `project-manager-project-meta` | P | ProjectProvider | status / baseline / variations |
+| 3 | `project-manager-finance-data` | P | Finance | cost ledger entries |
+| 4 | `project-manager-finance-config` | P | Finance | editable dropdown lists |
+| 5 | `pm-calculator-templates` | P | CalculatorTemplates | BOQ calculator templates |
+| 6 | `project-manager-daily-reports` | P | DailyNotes | daily site notes |
+| 7 | `pm-orders` | P | OrderEngine | order ledger + lastWhoByType |
+| 8 | `pm-registries` | shared | Registries | contractors / teams / workers |
+| 9 | `pm-identity` | shared | Identity | current user {name, role} |
+| 10 | `pm-plans` | P | PlanningStore | lookahead targets/assignments |
+| 11 | `pm-rate-library` | shared | RateLibrary | IQD unit-price catalog |
+| 12 | `pm-templates` | shared | TemplateEngine | project structure templates |
+| 13 | `pm-activity` | P | ActivityLog | app event log (cap 2000) |
+| 14 | `pm-snapshots` | P | Snapshots | auto (14 days) + named snapshots |
+| 15 | `pm-language` | shared | i18n | `'ar'` \| `'en'` |
+| 16 | `pm-theme` | shared | Theme | `'light'` \| `'dark'` \| `'system'` (default light) |
+| 17 | `pm-projects` | shared | Projects | the project list (§0) |
+| 18 | `pm-last-project` | shared | Projects | id of the last project opened on this device |
 
 ---
 
@@ -245,7 +276,8 @@ subtitle, tone, refTaskId, payload}`.
 ## 11. IndexedDB — `ProjectManagerDB` (files)
 
 - DB `ProjectManagerDB` v1, object store **`files`** (keyPath `id`, index `folderId`).
-- Record: `{ id, folderId, name, size, type, blob, createdAt }`.
+- Record: `{ id, folderId, projectId, name, size, type, blob, createdAt }`
+  (`getFiles` returns only the open project's files; no `projectId` = the first project).
 - Folder tree itself is virtual — root → per-task folders derived from the task list.
 - Managed only through `utils/FileDB.js` (`initDB/saveFile/getFiles/deleteFile`,
   plus `getAllFiles/replaceAllFiles` for the backup).
@@ -256,16 +288,17 @@ subtitle, tone, refTaskId, payload}`.
 ## 12. Backup file format (DataIO)
 
 `exportAppData()` downloads `project-backup-YYYY-MM-DD_HH-MM.json`
-(`project-backup-before-restore-…json` for the automatic safety copy):
+(`…-before-restore-…` / `…-before-delete-…` for the automatic safety copies):
 
 ```js
 {
   magic: 'projectmanager-backup',
-  version: 2,                    // 1 = no files section
+  version: 3,                    // 1 = no files · 2 = files, one project · 3 = all projects
   exportedAt: 'ISO',
   app: 'ProjectManagerApp',
   storage: { '<localStorageKey>': '<raw JSON string, exactly as stored>' },
-  files: [ { id, folderId, name, size, type, createdAt, data: '<base64>' } ]
+                                 // every app key incl. pm-projects and 'pm-p:<id>:…'
+  files: [ { id, folderId, projectId?, name, size, type, createdAt, data: '<base64>' } ]
 }                                // files left out if IndexedDB couldn't be read
 ```
 
@@ -275,7 +308,9 @@ codes (`BackupError.code`) shown via `app.backup.err.*`.
 
 Restore (`useBackupRestore.jsx`): confirm → **download a safety backup of the
 current data first** (restore is cancelled if that fails) → `restoreAppData()`
-→ reload. `restoreAppData()` writes the known keys in the backup (others are
-left as they are) and, when the backup has a `files` section, replaces ALL
+→ reload. `restoreAppData()` writes the app keys in the backup. A version-3
+backup replaces everything: app keys it doesn't hold are removed (language,
+theme and last-project stay). Older backups only write the keys they hold
+(they restore into the first project). When the backup has a `files` section it replaces ALL
 stored files in one IndexedDB transaction; a version-1 backup leaves the files
 alone. If any write fails, the localStorage keys are put back as they were.

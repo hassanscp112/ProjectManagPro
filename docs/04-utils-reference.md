@@ -7,12 +7,28 @@ tests in `__tests__/` (run: `npm test` from `ProjectManagerApp/`).
 Dependency order (leaf → top):
 
 ```
-CalculatorEngine, CriticalPath, FileDB, Identity, DataIO, RateLibrary   (standalone)
-ActivityLog, PlanningStore, Registries, Snapshots                      (import i18n only)
+Projects                                                               (standalone; every project-scoped owner imports it)
+CalculatorEngine, CriticalPath, Identity, RateLibrary                  (standalone)
+FileDB, DataIO                                                         (import Projects)
+ActivityLog, PlanningStore, Registries, Snapshots                      (import i18n / Projects)
 OrderEngine                                                            (imports i18n)
 TemplateEngine                                                         (imports RateLibrary)
 GanttEngine                                                            (imports OrderEngine + CriticalPath)
 ```
+
+---
+
+## Projects.js — the project list and the open project
+
+**Storage:** `pm-projects` (+ `pm-last-project`; open project in sessionStorage).
+- `PROJECT_SCOPED_KEYS` — the stores kept once per project; `LEGACY_PROJECT_ID = 'project-1'`
+- `keyFor(project, base)` → base for the legacy project, else `'pm-p:<id>:<base>'`; `parseProjectKey(key)`
+- `projectKey(base)` — key for the open project (base when none is open); **every project-scoped owner calls it at access time**
+- `currentProject()` (cached per page load) / `openProject(id)` / `closeProject()` / `lastProjectId()` / `projectStartDate(project?)`
+- `loadProjects()` / `saveProjects(list)` / `getProject(id)` / `createProject(details)` / `updateProject(id, changes)` / `deleteProject(id)` (removes its keys)
+- `ensureProjects()` — startup migration: plain project data → the first project
+
+Storage functions take an optional storage argument (tests). Tests: `projects.test.js`.
 
 ---
 
@@ -181,7 +197,8 @@ No storage, no imports. Excel-style evaluation for calculator rows:
 
 DB `ProjectManagerDB` v1, store `files`.
 `initDB()` → `saveFile(folderId, fileObj)` / `getFiles(folderId)` / `deleteFile(fileId)`;
-`getAllFiles()` / `replaceAllFiles(records)` (one transaction) for the backup.
+`getAllFiles()` / `replaceAllFiles(records)` (one transaction) for the backup;
+`deleteProjectFiles(projectId)`. Records carry `projectId`; `getFiles` returns the open project's only.
 
 ---
 
@@ -242,13 +259,14 @@ Pure. Tests: `whoSelection.test.js`.
 
 ## DataIO.js — full backup / restore
 
-`APP_STORAGE_KEYS` — the canonical list of all 16 keys (see
+`APP_STORAGE_KEYS` — the canonical list of all 18 keys (see
 [03-data-model §1](03-data-model.md)). **Adding a key anywhere = adding it here.**
+`isAppStorageKey(key)` also accepts every project's `pm-p:<id>:<key>` copy.
 - `exportAppData({label?})` → `{filename, fileCount, filesSkipped}` — async; downloads the JSON backup incl. uploaded files (format in 03-data-model §12)
 - `buildBackupPayload()` → `{payload, filesSkipped}`
 - `readBackupFile(file)` → parsed JSON (rejects with `BackupError`)
 - `validateBackup(parsed)` → `{ok, code?, stats?{keys, bytes, files}}`
-- `restoreAppData(parsed)` — async; writes keys (rolled back on failure) and replaces files when the backup has them; returns keys written; throws `BackupError`
+- `restoreAppData(parsed)` — async; writes keys (a version-3 backup also removes app keys it doesn't hold; rolled back on failure) and replaces files when the backup has them; returns keys written; throws `BackupError`
 - `BackupError` (`.code` → `app.backup.err.<code>`), `bytesToBase64` / `base64ToBytes` / `encodeFileRecord` / `decodeFileEntries`
 
 Tests: `dataIO.test.js`.

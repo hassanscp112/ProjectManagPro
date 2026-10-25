@@ -9,6 +9,36 @@ always goes through `src/utils` helpers.
 
 ---
 
+## Projects level — `src/app/portfolio/`, `src/app/templates/`
+
+The level above every project, in its own frame (`PortfolioLayout`: sidebar
+with *New project*, Projects, Templates, Rates; phone bottom bar). No project
+store is mounted here. Inside a project, the sidebar's project name links
+back to `#/projects` (and the phone *More* page lists the three pages).
+- **Projects `#/projects`** — a card per project (newest first): name,
+  contract, status, contract value, items, orders, actual progress with the
+  planned marker, schedule span, location; *Open project*; ⋯ menu: *Edit
+  details* (dialog), *Delete project* (asks, downloads a full backup first,
+  then removes its keys and files). Empty state with *New project*. Figures
+  come from each project's own stores (`portfolioModel.summarizeProject`).
+- **New project `#/projects/new`** — details (name required, contract,
+  location, start date) and *Start from*: **Template** (pick one, its
+  variables, live preview priced from the rate library, dated from the start
+  date), **Blank** (one empty main group), **Copy a project** (task tree,
+  quantities, prices, links; nothing executed; dates moved by the start-date
+  gap). *Create and start planning* creates it as a draft, logs it in the new
+  project's activity, and opens the Schedule with editing on. Arriving from
+  Templates preselects that template and its values.
+- **Templates `#/templates`** — template cards; picking one (`?t=id`) shows
+  its variables, a live preview and *New project from this template*. *Save
+  project as template* picks one of the projects. Builder at
+  `#/templates/new`. Seed template names and rate categories are stored in
+  Arabic and shown in the UI language (`templateLabels.js`).
+- **Rates `#/rates`** — the IQD rate library (shared): search, add / edit in
+  a dialog, delete (asks first). Prices are copied at generation time.
+
+Logic: `src/state/portfolioModel.js`; storage: `utils/Projects.js`.
+
 ## Home — `src/app/home/` (rebuilt in Phase 3)
 
 Where the project stands and what needs doing, at a glance (`#/`):
@@ -133,7 +163,7 @@ and *Today*:
 
 ## Library — `src/app/library/` (rebuilt in Phase 6)
 
-Four sub-pages (tabs):
+Two sub-pages (tabs) — templates and rates moved up to the projects level:
 - **BOQ `#/library/boq`** — quantity take-off grids. A list of grids and the
   open one (`?grid=id`): a row per element, input cells (`design` columns
   tinted), formula cells computed by `CalculatorEngine.calculateRow`, a total
@@ -144,19 +174,6 @@ Four sub-pages (tabs):
   (`=A2*B2` — typing `=` marks the column as a formula); the side panel sets
   the selected column's source. Saves raw formulas. Storage:
   `utils/CalculatorTemplates.js`.
-- **Templates `#/library/templates`** — template cards; picking one (`?t=id`)
-  shows its variables + start date, a live preview (items, quantity, unit,
-  price, cost, duration; unpriced items flagged) and *Generate N items*, which
-  asks first, appends the tree with renumbered WBS and opens the Timeline.
-  *Save project as template* stores the current tree with fixed quantities.
-  Seed template names and rate categories are stored in Arabic and shown in
-  the UI language (`templateLabels.js`).
-- **Template builder `#/library/templates/new`** — name + icon, variables
-  (key, label, default), line items (part, section, quantity formula over the
-  variables, "repeats per", depends on another item with FS/SS/FF/SF + lag).
-  Checked by `cleanTemplateDraft()`.
-- **Rates `#/library/rates`** — the IQD rate library: search, add / edit in a
-  dialog, delete (asks first). Prices are copied at generation time.
 - **Files `#/library/files`** — folders: root → *Items* → one per top-level
   section (`task_<id>`); the open folder is in `?folder=`;
   `#/library/files/:taskId` opens the folder of that item's section (the task
