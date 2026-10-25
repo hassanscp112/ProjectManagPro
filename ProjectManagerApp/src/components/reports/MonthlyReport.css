@@ -1,0 +1,445 @@
+/* ═══════════════════════════════════════════════════════
+   MONTHLY REPORT — live view of the order ledger,
+   frozen by the act of printing.
+   ═══════════════════════════════════════════════════════ */
+
+.monthly-report {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 100%;
+  padding: 4px 0 32px 0;
+}
+
+/* ── Control bar (screen only) ── */
+.mr-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+}
+
+.mr-control-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mr-control-field label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.mr-control-field input {
+  padding: 8px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-app);
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.mr-control-field input:focus {
+  outline: none;
+  border-color: var(--apple-blue-action);
+}
+
+.mr-period {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mr-period-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.mr-period-value {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--text-primary);
+  direction: ltr;
+  padding: 6px 0;
+}
+
+.mr-print-btn {
+  margin-inline-start: 8px;
+}
+
+.mr-stamp {
+  margin-inline-start: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  direction: ltr;
+  padding: 8px 0 2px 0;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════
+   THE SHEET (A4-ish printable document)
+   ═══════════════════════════════════════════════════════ */
+.report-sheet {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-level-1);
+  padding: 40px 44px 48px 44px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ── 1. Header ── */
+.mr-sheet-header {
+  text-align: center;
+  border-bottom: 2px solid var(--text-primary);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.mr-project-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.mr-report-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.mr-header-meta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.mr-header-meta strong {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+/* ── Sections ── */
+.mr-section {
+  margin-bottom: 26px;
+}
+
+.mr-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-inline-start: 4px solid var(--apple-blue-action);
+  padding-inline-start: 10px;
+  margin-bottom: 12px;
+}
+
+/* ── 2. Executive summary KPI cards ── */
+.mr-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.mr-kpi-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--bg-app);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.mr-kpi-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.mr-kpi-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  direction: ltr;
+  text-align: right;
+  letter-spacing: -0.2px;
+}
+
+.mr-kpi-value.tone-good { color: #1a7d34; }
+.mr-kpi-value.tone-warn { color: #b35900; }
+.mr-kpi-value.tone-bad  { color: #c0392b; }
+
+/* ── Tables ── */
+.mr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.mr-table th,
+.mr-table td {
+  border: 1px solid var(--border-soft);
+  padding: 8px 10px;
+  text-align: right;
+  vertical-align: top;
+}
+
+.mr-table th {
+  background: var(--bg-app);
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.mr-table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.mr-table tfoot td {
+  background: var(--bg-app);
+  font-weight: 700;
+}
+
+.mr-table .num {
+  text-align: left;
+  direction: ltr;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mr-table .num.tone-bad {
+  color: #c0392b;
+}
+
+.mr-wbs {
+  direction: ltr;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mr-date {
+  direction: ltr;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.mr-name {
+  max-width: 260px;
+}
+
+.mr-qty-cell {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.mr-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 18px !important;
+  font-size: 0.85rem;
+}
+
+.mr-internal-row td {
+  background: var(--bg-app);
+}
+
+/* ── 8. Financial summary ── */
+.mr-fin-table {
+  max-width: 560px;
+}
+
+.mr-row-value td {
+  font-weight: 600;
+}
+
+.mr-row-total td {
+  font-weight: 700;
+}
+
+.mr-row-net td {
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.mr-net-positive td {
+  color: #1a7d34;
+}
+
+.mr-net-negative td {
+  color: #c0392b;
+}
+
+.mr-footnote {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ── 9. Signatures ── */
+.mr-signatures {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  margin-top: 36px;
+  margin-bottom: 0;
+}
+
+.mr-sign-block {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.mr-sign-role {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.mr-sign-line {
+  height: 52px;
+  border-bottom: 1px solid var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.mr-sign-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  direction: rtl;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PRINT — the printing act freezes the authoritative copy
+   ═══════════════════════════════════════════════════════ */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .report-sheet,
+  .report-sheet * {
+    visibility: visible;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .report-sheet {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: #ffffff;
+  }
+
+  /* Tighter typography for A4 */
+  .mr-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+  }
+
+  .mr-table {
+    font-size: 0.72rem;
+  }
+
+  .mr-table th,
+  .mr-table td {
+    padding: 5px 6px;
+  }
+
+  .mr-table .num,
+  .mr-qty-cell {
+    font-size: 0.7rem;
+  }
+
+  .mr-table thead {
+    display: table-header-group;
+  }
+
+  .mr-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Chart panel prints clean on white */
+  .report-sheet .scurve-wrap {
+    background: #ffffff;
+  }
+
+  .mr-kpi-card {
+    background: #ffffff;
+  }
+
+  .mr-signatures {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   LTR (English) — mirror the physical RTL assumptions of
+   the sheet (also applies to the printed copy). Everything
+   else uses logical properties, which follow direction.
+   ═══════════════════════════════════════════════════════ */
+
+/* Sheet tables are start-aligned, not right-aligned */
+[dir="ltr"] .mr-table th,
+[dir="ltr"] .mr-table td {
+  text-align: left;
+}
+
+/* Numeric cells mirror to the far edge of the column */
+[dir="ltr"] .mr-table .num {
+  text-align: right;
+}
+
+/* KPI values align to the reading start */
+[dir="ltr"] .mr-kpi-value {
+  text-align: left;
+}
+
+/* Signature hint line follows the document direction */
+[dir="ltr"] .mr-sign-hint {
+  direction: ltr;
+}
+
