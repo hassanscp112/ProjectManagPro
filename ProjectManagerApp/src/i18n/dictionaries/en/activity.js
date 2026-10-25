@@ -88,4 +88,6 @@ export default {
   'activity.variationUnitPrice': 'Variation — unit price',
   'activity.variationContractQty': 'Variation — contract quantity',
   'activity.defaultEventTitle': 'Event',
+  // ── rebuilt Activity (Phase 5) ──
+  'activity.pickTask': 'Pick an item to see its whole history.',
 };

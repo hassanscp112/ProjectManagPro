@@ -30,6 +30,10 @@ rebuilt screens. Kept for reference; they import paths that may no longer exist.
 | `Phase1-SchedulePage.jsx` | `ProjectManagerApp/src/app/pages/SchedulePage.jsx` (legacy Gantt toolbar + dialogs, Phase 1) | `src/app/schedule/` (Phase 4) |
 | `Legacy-GanttChart.jsx` + `.css` | `ProjectManagerApp/src/components/GanttChart.*` (the original Gantt grid + timeline) | `src/app/schedule/Gantt.jsx` (Phase 4) |
 | `Legacy-PlanningScreen.jsx` + `.css` | `ProjectManagerApp/src/components/planning/PlanningScreen.*` (rolling lookahead: month targets / week crews / day plan) | `src/app/schedule/LookaheadPage.jsx` + `src/state/lookaheadModel.js` (Phase 4) |
+| `Legacy-DailyReports.jsx` + `.css` | `ProjectManagerApp/src/components/reports/DailyReports.*` (daily notes form + filter/print view) | `src/app/reports/DailyReportPage.jsx` + `utils/DailyNotes.js` (Phase 5) |
+| `Legacy-MonthlyReport.jsx` + `.css` | `ProjectManagerApp/src/components/reports/MonthlyReport.*` (printable monthly sheet) | `src/app/reports/MonthlyReportPage.jsx` (Phase 5) |
+| `Legacy-ActivityScreen.jsx` + `.css` | `ProjectManagerApp/src/components/activity/ActivityScreen.*` (feed / task history / heatmap) | `src/app/reports/ActivityPage.jsx` (Phase 5) |
+| `Legacy-Dashboard.jsx` + `.css`, `Legacy-SCurveChart.jsx` + `.css` | `ProjectManagerApp/src/components/dashboard/*` (old Dashboard tab and its S-curve) | `src/app/home/` (Phase 3); the monthly report now uses `home/SCurve.jsx` |
 
 ### `.agent/` *(gitignored — 243 MB)*
 "Antigravity Kit" AI-agent toolkit (20 agents / 36 skills / 11 workflows).

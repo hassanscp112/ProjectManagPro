@@ -12,13 +12,13 @@ import SchedulePage from './schedule/SchedulePage.jsx';
 import RecordLogPage from './record/RecordLogPage.jsx';
 import RecordNewPage from './record/RecordNewPage.jsx';
 import RecordPendingPage from './record/RecordPendingPage.jsx';
+import ActivityPage from './reports/ActivityPage.jsx';
+import DailyReportPage from './reports/DailyReportPage.jsx';
+import MonthlyReportPage from './reports/MonthlyReportPage.jsx';
 import {
-  ActivityPage,
   BoqCalculatorPage,
-  DailyReportsPage,
   FilesPage,
   FinancePage,
-  MonthlyReportPage,
   PeoplePage,
   SettingsPage,
   TaskDetailsPage,
@@ -45,7 +45,7 @@ const appRoutes = {
     { path: 'schedule/lookahead', element: <LookaheadPage /> },
     { path: 'schedule/baseline', element: <BaselinePage /> },
     { path: 'reports', element: <Navigate to="/reports/daily" replace /> },
-    { path: 'reports/daily', element: <DailyReportsPage /> },
+    { path: 'reports/daily', element: <DailyReportPage /> },
     { path: 'reports/monthly', element: <MonthlyReportPage /> },
     { path: 'reports/activity', element: <ActivityPage /> },
     { path: 'finance', element: <FinancePage /> },

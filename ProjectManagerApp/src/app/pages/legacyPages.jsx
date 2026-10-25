@@ -1,15 +1,12 @@
 // Route pages that mount the existing screens unchanged inside the new
 // shell (Phase 1). Each one is replaced by a rebuilt screen in its phase:
-// Schedule/Task P4 · Reports P5 · the rest P6.
+// Schedule P4 · Reports P5 (done) · the rest P6.
 
 import { Navigate, useNavigate, useParams } from 'react-router';
-import ActivityScreen from '../../components/activity/ActivityScreen';
 import CalculatorView from '../../components/calculator/CalculatorView';
 import FileManager from '../../components/FileManager';
 import FinanceManager from '../../components/finance/FinanceManager';
 import RegistriesScreen from '../../components/registries/RegistriesScreen';
-import DailyReports from '../../components/reports/DailyReports';
-import MonthlyReport from '../../components/reports/MonthlyReport';
 import SnapshotsScreen from '../../components/snapshots/SnapshotsScreen';
 import TaskDetails from '../../components/taskDetails/TaskDetails';
 import TemplatesScreen from '../../components/templates/TemplatesScreen';
@@ -41,40 +38,6 @@ export function TaskDetailsPage() {
         onJumpToTaskDetails={(next) => navigate(`/schedule/task/${encodeURIComponent(next.id)}/details`)}
         onBack={() => navigate(`/schedule/task/${encodeURIComponent(task.id)}`)}
       />
-    </Page>
-  );
-}
-
-export function DailyReportsPage() {
-  const { tasks, orders, registries, identity } = useProject();
-  return (
-    <Page area="reports">
-      <DailyReports tasks={tasks} orders={orders} registries={registries} identity={identity} />
-    </Page>
-  );
-}
-
-export function MonthlyReportPage() {
-  const { engineResult, orders, projectMeta, registries } = useProject();
-  return (
-    <Page area="reports">
-      <MonthlyReport
-        summary={engineResult}
-        computedTasks={engineResult.tasks}
-        orders={orders}
-        variations={projectMeta.variations || []}
-        projectMeta={projectMeta}
-        registries={registries}
-      />
-    </Page>
-  );
-}
-
-export function ActivityPage() {
-  const { orders, projectMeta, appEvents, tasks, registries } = useProject();
-  return (
-    <Page area="reports">
-      <ActivityScreen orders={orders} variations={projectMeta.variations || []} appEvents={appEvents} tasks={tasks} registries={registries} />
     </Page>
   );
 }

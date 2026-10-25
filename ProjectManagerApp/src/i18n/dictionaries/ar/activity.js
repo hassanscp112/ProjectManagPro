@@ -88,4 +88,6 @@ export default {
   'activity.variationUnitPrice': 'أمر تغيير — سعر الوحدة',
   'activity.variationContractQty': 'أمر تغيير — الكمية التعاقدية',
   'activity.defaultEventTitle': 'حدث',
+  // ── rebuilt Activity (Phase 5) ──
+  'activity.pickTask': 'اختر فقرة لعرض سجلها كاملاً.',
 };
