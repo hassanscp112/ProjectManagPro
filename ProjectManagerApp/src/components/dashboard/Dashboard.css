@@ -269,3 +269,15 @@
   font-size: 0.75rem;
   color: var(--text-secondary);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   LTR (English) — flip physical alignments that assumed RTL.
+   ───────────────────────────────────────────────────────────── */
+[dir="ltr"] .action-table {
+  text-align: left;
+}
+
+[dir="ltr"] .dash-progress-wrapper {
+  margin-left: 0;
+  margin-right: 8px;
+}

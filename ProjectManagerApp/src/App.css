@@ -448,3 +448,55 @@ html, body, #root {
   color: var(--text-secondary);
   margin-top: 0.2rem;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   LTR support (English & other LTR languages) + language switcher
+   The app-root carries dir="rtl|ltr" from I18nProvider; the html
+   element mirrors it. Flex order flips automatically via direction.
+   ───────────────────────────────────────────────────────────── */
+.app-root[dir="ltr"] {
+  direction: ltr;
+}
+
+html[dir="ltr"] .app-root,
+html[dir="ltr"] body {
+  direction: ltr;
+}
+
+/* Physical alignments that assumed RTL */
+[dir="ltr"] .dg-cell.num,
+[dir="ltr"] .kpi-compact-card,
+[dir="ltr"] .modal-text {
+  text-align: left;
+}
+
+/* Language switcher (top bar) */
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 2px;
+}
+.lang-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.lang-btn.active {
+  background: var(--apple-blue-action);
+  color: #fff;
+}
+.lang-btn:not(.active):hover {
+  color: var(--text-primary);
+  background: rgba(120, 120, 128, 0.12);
+}

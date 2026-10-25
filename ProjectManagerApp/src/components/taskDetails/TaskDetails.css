@@ -568,6 +568,604 @@
   color: var(--apple-blue-action);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   READ MODE — the living report
+   ═══════════════════════════════════════════════════════════ */
+
+/* ---------- Mode toggle (shared by both headers) ---------- */
+.td-mode-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-level-1);
+}
+
+.td-mode-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.td-mode-btn + .td-mode-btn {
+  border-right: 1px solid var(--border-soft);
+}
+
+.td-mode-btn:hover:not(.active) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.td-mode-btn.active {
+  background: var(--apple-blue-action);
+  color: var(--text-inverse);
+}
+
+/* Signed project: the edit affordance carries a subtle warning tone */
+.td-mode-btn.edit.warn {
+  color: #B45309;
+}
+
+.td-mode-btn.edit.warn:hover:not(.active) {
+  background: #FEF3C7;
+}
+
+.td-mode-btn.edit.warn.active {
+  background: #B45309;
+  color: var(--text-inverse);
+}
+
+/* ---------- Read header strip ---------- */
+.td-read-header {
+  align-items: stretch;
+  gap: 14px;
+}
+
+.td-read-header .td-back-btn {
+  align-self: center;
+}
+
+.td-read-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  min-width: 170px;
+  box-shadow: var(--shadow-level-1);
+}
+
+.td-read-stat-progress {
+  min-width: 210px;
+}
+
+.td-read-stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.td-read-progress-num {
+  font-family: var(--font-mono);
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--apple-blue-action);
+}
+
+.td-read-header .td-mode-toggle {
+  align-self: center;
+  margin-right: auto;
+}
+
+.td-sched-dates {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.td-sched-days {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.td-badge.lock {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+  color: #B45309;
+}
+
+/* ---------- Progress bars (pure CSS) ---------- */
+.td-bar {
+  height: 8px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  width: 100%;
+}
+
+.td-bar-fill {
+  height: 100%;
+  background: var(--apple-blue-action);
+  transition: width 0.3s ease;
+}
+
+.td-bar-fill.done {
+  background: #16A34A;
+}
+
+.td-bar.slim {
+  width: 56px;
+  height: 6px;
+  flex: none;
+}
+
+.td-bar.empty {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--bg-hover),
+    var(--bg-hover) 4px,
+    var(--bg-surface) 4px,
+    var(--bg-surface) 8px
+  );
+}
+
+/* ---------- Overall progress card ---------- */
+.td-overall-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-level-1);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.td-overall-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.td-overall-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.td-overall-num {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--apple-blue-action);
+}
+
+.td-overall-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* ---------- Quantity-type cards ---------- */
+.td-qty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.td-qty-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-level-1);
+  padding: 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.td-qty-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.td-qty-name {
+  font-weight: 700;
+  color: var(--apple-black);
+  font-size: 0.95rem;
+}
+
+.td-qty-unit {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.td-qty-boq {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--apple-blue-action);
+  background: var(--bg-showcase);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  cursor: help;
+}
+
+.td-qty-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.td-qty-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.td-qty-stat span {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.td-qty-stat b {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.td-remaining-over {
+  color: #EA580C;
+}
+
+.td-qty-foot {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.71rem;
+  color: var(--text-secondary);
+  min-height: 1em;
+}
+
+/* ---------- Status chips ---------- */
+.td-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.td-chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.td-status-chips {
+  align-items: center;
+}
+
+/* ---------- Elements map table ---------- */
+.td-map-table-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  box-shadow: var(--shadow-level-1);
+}
+
+.td-map-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 560px;
+}
+
+.td-map-table thead th {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: right;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.td-map-table tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--bg-hover);
+  vertical-align: middle;
+}
+
+.td-map-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.td-map-table tbody tr.is-completed td {
+  color: var(--text-secondary);
+}
+
+.td-map-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.td-map-notes {
+  display: block;
+  font-size: 0.71rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.td-map-qty {
+  font-family: var(--font-mono);
+}
+
+.td-map-hiddennote {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 18px !important;
+  font-size: 0.82rem;
+}
+
+/* ---------- Orders (who & lately) ---------- */
+.td-orders-table-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  box-shadow: var(--shadow-level-1);
+}
+
+.td-orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 620px;
+}
+
+.td-orders-table thead th {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: right;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.td-orders-table tbody td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--bg-hover);
+  vertical-align: middle;
+}
+
+.td-orders-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.td-o-date {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.td-o-type {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.td-o-qty {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.td-ostatus {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.td-ostatus.approved {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.td-ostatus.recorded {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.td-more-note {
+  font-size: 0.75rem;
+}
+
+.td-rollup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.td-rollup-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.td-rollup-card {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 6px 11px;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.td-rollup-card b {
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.td-rollup-card span {
+  font-family: var(--font-mono);
+}
+
+/* ---------- Money cards ---------- */
+.td-money-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.td-money-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-level-1);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.td-money-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.td-money-val {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--apple-black);
+}
+
+.td-money-val.pos {
+  color: #EA580C;
+}
+
+.td-money-val.neg {
+  color: var(--apple-blue-action);
+}
+
+.td-money-sub {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* ---------- Evidence cards ---------- */
+.td-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.td-evidence-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-level-1);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.td-evidence-card.placeholder {
+  border-style: dashed;
+  opacity: 0.75;
+}
+
+.td-evidence-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.td-evidence-num {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--apple-black);
+}
+
+.td-evidence-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* ---------- Read-mode children table extras ---------- */
+.td-children-table.td-children-readonly tbody td {
+  padding: 10px 8px;
+}
+
+.td-ro-name {
+  font-weight: 600;
+}
+
+.td-plain-num {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.td-progress-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.td-progress-txt {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 720px) {
   .td-summary {
@@ -580,4 +1178,60 @@
   .td-title-block {
     width: 100%;
   }
+  .td-read-header .td-mode-toggle {
+    margin-right: 0;
+  }
+  .td-qty-grid {
+    grid-template-columns: 1fr;
+  }
+  .td-money-grid,
+  .td-evidence-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LTR overrides (English) — the file is authored RTL-first.
+   These selectors win on specificity over the RTL defaults
+   above and only apply inside a [dir="ltr"] root.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Accent stripe of the help banner moves to the inline-start edge */
+[dir="ltr"] .td-help-banner {
+  border-right: 1px solid var(--border-soft);
+  border-left: 3px solid var(--apple-blue-action);
+}
+
+/* Table headers read from the left */
+[dir="ltr"] .td-types-table thead th,
+[dir="ltr"] .td-elements-table thead th,
+[dir="ltr"] .td-children-table thead th,
+[dir="ltr"] .td-map-table thead th,
+[dir="ltr"] .td-orders-table thead th {
+  text-align: left;
+}
+
+/* Mode toggle: divider between the two buttons sits on the shared edge */
+[dir="ltr"] .td-mode-btn + .td-mode-btn {
+  border-right: none;
+  border-left: 1px solid var(--border-soft);
+}
+
+/* Read header: toggle pushes to the far (right) end */
+[dir="ltr"] .td-read-header .td-mode-toggle {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+/* Section count follows the heading text */
+[dir="ltr"] .td-section-count {
+  margin-right: 0;
+  margin-left: 4px;
+}
+
+/* Status select: extra padding on the arrow/end side (start border is the
+   inline color stripe set in JSX via borderInlineStart) */
+[dir="ltr"] .td-select {
+  padding-left: 8px;
+  padding-right: 22px;
 }

@@ -303,3 +303,26 @@
   color: var(--text-primary);
   font-family: inherit;
 }
+
+/* LTR (English) — the physical rules above assume RTL layout: sidebar on the
+   start side (separator flips to its other edge), header/cell text alignment
+   and the column separator borders all mirror. */
+[dir="ltr"] .calc-sidebar {
+  border-left: none;
+  border-right: 1px solid var(--border-soft);
+}
+
+[dir="ltr"] .calc-grid th {
+  text-align: left;
+}
+
+[dir="ltr"] .calc-grid th,
+[dir="ltr"] .calc-grid td {
+  border-left: none;
+  border-right: 1px solid var(--border-soft);
+}
+
+[dir="ltr"] .calc-grid th:last-child,
+[dir="ltr"] .calc-grid td:last-child {
+  border-right: none;
+}

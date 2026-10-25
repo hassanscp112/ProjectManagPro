@@ -1,9 +1,11 @@
 import { useRef, useEffect, useState } from 'react';
 import jspreadsheet from 'jspreadsheet-ce';
 import 'jspreadsheet-ce/dist/jspreadsheet.css';
+import { useI18n } from '../../i18n/useI18n.js';
 import { colIndexToLetter } from '../../utils/CalculatorEngine';
 
 const TemplateEditor = ({ onSave, onCancel, initialTemplate }) => {
+  const { t, dir } = useI18n();
   const [name, setName] = useState(initialTemplate?.name || '');
   const jssRef = useRef(null);
   const jssInstance = useRef(null);
@@ -109,7 +111,7 @@ const TemplateEditor = ({ onSave, onCancel, initialTemplate }) => {
   };
 
   const handleSave = () => {
-    if (!name.trim()) return alert('الرجاء إدخال اسم النموذج');
+    if (!name.trim()) return alert(t('calculator.alertNameRequired'));
     
     // We need to extract headers from Row 0, and values/formulas from Row 1
     const sheet = jssInstance.current[0];
@@ -137,7 +139,7 @@ const TemplateEditor = ({ onSave, onCancel, initialTemplate }) => {
       }
     }
 
-    if (validColumns.length === 0) return alert('الرجاء تعبئة اسم عمود واحد على الأقل في الصف الأول');
+    if (validColumns.length === 0) return alert(t('calculator.alertColumnRequired'));
 
     onSave({
       id: initialTemplate?.id || 'tpl_' + Date.now(),
@@ -153,17 +155,17 @@ const TemplateEditor = ({ onSave, onCancel, initialTemplate }) => {
       {/* Top Bar */}
       <div style={{ padding: '16px 24px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>اسم النموذج</span>
-          <input 
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{t('calculator.templateName')}</span>
+          <input
             style={{ fontSize: '1.2rem', fontWeight: 'bold', border: 'none', outline: 'none', background: 'transparent', color: 'var(--text-primary)' }}
-            value={name} 
-            onChange={e => setName(e.target.value)} 
-            placeholder="مثال: أعمال الدفن الترابية" 
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder={t('calculator.namePlaceholder')}
           />
         </div>
         <div className="calc-main-actions">
-          <button className="calc-btn primary" onClick={handleSave}>حفظ النموذج</button>
-          <button className="calc-btn secondary" onClick={onCancel}>إلغاء</button>
+          <button className="calc-btn primary" onClick={handleSave}>{t('calculator.saveTemplate')}</button>
+          <button className="calc-btn secondary" onClick={onCancel}>{t('common.cancel')}</button>
         </div>
       </div>
 
@@ -171,9 +173,9 @@ const TemplateEditor = ({ onSave, onCancel, initialTemplate }) => {
         
         {/* Spreadsheet Area */}
         <div style={{ flex: 1, overflow: 'auto', padding: '24px' }} dir="ltr">
-          <div style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.95rem' }} dir="rtl">
-            <p style={{ fontWeight: '500', color: 'var(--text-primary)' }}>1. استخدم الصف الأول (Row 1) لإدخال أسماء الأعمدة.</p>
-            <p>2. استخدم الصف الثاني (Row 2) لإدخال أرقام تجريبية أو معادلات إكسل مثل <code style={{color:'var(--apple-blue-action)'}}>=A2*B2</code>.</p>
+          <div style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.95rem' }} dir={dir}>
+            <p style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{t('calculator.instruction1')}</p>
+            <p>{t('calculator.instruction2')} <code style={{color:'var(--apple-blue-action)'}}>=A2*B2</code>.</p>
           </div>
 
           <div style={{ background: '#fff', borderRadius: '4px', overflow: 'auto', boxShadow: 'var(--shadow-level-1)', maxWidth: '100%' }}>
@@ -183,47 +185,47 @@ const TemplateEditor = ({ onSave, onCancel, initialTemplate }) => {
         </div>
 
         {/* Sidebar Configuration Panel */}
-        <div style={{ width: '300px', borderRight: '1px solid var(--border-soft)', background: 'var(--bg-surface)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }} dir="rtl">
-          <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>إعدادات العمود</h3>
-          
+        <div style={{ width: '300px', borderInlineStart: '1px solid var(--border-soft)', background: 'var(--bg-surface)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }} dir={dir}>
+          <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>{t('calculator.columnSettings')}</h3>
+
           {selectedColIndex !== null ? (
             <>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '12px', background: 'var(--bg-app)', borderRadius: 'var(--radius-sm)' }}>
-                <strong style={{ fontSize: '1.2rem', color: 'var(--apple-blue-action)' }}>العمود {colIndexToLetter(selectedColIndex)}</strong>
+                <strong style={{ fontSize: '1.2rem', color: 'var(--apple-blue-action)' }}>{t('calculator.columnLetter', { col: colIndexToLetter(selectedColIndex) })}</strong>
               </div>
 
               <div className="calc-form-group">
-                <label>مصدر البيانات</label>
-                <select 
+                <label>{t('calculator.dataSource')}</label>
+                <select
                   className="calc-input"
                   value={colSources[selectedColIndex] || 'input'}
                   onChange={e => handleUpdateSource(e.target.value)}
                 >
-                  <option value="input">مدخلات يدوية (User Input)</option>
-                  <option value="design">بيانات تصميمية (Design Data)</option>
-                  <option value="formula">معادلة حسابية (Formula)</option>
+                  <option value="input">{t('calculator.sourceInput')}</option>
+                  <option value="design">{t('calculator.sourceDesign')}</option>
+                  <option value="formula">{t('calculator.sourceFormula')}</option>
                 </select>
               </div>
 
               {colSources[selectedColIndex] === 'formula' && (
                 <div style={{ padding: '12px', background: 'rgba(0, 113, 227, 0.1)', color: 'var(--apple-blue-action)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', lineHeight: '1.5' }}>
-                  <strong>هذا العمود عبارة عن معادلة.</strong><br/>
-                  سوف يقرأ النظام المعادلة التي أدخلتها في الصف الثاني من هذا العمود ويقوم بتطبيقها تلقائياً على كل صفوف المشروع.
+                  <strong>{t('calculator.formulaNoticeTitle')}</strong><br/>
+                  {t('calculator.formulaNoticeBody')}
                 </div>
               )}
 
               {colSources[selectedColIndex] === 'design' && (
                 <div className="calc-form-group">
                   <div style={{ padding: '12px', background: 'rgba(255, 149, 0, 0.1)', color: '#ff9500', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
-                    <strong>بيانات تصميمية</strong><br/>
-                    هذا العمود مخصص للبيانات المسحوبة من جداول الكميات أو المخططات. سيظهر كعمود جاهز للاستيراد.
+                    <strong>{t('calculator.designNoticeTitle')}</strong><br/>
+                    {t('calculator.designNoticeBody')}
                   </div>
                 </div>
               )}
             </>
           ) : (
             <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px', background: 'var(--bg-app)', borderRadius: 'var(--radius-sm)' }}>
-              انقر على أي خلية في الجدول لتعديل خصائصها
+              {t('calculator.selectCellHint')}
             </div>
           )}
         </div>

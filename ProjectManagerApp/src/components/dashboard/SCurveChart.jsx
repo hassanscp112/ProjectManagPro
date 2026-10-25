@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import './SCurveChart.css';
+import { useI18n } from '../../i18n/useI18n.js';
 
 // S-curve chart: cumulative Planned Value (PV) vs Earned Value (EV) vs
 // Actual Cost (AC) over the project schedule. Pure inline SVG — no deps.
@@ -7,12 +8,13 @@ import './SCurveChart.css';
 // The series come pre-computed from GanttEngine.buildSCurve (one point per
 // week). We render three polylines + a "today" marker + axis labels.
 const SERIES = [
-  { key: 'pv', label: 'المخططة (PV)', color: '#0a84ff' },   // blue
-  { key: 'ev', label: 'المكتسبة (EV)', color: '#30d158' },   // green
-  { key: 'ac', label: 'الفعلية (AC)', color: '#ff9f0a' },    // orange
+  { key: 'pv', labelKey: 'dashboard.seriesPv', color: '#0a84ff' },   // blue
+  { key: 'ev', labelKey: 'dashboard.seriesEv', color: '#30d158' },   // green
+  { key: 'ac', labelKey: 'dashboard.seriesAc', color: '#ff9f0a' },   // orange
 ];
 
 const SCurveChart = ({ points }) => {
+  const { t } = useI18n();
   const view = useMemo(() => {
     if (!points || points.length < 2) return null;
 
@@ -68,15 +70,16 @@ const SCurveChart = ({ points }) => {
   if (!view) {
     return (
       <div className="scurve-empty">
-        لا توجد بيانات كافية لرسم منحنى القيمة. أضف فقرات بمواعيد وأسعار أولاً.
+        {t('dashboard.scurveEmpty')}
       </div>
     );
   }
 
+  // Compact axis labels; unit suffix is language-aware (B/M/K vs مليار/مليون/ألف).
   const fmtShort = (n) => {
-    if (n >= 1e9) return (n / 1e9).toFixed(1) + ' مليار';
-    if (n >= 1e6) return (n / 1e6).toFixed(0) + ' مليون';
-    if (n >= 1e3) return (n / 1e3).toFixed(0) + ' ألف';
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + t('dashboard.unitBillion');
+    if (n >= 1e6) return (n / 1e6).toFixed(0) + t('dashboard.unitMillion');
+    if (n >= 1e3) return (n / 1e3).toFixed(0) + t('dashboard.unitThousand');
     return String(Math.round(n));
   };
 
@@ -123,7 +126,7 @@ const SCurveChart = ({ points }) => {
               x={view.xFor(view.todayIdx)} y={view.padT - 4}
               className="scurve-today" textAnchor="middle"
             >
-              اليوم
+              {t('dashboard.todayMarker')}
             </text>
           </g>
         )}
@@ -147,7 +150,7 @@ const SCurveChart = ({ points }) => {
         {SERIES.map((s) => (
           <span key={s.key} className="scurve-legend-item">
             <span className="scurve-swatch" style={{ background: s.color }} />
-            {s.label}
+            {t(s.labelKey)}
           </span>
         ))}
       </div>

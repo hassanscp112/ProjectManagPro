@@ -1,13 +1,8 @@
 import { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
+import { useI18n } from '../i18n/useI18n.js';
 import './GanttChart.css';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DEP_TYPE_LABELS = {
-  FS: 'FS انتهاء → بدء',
-  SS: 'SS بدء → بدء',
-  FF: 'FF انتهاء → انتهاء',
-  SF: 'SF بدء → انتهاء',
-};
 
 /* ────────────────────────────────────────────────────────
    Helpers
@@ -39,21 +34,32 @@ const fmtPct = (p) => {
    Main Component
    ──────────────────────────────────────────────────────── */
 const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 'week', onAddMainTask, onAddSubTask, onDeleteTask, onJumpToTaskFolder, onJumpToTaskDetails, isSigned }) => {
+  const { t, isRTL } = useI18n();
+  // Timeline anchors bars to the schedule start: 'right' in RTL, 'left' in LTR.
+  const startSide = isRTL ? 'right' : 'left';
   const [hoveredId, setHoveredId] = useState(null);
   const gridBodyRef = useRef(null);
   const timelineBodyRef = useRef(null);
   const taskById = useMemo(() => new Map(tasks.map(task => [task.id, task])), [tasks]);
   const dependencyOptions = useMemo(() => tasks.filter(task => !task.isGroup), [tasks]);
 
+  // Relation types: codes (FS/SS/FF/SF) are universal; only the label text is translated.
+  const depTypeLabels = useMemo(() => ({
+    FS: t('gantt.depFS'),
+    SS: t('gantt.depSS'),
+    FF: t('gantt.depFF'),
+    SF: t('gantt.depSF'),
+  }), [t]);
+
   const getDependencyLabel = (task) => {
-    if (!task) return '—';
+    if (!task) return t('common.none');
     return `${task.wbs || task.id} - ${task.name || ''}`;
   };
 
   const getDependencyDisplay = (dependsOn) => {
-    if (!dependsOn) return '—';
+    if (!dependsOn) return t('common.none');
     const dependency = taskById.get(dependsOn);
-    return dependency ? getDependencyLabel(dependency) : `غير موجود: ${dependsOn}`;
+    return dependency ? getDependencyLabel(dependency) : t('gantt.notFound', { id: dependsOn });
   };
 
   // Sync scroll between data grid and timeline
@@ -249,20 +255,20 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
       <div className="data-grid">
         {/* Header */}
         <div className="dg-header">
-          <div className="dg-cell c-wbs">المعرّف</div>
-          <div className="dg-cell c-name">الفقرة</div>
-          <div className="dg-cell c-dur">الأيام</div>
-          <div className="dg-cell c-qty">الكمية</div>
-          <div className="dg-cell c-actq">المنفذ</div>
-          <div className="dg-cell c-price">السعر</div>
-          <div className="dg-cell c-amt">مبلغ الفقرة</div>
-          <div className="dg-cell c-unit">الوحدة</div>
-          <div className="dg-cell c-pct">الإنجاز</div>
-          <div className="dg-cell c-date">تاريخ البدء</div>
-          <div className="dg-cell c-date">تاريخ الانتهاء</div>
-          <div className="dg-cell c-depid">السابقة</div>
-          <div className="dg-cell c-deptype">العلاقة</div>
-          <div className="dg-cell c-lag">الفجوة</div>
+          <div className="dg-cell c-wbs">{t('gantt.colId')}</div>
+          <div className="dg-cell c-name">{t('gantt.colItem')}</div>
+          <div className="dg-cell c-dur">{t('gantt.colDays')}</div>
+          <div className="dg-cell c-qty">{t('common.quantity')}</div>
+          <div className="dg-cell c-actq">{t('common.executed')}</div>
+          <div className="dg-cell c-price">{t('common.price')}</div>
+          <div className="dg-cell c-amt">{t('gantt.colAmount')}</div>
+          <div className="dg-cell c-unit">{t('common.unit')}</div>
+          <div className="dg-cell c-pct">{t('gantt.colProgress')}</div>
+          <div className="dg-cell c-date">{t('gantt.colStart')}</div>
+          <div className="dg-cell c-date">{t('gantt.colEnd')}</div>
+          <div className="dg-cell c-depid">{t('gantt.colPredecessor')}</div>
+          <div className="dg-cell c-deptype">{t('gantt.colRelation')}</div>
+          <div className="dg-cell c-lag">{t('gantt.colLag')}</div>
         </div>
 
         {/* Body */}
@@ -293,13 +299,13 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                     <div className="task-name-wrapper">
                       <div className="tree-indent" style={{ width: indentWidth }}></div>
                       {depth > 0 && <span className="tree-indicator">↳</span>}
-                      {isEditMode ? <input className="cell-input" value={task.name || ''} onChange={e => handleChange(task.id, 'name', e.target.value)} style={{ fontWeight: 'bold', marginRight: '8px' }} /> : <strong title={task.name}>{task.name}</strong>}
+                      {isEditMode ? <input className="cell-input" value={task.name || ''} onChange={e => handleChange(task.id, 'name', e.target.value)} style={{ fontWeight: 'bold', marginInlineStart: '8px' }} /> : <strong title={task.name}>{task.name}</strong>}
                       {!isEditMode && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginRight: 'auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginInlineStart: 'auto' }}>
                           <button
                             className="jump-to-folder-btn"
                             onClick={(e) => { e.stopPropagation(); onJumpToTaskFolder?.(task); }}
-                            title="عرض ملفات الفقرة"
+                            title={t('gantt.viewItemFiles')}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', color: 'var(--apple-blue-action)' }}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
@@ -307,7 +313,7 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                           <button
                             className="jump-to-details-btn"
                             onClick={(e) => { e.stopPropagation(); onJumpToTaskDetails?.(task); }}
-                            title="تفاصيل الفقرة والعناصر"
+                            title={t('gantt.itemDetailsElements')}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', color: 'var(--apple-blue-action)' }}
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
@@ -316,11 +322,11 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                       )}
                     </div>
                     {isEditMode && (
-                      <div style={{ display: 'flex', gap: '8px', marginRight: 'auto' }}>
+                      <div style={{ display: 'flex', gap: '8px', marginInlineStart: 'auto' }}>
                         <button className="add-subtask-btn" onClick={() => onAddSubTask(task.id)}>
-                          + فرعية
+                          + {t('gantt.addSub')}
                         </button>
-                        <button className="delete-task-btn" onClick={() => onDeleteTask(task.id)} title="حذف">
+                        <button className="delete-task-btn" onClick={() => onDeleteTask(task.id)} title={t('common.delete')}>
                           ✕
                         </button>
                       </div>
@@ -329,11 +335,11 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                   <div className="dg-cell c-dur">
                     <span className="center">{task.duration}</span>
                   </div>
-                  <div className="dg-cell c-qty num">—</div>
-                  <div className="dg-cell c-actq num">—</div>
-                  <div className="dg-cell c-price num">—</div>
+                  <div className="dg-cell c-qty num">{t('common.none')}</div>
+                  <div className="dg-cell c-actq num">{t('common.none')}</div>
+                  <div className="dg-cell c-price num">{t('common.none')}</div>
                   <div className="dg-cell c-amt num">{fmtNum(task.totalCost)}</div>
-                  <div className="dg-cell c-unit center">—</div>
+                  <div className="dg-cell c-unit center">{t('common.none')}</div>
                   <div className="dg-cell c-pct">
                     <span className="progress-pill">
                       {fmtPct(task.progress)}
@@ -341,9 +347,9 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                   </div>
                   <div className="dg-cell c-date mono">{fmtDate(task.startDate)}</div>
                   <div className="dg-cell c-date mono">{fmtDate(task.endDate)}</div>
-                  <div className="dg-cell c-depid center">—</div>
-                  <div className="dg-cell c-deptype center">—</div>
-                  <div className="dg-cell c-lag center">—</div>
+                  <div className="dg-cell c-depid center">{t('common.none')}</div>
+                  <div className="dg-cell c-deptype center">{t('common.none')}</div>
+                  <div className="dg-cell c-lag center">{t('common.none')}</div>
                 </div>
               );
             }
@@ -365,13 +371,13 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                   <div className="task-name-wrapper">
                     <div className="tree-indent" style={{ width: indentWidth }}></div>
                     {depth > 0 && <span className="tree-indicator">↳</span>}
-                    {isEditMode ? <input className="cell-input" value={task.name || ''} onChange={e => handleChange(task.id, 'name', e.target.value)} style={{ marginRight: '8px' }} /> : <span className="task-name-text">{task.name}</span>}
+                    {isEditMode ? <input className="cell-input" value={task.name || ''} onChange={e => handleChange(task.id, 'name', e.target.value)} style={{ marginInlineStart: '8px' }} /> : <span className="task-name-text">{task.name}</span>}
                     {!isEditMode && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginRight: 'auto' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginInlineStart: 'auto' }}>
                         <button
                           className="jump-to-folder-btn"
                           onClick={(e) => { e.stopPropagation(); onJumpToTaskFolder?.(task); }}
-                          title="عرض ملفات الفقرة"
+                          title={t('gantt.viewItemFiles')}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', color: 'var(--apple-blue-action)' }}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
@@ -379,7 +385,7 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                         <button
                           className="jump-to-details-btn"
                           onClick={(e) => { e.stopPropagation(); onJumpToTaskDetails?.(task); }}
-                          title="تفاصيل الفقرة والعناصر"
+                          title={t('gantt.itemDetailsElements')}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', color: 'var(--apple-blue-action)' }}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
@@ -388,7 +394,7 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                     )}
                   </div>
                   {isEditMode && (
-                    <button className="delete-task-btn" onClick={() => onDeleteTask(task.id)} title="حذف" style={{ marginRight: 'auto' }}>
+                    <button className="delete-task-btn" onClick={() => onDeleteTask(task.id)} title={t('common.delete')} style={{ marginInlineStart: 'auto' }}>
                       ✕
                     </button>
                   )}
@@ -399,19 +405,27 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                 <div className="dg-cell c-qty num">
                   {isEditMode ? (
                     task.boqLinked
-                      ? <span className="locked-cell" title="تُدار من تفاصيل الفقرة (العناصر)">🔗 {fmtNum(task.quantity)}</span>
+                      ? <span className="locked-cell" title={t('gantt.lockedFromDetails')}>🔗 {fmtNum(task.quantity)}</span>
                       : isSigned
-                        ? <span className="locked-cell" title="كمية تعاقدية معتمدة — تُعدّل عبر أمر تغيير">🔒 {fmtNum(task.quantity)}</span>
+                        ? <span className="locked-cell" title={t('gantt.lockedContractQty')}>🔒 {fmtNum(task.quantity)}</span>
                         : <input className="cell-input center" type="number" value={task.quantity ?? ''} onChange={e => handleChange(task.id, 'quantity', e.target.value)} />
                   ) : fmtNum(task.quantity)}
                 </div>
                 <div className="dg-cell c-actq">
-                  {isEditMode ? <input className="cell-input center" type="number" value={task.actualQuantity ?? ''} onChange={e => handleChange(task.id, 'actualQuantity', e.target.value)} /> : fmtNum(task.actualQuantity)}
+                  {isEditMode ? (
+                    task.orderSource && task.orderSource.manual === false ? (
+                      <span className="locked-cell" title={t('gantt.autoFromWorkOrders')}>
+                        🔗 {fmtNum(task.actualQty)}
+                      </span>
+                    ) : (
+                      <input className="cell-input center" type="number" value={task.actualQuantity ?? ''} onChange={e => handleChange(task.id, 'actualQuantity', e.target.value)} />
+                    )
+                  ) : fmtNum(task.actualQty ?? task.actualQuantity)}
                 </div>
                 <div className="dg-cell c-price num">
                   {isEditMode ? (
                     isSigned
-                      ? <span className="locked-cell" title="سعر تعاقدي معتمد — يُعدّل عبر أمر تغيير">🔒 {fmtNum(task.unitPrice)}</span>
+                      ? <span className="locked-cell" title={t('gantt.lockedContractPrice')}>🔒 {fmtNum(task.unitPrice)}</span>
                       : <input className="cell-input center" type="number" value={task.unitPrice ?? ''} onChange={e => handleChange(task.id, 'unitPrice', e.target.value)} />
                   ) : fmtNum(task.unitPrice)}
                 </div>
@@ -421,11 +435,11 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                 <div className="dg-cell c-unit">
                   {isEditMode ? (
                     task.boqLinked
-                      ? <span className="locked-cell" title="تُدار من تفاصيل الفقرة (العناصر)">🔗 {task.unit || '—'}</span>
+                      ? <span className="locked-cell" title={t('gantt.lockedFromDetails')}>🔗 {task.unit || t('common.none')}</span>
                       : isSigned
-                        ? <span className="locked-cell" title="وحدة تعاقدية معتمدة">🔒 {task.unit || '—'}</span>
+                        ? <span className="locked-cell" title={t('gantt.lockedContractUnit')}>🔒 {task.unit || t('common.none')}</span>
                         : <input className="cell-input center" value={task.unit || ''} onChange={e => handleChange(task.id, 'unit', e.target.value)} />
-                  ) : (task.unit || '—')}
+                  ) : (task.unit || t('common.none'))}
                 </div>
                 <div className="dg-cell c-pct">
                   <span className="progress-pill">
@@ -453,7 +467,7 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                       value={task.dependsOn || ''}
                       onChange={e => handleDependencyChange(task, e.target.value)}
                     >
-                      <option value="">بدون سابقة</option>
+                      <option value="">{t('gantt.noDependency')}</option>
                       {task.dependsOn && !dependencyOptions.some(dep => dep.id === task.dependsOn) && (
                         <option value={task.dependsOn}>{getDependencyDisplay(task.dependsOn)}</option>
                       )}
@@ -479,8 +493,8 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                       onChange={e => handleDepTypeChange(task, e.target.value)}
                       disabled={!task.dependsOn}
                     >
-                      <option value="">—</option>
-                      {Object.entries(DEP_TYPE_LABELS).map(([value, label]) => (
+                      <option value="">{t('common.none')}</option>
+                      {Object.entries(depTypeLabels).map(([value, label]) => (
                         <option key={value} value={value}>{label}</option>
                       ))}
                     </select>
@@ -504,7 +518,7 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
           {isEditMode && (
             <div className="add-main-task-row">
               <button className="add-main-btn" onClick={onAddMainTask}>
-                + إضافة مجموعة رئيسية جديدة
+                + {t('gantt.addMainGroup')}
               </button>
             </div>
           )}
@@ -571,22 +585,22 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                 const rightOffset = Math.min(diffDays, totalDays) * DAY_WIDTH;
                 const isOutOfBounds = diffDays > totalDays;
                 return (
-                  <div 
-                    className="tl-today-line" 
-                    style={{ 
-                      right: `${rightOffset}px`, 
-                      position: 'absolute', 
-                      top: 0, 
-                      bottom: 0, 
-                      width: isOutOfBounds ? '4px' : '2px', 
-                      backgroundColor: 'var(--apple-red)', 
-                      zIndex: 10, 
+                  <div
+                    className="tl-today-line"
+                    style={{
+                      [startSide]: `${rightOffset}px`,
+                      position: 'absolute',
+                      top: 0,
+                      bottom: 0,
+                      width: isOutOfBounds ? '4px' : '2px',
+                      backgroundColor: 'var(--apple-red)',
+                      zIndex: 10,
                       pointerEvents: 'none',
                       opacity: isOutOfBounds ? 0.5 : 1
                     }}
-                    title={isOutOfBounds ? "تاريخ اليوم (خارج نطاق المشروع)" : "تاريخ اليوم (نسبة الانجاز المخطط)"}
+                    title={isOutOfBounds ? t('gantt.todayOutOfRange') : t('gantt.todayPlanned')}
                   >
-                    <div style={{ position: 'absolute', top: '-20px', right: '-4px', width: '10px', height: '10px', backgroundColor: 'var(--apple-red)', borderRadius: '50%' }}></div>
+                    <div style={{ position: 'absolute', top: '-20px', [startSide]: '-4px', width: '10px', height: '10px', backgroundColor: 'var(--apple-red)', borderRadius: '50%' }}></div>
                   </div>
                 );
               }
@@ -613,7 +627,7 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                   <div
                     className={`bar-container ${task.isGroup ? 'bar-group' : ''}`}
                     style={{
-                      right: `${right}px`,
+                      [startSide]: `${right}px`,
                       width: `${width}px`,
                     }}
                   >
@@ -624,21 +638,21 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                         <div className="bar-group-diamond left"></div>
                       </div>
                     ) : (
-                      <div className="bar-track">
+                      <div className={`bar-track${task.isCritical ? ' critical' : ''}`}>
                         <div
                           className="bar-fill"
                           style={{
                             width: `${progressPct}%`,
                             zIndex: 2
                           }}
-                          title={`الانجاز الفعلي: ${progressPct.toFixed(1)}%`}
+                          title={t('gantt.actualProgress', { value: progressPct.toFixed(1) })}
                         ></div>
                         <div
                           className="bar-planned-fill"
                           style={{
                             position: 'absolute',
                             top: '50%',
-                            right: 0,
+                            [startSide]: 0,
                             height: '4px',
                             marginTop: '-2px',
                             backgroundColor: '#fbbf24', /* Tailwind Yellow 400 */
@@ -648,7 +662,7 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                             borderRadius: '2px',
                             pointerEvents: 'none'
                           }}
-                          title={`الانجاز المخطط: ${plannedPct.toFixed(1)}%`}
+                          title={t('gantt.plannedProgress', { value: plannedPct.toFixed(1) })}
                         ></div>
                       </div>
                     )}
@@ -666,10 +680,15 @@ const GanttChart = ({ tasks, onUpdateTask, projectStart, isEditMode, viewMode = 
                           <span>{fmtDate(task.startDate)} → {fmtDate(task.endDate)}</span>
                         </div>
                         <div className="tt-row dim">
-                          <span>{task.duration} يوم</span>
+                          <span>{t('gantt.days', { n: task.duration })}</span>
                           <span className="tt-sep">|</span>
-                          <span>{fmtNum(task.actualQuantity)} / {fmtNum(task.quantity)} {task.unit}</span>
+                          <span>{fmtNum(task.actualQty ?? task.actualQuantity)} / {fmtNum(task.quantity)} {task.unit}</span>
                         </div>
+                        {task.isCritical && (
+                          <div className="tt-row dim" style={{ color: '#d93838', fontWeight: 700 }}>
+                            ● {t('gantt.onCriticalPath')}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

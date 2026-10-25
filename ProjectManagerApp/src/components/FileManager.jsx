@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useI18n } from '../i18n/useI18n.js';
 import { saveFile, getFiles, deleteFile } from '../utils/FileDB';
 import './FileManager.css';
 
 const FileManager = ({ tasks, targetTask }) => {
+  const { t } = useI18n();
   const [currentPath, setCurrentPath] = useState([{ id: 'root', name: 'الرئيسية' }]);
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -10,6 +12,14 @@ const FileManager = ({ tasks, targetTask }) => {
   const fileInputRef = useRef(null);
 
   const currentFolder = currentPath[currentPath.length - 1];
+
+  // Virtual folders ('root', 'tasks_root') are UI-level labels — translated at
+  // display via dict. Task-derived folder names are user data and stay as-is.
+  const displayFolderName = (folder) => {
+    if (folder.id === 'root') return t('files.root');
+    if (folder.id === 'tasks_root') return t('files.tasksRoot');
+    return folder.name;
+  };
 
   // Derive folders dynamically based on current path
   const getSubFolders = () => {
@@ -116,8 +126,8 @@ const FileManager = ({ tasks, targetTask }) => {
       }
       await loadFiles();
     } catch (err) {
-      console.error('Upload failed:', err);
-      alert('فشل في رفع الملف');
+    console.error('Upload failed:', err);
+    alert(t('files.uploadFailed'));
     } finally {
       setIsLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -144,7 +154,7 @@ const FileManager = ({ tasks, targetTask }) => {
   };
 
   const handleDeleteFile = async (fileId) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا الملف؟')) {
+    if (window.confirm(t('files.confirmDelete'))) {
       try {
         await deleteFile(fileId);
         await loadFiles();
@@ -179,11 +189,11 @@ const FileManager = ({ tasks, targetTask }) => {
         <div className="fm-breadcrumbs">
           {currentPath.map((folder, index) => (
             <React.Fragment key={folder.id}>
-              <span 
+              <span
                 className={`fm-crumb ${index === currentPath.length - 1 ? 'active' : ''}`}
                 onClick={() => handleBreadcrumbClick(index)}
               >
-                {folder.name}
+                {displayFolderName(folder)}
               </span>
               {index < currentPath.length - 1 && <span className="fm-crumb-sep">/</span>}
             </React.Fragment>
@@ -203,7 +213,7 @@ const FileManager = ({ tasks, targetTask }) => {
               <polyline points="17 8 12 3 7 8"></polyline>
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
-            رفع ملف
+            {t('files.upload')}
           </button>
         </div>
       </div>
@@ -222,8 +232,8 @@ const FileManager = ({ tasks, targetTask }) => {
               <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
               <polyline points="13 2 13 9 20 9"></polyline>
             </svg>
-            <p>المجلد فارغ</p>
-            <p className="fm-empty-sub">قم بسحب وإفلات الملفات هنا أو اضغط على "رفع ملف"</p>
+            <p>{t('files.emptyFolder')}</p>
+            <p className="fm-empty-sub">{t('files.emptyHint')}</p>
           </div>
         )}
 
@@ -236,7 +246,7 @@ const FileManager = ({ tasks, targetTask }) => {
                     <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
                   </svg>
                 </div>
-                <div className="fm-item-name" title={folder.name}>{folder.name}</div>
+                <div className="fm-item-name" title={displayFolderName(folder)}>{displayFolderName(folder)}</div>
               </div>
             ))}
 
@@ -252,7 +262,7 @@ const FileManager = ({ tasks, targetTask }) => {
                   <div className="fm-item-name" onClick={() => handleDownloadFile(file)}>{file.name}</div>
                   <div className="fm-item-meta">{formatSize(file.size)}</div>
                 </div>
-                <button className="fm-delete-btn" onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id); }} title="حذف الملف">
+                <button className="fm-delete-btn" onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id); }} title={t('files.deleteFileTitle')}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>

@@ -620,3 +620,66 @@
   cursor: help;
   opacity: 0.85;
 }
+
+/* ── Critical path (zero-float leaves, from CriticalPath util) ── */
+.bar-track.critical {
+  box-shadow: inset 0 0 0 2px #d93838;
+}
+
+/* ═══════════════════════════════════════════════════════
+   LTR (English) — mirrors physical RTL assumptions.
+   Flex order flips automatically via direction; only forced
+   directions, physical offsets and border sides need fixing.
+   ═══════════════════════════════════════════════════════ */
+
+/* Timeline was hard-wired to RTL flow; in LTR it must flow
+   left→right so tiers/gridlines align with the left-anchored bars. */
+[dir="ltr"] .timeline-panel {
+  direction: ltr;
+}
+
+/* Tooltip anchors to the bar's start edge; content runs LTR. */
+[dir="ltr"] .bar-tooltip {
+  right: auto;
+  left: 0;
+  direction: ltr;
+}
+
+/* Tree indent: the spacer itself is width-only (direction-agnostic);
+   the arrow's trailing gap flips to the far side. */
+[dir="ltr"] .tree-indicator {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* Warning badge stripe sits on the divider-side (end) edge of the row. */
+[dir="ltr"] .dg-row.has-warning {
+  box-shadow: inset 3px 0 0 #ff9f0a;
+}
+
+/* Dependency labels are user data; truncation/ellipsis must run LTR. */
+[dir="ltr"] .dependency-display,
+[dir="ltr"] .dependency-select {
+  direction: ltr;
+}
+
+/* Cell separators: keep them on the end side (between cells) and the
+   outer start edge clean, mirroring the RTL arrangement exactly. */
+[dir="ltr"] .dg-cell {
+  border-left: none;
+  border-right: 1px solid var(--border-soft);
+}
+[dir="ltr"] .data-grid {
+  border-left: none;
+  border-right: 1px solid var(--border-soft);
+}
+
+/* Same end-side mirror for the timeline tier cells and gridlines. */
+[dir="ltr"] .tl-tier-cell {
+  border-left: none;
+  border-right: 1px solid var(--border-soft);
+}
+[dir="ltr"] .tl-gridline {
+  border-left: none;
+  border-right: 1px solid var(--border-soft);
+}

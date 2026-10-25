@@ -9,17 +9,42 @@ import Dashboard from './components/dashboard/Dashboard'
 import TaskDetails from './components/taskDetails/TaskDetails'
 import { GanttEngine } from './utils/GanttEngine'
 import { exportAppData, readBackupFile, validateBackup, restoreAppData } from './utils/DataIO'
+import OrdersScreen from './components/orders/OrdersScreen'
+import PlanningScreen from './components/planning/PlanningScreen'
+import ActivityScreen from './components/activity/ActivityScreen'
+import MonthlyReport from './components/reports/MonthlyReport'
+import TemplatesScreen from './components/templates/TemplatesScreen'
+import RegistriesScreen from './components/registries/RegistriesScreen'
+import IdentityPicker from './components/registries/IdentityPicker'
+import SnapshotsScreen from './components/snapshots/SnapshotsScreen'
+import { loadOrdersData } from './utils/OrderEngine'
+import { loadRegistries } from './utils/Registries'
+import { loadIdentity, hasIdentity } from './utils/Identity'
+import { loadAppEvents, logAppEvent } from './utils/ActivityLog'
+import { writeAutoSnapshot } from './utils/Snapshots'
+import { useI18n } from './i18n/useI18n.js'
+import { compactCurrency } from './i18n/index.js'
+import LanguageSwitcher from './i18n/LanguageSwitcher.jsx'
 const STORAGE_KEY = 'project-manager-gantt-tasks';
 const META_KEY = 'project-manager-project-meta';
 const PROJECT_START = '2025-08-02';
 
 const DEFAULT_META = { status: 'draft', baseline: null, variations: [] };
 
-const STATUS_LABELS = {
-  draft: 'مسودة',
-  signed: 'معتمد',
-  executing: 'قيد التنفيذ',
-  completed: 'مكتمل',
+const STATUS_KEYS = {
+  draft: 'common.statusDraft',
+  signed: 'common.statusSigned',
+  executing: 'common.statusExecuting',
+  completed: 'common.statusCompleted',
+};
+
+// Variation-order classification codes (stored on records; labels via i18n).
+const VO_CLASS_KEYS = {
+  qty: 'app.vo.classQty',
+  price: 'app.vo.classPrice',
+  scope: 'app.vo.classScope',
+  add: 'app.vo.classAdd',
+  remove: 'app.vo.classRemove',
 };
 
 const INITIAL_TASKS = [
@@ -88,6 +113,7 @@ const getTaskAndDescendantIds = (tasks, taskId) => {
 };
 
 function App() {
+  const { t, lang, dir } = useI18n();
   const [tasks, setTasks] = useState(loadInitialTasks);
   const [projectMeta, setProjectMeta] = useState(loadMeta);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -100,7 +126,17 @@ function App() {
   const [signOffOpen, setSignOffOpen] = useState(false);
   const [signOffBy, setSignOffBy] = useState('');
   const [voOpen, setVoOpen] = useState(false);
-  const [voDraft, setVoDraft] = useState({ taskId: '', field: 'quantity', newValue: '', reason: '', approver: '' });
+  const [voDraft, setVoDraft] = useState({ taskId: '', field: 'quantity', newValue: '', reason: '', approver: '', urgency: 'medium', classification: '', estCostImpact: '', estScheduleDays: '', clauseRef: 'FIDIC 13.x' });
+
+  // Ecosystem stores (orders / registries / identity / activity). The module
+  // screens persist these directly to localStorage; App re-reads them on tab
+  // switches so the engine and sibling screens always see fresh data.
+  const [ordersData, setOrdersData] = useState(loadOrdersData);
+  const [registries, setRegistries] = useState(loadRegistries);
+  const [identity, setIdentity] = useState(loadIdentity);
+  const [appEvents, setAppEvents] = useState(loadAppEvents);
+  const [identityOpen, setIdentityOpen] = useState(() => !hasIdentity());
+  const orders = useMemo(() => ordersData?.orders || [], [ordersData]);
 
   // Backup / restore (data-safety: protect against localStorage loss)
   const [restoreOpen, setRestoreOpen] = useState(false);
@@ -119,6 +155,24 @@ function App() {
     localStorage.setItem(META_KEY, JSON.stringify(projectMeta));
   }, [projectMeta]);
 
+  // First change of the day → automatic checkpoint (version-history layer).
+  // writeAutoSnapshot no-ops when today's checkpoint already exists.
+  useEffect(() => {
+    writeAutoSnapshot(tasks, projectMeta, identity?.name || '');
+  }, [tasks, projectMeta, identity]);
+
+  // Module screens own their persistence — App's copies refresh on tab
+  // switches so the engine and views always read the latest ledger state.
+  const refreshEcosystemStores = () => {
+    setOrdersData(loadOrdersData());
+    setRegistries(loadRegistries());
+    setAppEvents(loadAppEvents());
+  };
+  const goToTab = (tab) => {
+    setActiveTab(tab);
+    refreshEcosystemStores();
+  };
+
   const pushToHistory = (stateToSave) => {
     historyRef.current.push(JSON.parse(JSON.stringify(stateToSave)));
     if (historyRef.current.length > 50) historyRef.current.shift();
@@ -134,8 +188,8 @@ function App() {
   };
 
   const engineResult = useMemo(() => {
-    return GanttEngine.calculate(tasks, PROJECT_START, projectMeta);
-  }, [tasks, projectMeta]);
+    return GanttEngine.calculate(tasks, PROJECT_START, projectMeta, orders);
+  }, [tasks, projectMeta, orders]);
 
   const handleUpdateTask = (updatedTask) => {
     const normalizedTask = {
@@ -170,7 +224,7 @@ function App() {
     const newTask = {
       id: createTaskId(),
       wbs: newWbs,
-      name: 'مجموعة رئيسية جديدة',
+      name: t('app.newMainGroup'),
       isGroup: true,
       manualStart: PROJECT_START,
       duration: 1,
@@ -208,7 +262,7 @@ function App() {
     const newTask = {
       id: createTaskId(),
       wbs: newWbs,
-      name: 'مهمة فرعية جديدة',
+      name: t('app.newSubTask'),
       isGroup: false,
       manualStart: PROJECT_START,
       duration: 1,
@@ -254,12 +308,12 @@ function App() {
 
   const handleJumpToTaskFolder = (task) => {
     setTargetFileFolder(task);
-    setActiveTab('files');
+    goToTab('files');
   };
 
   const handleJumpToTaskDetails = (task) => {
     setTargetTaskDetails(task);
-    setActiveTab('taskDetails');
+    goToTab('taskDetails');
   };
 
   // Index after which a new BOQ child should be inserted
@@ -307,7 +361,7 @@ function App() {
         const newLeaf = {
           id: createTaskId(),
           wbs: nextBoqWbs(prev, parent),
-          name: column.name || 'بند كميات',
+          name: column.name || t('app.newBoqItem'),
           isGroup: false,
           manualStart: parent.manualStart || PROJECT_START,
           duration: 1,
@@ -422,22 +476,42 @@ function App() {
         tasks: baselineTasks,
       },
     }));
+    logAppEvent({
+      actor: signedBy || identity.name,
+      kind: 'lifecycle',
+      summary: `${t('app.modal.signOffLog')} (${frozenTasks.filter(task => task.isGroup === false).length} ${t('app.modal.signOffLogCount')})`,
+      refType: 'baseline',
+      refId: 'latest',
+    });
   };
 
   const handleSetStatus = (status) => {
-    setProjectMeta(prev => ({ ...prev, status }));
+    setProjectMeta(prev => {
+      logAppEvent({
+        actor: identity.name,
+        kind: 'lifecycle',
+        summary: `${t('app.vo.statusChanged')} «${STATUS_KEYS[status] ? t(STATUS_KEYS[status]) : status}»`,
+        refType: 'project',
+        refId: 'status',
+      });
+      return { ...prev, status };
+    });
   };
 
   // Raise a Variation Order: change a locked contract field (quantity/unitPrice)
-  // and log it with reason + approver.
+  // and log it with reason + approver + FIDIC-style metadata.
   const handleRaiseVariation = () => {
-    const { taskId, field, newValue, reason, approver } = voDraft;
+    const { taskId, field, newValue, reason, approver, urgency, classification, estCostImpact, estScheduleDays, clauseRef } = voDraft;
     const task = tasks.find(t => t.id === taskId);
     if (!task || !field) return;
     const oldValue = task[field];
     pushToHistory(tasks);
     const parsedNew = newValue === '' ? '' : Number(newValue);
     setTasks(prev => prev.map(t => (t.id === taskId ? { ...t, [field]: parsedNew } : t)));
+    // Cost impact fallback: derive from the quantity delta at contract price.
+    const derivedCostImpact = (estCostImpact === '' && field === 'quantity' && Number.isFinite(Number(newValue)))
+      ? Math.max(0, Number(newValue) - Number(oldValue)) * (Number(task.unitPrice) || 0)
+      : null;
     const vo = {
       id: createTaskId(),
       date: new Date().toISOString(),
@@ -450,15 +524,57 @@ function App() {
       newValue: parsedNew,
       reason: reason || '',
       approver: approver || '',
+      urgency: urgency || 'medium',
+      classification: classification || (field === 'unitPrice' ? 'price' : 'qty'),
+      estCostImpact: estCostImpact === '' ? derivedCostImpact : Number(estCostImpact),
+      estScheduleDays: estScheduleDays === '' ? null : Number(estScheduleDays),
+      clauseRef: clauseRef || '',
+      status: 'issued',
     };
     setProjectMeta(prev => ({ ...prev, variations: [...(prev.variations || []), vo] }));
-    setVoDraft({ taskId: '', field: 'quantity', newValue: '', reason: '', approver: '' });
+    setVoDraft({ taskId: '', field: 'quantity', newValue: '', reason: '', approver: '', urgency: 'medium', classification: '', estCostImpact: '', estScheduleDays: '', clauseRef: 'FIDIC 13.x' });
   };
 
-  const formatCurrency = (val) => {
-    if (val >= 1e9) return `${(val / 1e9).toFixed(2)} مليار د.ع`;
-    if (val >= 1e6) return `${(val / 1e6).toFixed(1)} مليون د.ع`;
-    return new Intl.NumberFormat('en-US').format(val) + ' د.ع';
+  const formatCurrency = (val) => compactCurrency(val, lang);
+
+  const voClassLabel = (c) => (VO_CLASS_KEYS[c] ? t(VO_CLASS_KEYS[c]) : c);
+
+  const identityInitials = (() => {
+    const name = (identity?.name || '').trim();
+    if (!name) return '؟';
+    return name.split(/\s+/).slice(0, 2).map(w => w[0]).join('');
+  })();
+
+  // Template generator callback: append the generated task tree to the
+  // project, re-numbering its WBS past the current top-level sections.
+  const handleGenerateFromTemplate = (generated, meta) => {
+    if (!Array.isArray(generated) || generated.length === 0) return;
+    pushToHistory(tasks);
+
+    let maxMain = 0;
+    tasks.forEach(t => {
+      if (t.wbs && !t.wbs.includes('.')) {
+        const num = parseInt(t.wbs, 10);
+        if (!isNaN(num) && num > maxMain) maxMain = num;
+      }
+    });
+
+    const remapped = generated.map(t => {
+      const parts = String(t.wbs || '').split('.');
+      const first = parseInt(parts[0], 10);
+      if (!isNaN(first)) parts[0] = String(first + maxMain);
+      return { ...t, wbs: parts.join('.') };
+    });
+
+    setTasks(prev => [...prev, ...remapped]);
+    logAppEvent({
+      actor: identity.name,
+      kind: 'template',
+      summary: `${t('app.template.generatedLog')} «${meta?.templateName || ''}» — ${remapped.length} ${t('app.template.itemsLog')}`,
+      refType: 'template',
+      refId: meta?.templateId || '',
+    });
+    goToTab('gantt');
   };
 
   const deletePreview = useMemo(() => {
@@ -501,7 +617,7 @@ function App() {
       setRestoreInfo(result.stats);
       setRestoreOpen(true);
     } catch (err) {
-      alert(err.message || 'تعذّر قراءة ملف النسخة الاحتياطية.');
+        alert(err.message || t('app.modal.readFail'));
     }
   };
 
@@ -513,7 +629,7 @@ function App() {
       restoreAppData(parsed);
       window.location.reload();
     } catch (err) {
-      alert(err.message || 'فشل الاستعادة.');
+        alert(err.message || t('app.modal.restoreFail'));
       setRestoreOpen(false);
     }
   };
@@ -521,20 +637,24 @@ function App() {
   const totalDays = engineResult.projectDuration;
 
   return (
-    <div className="app-root">
+    <div className="app-root" dir={dir}>
       {/* ── SIDEBAR (Right side due to RTL) ── */}
       <aside className="app-sidebar">
         <div className="sidebar-logo">ProjectManager</div>
         <nav className="sidebar-nav">
-          <a href="#" className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveTab('dashboard'); }}>لوحة القيادة</a>
-          <a href="#" className={`nav-item ${activeTab === 'gantt' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveTab('gantt'); }}>جدول تقدم العمل</a>
-          <a href="#" className={`nav-item ${activeTab === 'files' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveTab('files'); }}>الملفات</a>
-          <a href="#" className={`nav-item ${activeTab === 'calc' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveTab('calc'); }}>حاسبة الكميات</a>
-          <a href="#" className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveTab('reports'); }}>التقارير اليومية</a>
-          <a href="#" className={`nav-item ${activeTab === 'finance' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveTab('finance'); }}>الحسابات والتكاليف</a>
-          <a href="#" className="nav-item">الموارد البشرية</a>
-          <a href="#" className="nav-item">المشتريات والمواد</a>
-          <a href="#" className="nav-item">الإعدادات</a>
+          <a href="#" className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('dashboard'); }}>{t('app.nav.dashboard')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'gantt' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('gantt'); }}>{t('app.nav.gantt')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('orders'); }}>{t('app.nav.orders')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'planning' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('planning'); }}>{t('app.nav.planning')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'files' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('files'); }}>{t('app.nav.files')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'calc' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('calc'); }}>{t('app.nav.calc')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('reports'); }}>{t('app.nav.reports')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'monthly' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('monthly'); }}>{t('app.nav.monthly')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'activity' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('activity'); }}>{t('app.nav.activity')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'snapshots' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('snapshots'); }}>{t('app.nav.snapshots')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'finance' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('finance'); }}>{t('app.nav.finance')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'registries' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('registries'); }}>{t('app.nav.registries')}</a>
+          <a href="#" className={`nav-item ${activeTab === 'templates' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); goToTab('templates'); }}>{t('app.nav.templates')}</a>
         </nav>
       </aside>
 
@@ -544,7 +664,17 @@ function App() {
         {/* Top Header Bar */}
         <header className="workspace-topbar">
           <div className="breadcrumbs">مشروع استصلاح اراضي واسط / عقد 5 لسنة 2023 / غرب الغراف / ايسر MC7</div>
-          <div className="user-profile">AH</div>
+          <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <LanguageSwitcher />
+            <div
+              className="user-profile"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setIdentityOpen(true)}
+              title={identity?.name ? `${identity.name}${identity.role ? ' — ' + identity.role : ''} ${t('app.identity.current')}` : t('app.identity.setUser')}
+            >
+              {identityInitials}
+            </div>
+          </div>
         </header>
 
         {/* Content Area */}
@@ -552,26 +682,43 @@ function App() {
           
           {activeTab === 'dashboard' ? (
             <Dashboard tasks={engineResult.tasks} summary={engineResult} />
+          ) : activeTab === 'orders' ? (
+            <OrdersScreen tasks={tasks} identity={identity} />
+          ) : activeTab === 'planning' ? (
+            <PlanningScreen tasks={tasks} computedTasks={engineResult.tasks} orders={orders} registries={registries} />
+          ) : activeTab === 'activity' ? (
+            <ActivityScreen orders={orders} variations={projectMeta.variations || []} appEvents={appEvents} tasks={tasks} registries={registries} />
+          ) : activeTab === 'snapshots' ? (
+            <SnapshotsScreen tasks={tasks} projectMeta={projectMeta} identity={identity} onRestored={() => window.location.reload()} />
+          ) : activeTab === 'monthly' ? (
+            <MonthlyReport summary={engineResult} computedTasks={engineResult.tasks} orders={orders} variations={projectMeta.variations || []} projectMeta={projectMeta} registries={registries} />
+          ) : activeTab === 'registries' ? (
+            <RegistriesScreen onChange={setRegistries} />
+          ) : activeTab === 'templates' ? (
+            <TemplatesScreen onGenerate={handleGenerateFromTemplate} tasks={tasks} />
           ) : activeTab === 'taskDetails' ? (
             <TaskDetails
               task={tasks.find(t => t.id === targetTaskDetails?.id) || targetTaskDetails}
               allTasks={tasks}
               computedTasks={engineResult.tasks}
               isSigned={!!projectMeta.baseline}
+              orders={orders}
+              registries={registries}
+              identity={identity}
               onUpdateTask={handleUpdateTask}
               onToggleBoqLink={handleToggleBoqLink}
               onLinkExistingBoq={handleLinkExistingBoq}
               onAddSubTask={handleAddSubTask}
               onDeleteTask={handleDeleteTask}
               onJumpToTaskDetails={handleJumpToTaskDetails}
-              onBack={() => setActiveTab('gantt')}
+              onBack={() => goToTab('gantt')}
             />
           ) : activeTab === 'files' ? (
             <FileManager tasks={engineResult.tasks} targetTask={targetFileFolder} />
           ) : activeTab === 'calc' ? (
             <CalculatorView />
           ) : activeTab === 'reports' ? (
-            <DailyReports tasks={engineResult.tasks} />
+            <DailyReports tasks={tasks} orders={orders} registries={registries} identity={identity} />
           ) : activeTab === 'finance' ? (
             <FinanceManager />
           ) : activeTab === 'gantt' ? (
@@ -579,33 +726,33 @@ function App() {
               {/* Compact KPI Strip */}
               <div className="compact-kpi-strip">
                 <div className="kpi-compact-card">
-                  <span className="kpi-compact-label">الكلفة الكلية</span>
+                  <span className="kpi-compact-label">{t('app.kpi.totalCost')}</span>
                   <span className="kpi-compact-value">{formatCurrency(engineResult.projectTotalCost)}</span>
                 </div>
                 <div className="kpi-compact-card">
-                  <span className="kpi-compact-label">نسبة الانجاز</span>
+                  <span className="kpi-compact-label">{t('app.kpi.progress')}</span>
                   <span className="kpi-compact-value">{engineResult.projectTotalProgress.toFixed(2)}%</span>
                 </div>
                 <div className="kpi-compact-card">
-                  <span className="kpi-compact-label">الانجاز المخطط</span>
+                  <span className="kpi-compact-label">{t('app.kpi.planned')}</span>
                   <span className="kpi-compact-value">{engineResult.projectPlannedProgress.toFixed(2)}%</span>
                 </div>
                 <div className="kpi-compact-card">
-                  <span className="kpi-compact-label">نسبة الانحراف</span>
+                  <span className="kpi-compact-label">{t('app.kpi.deviation')}</span>
                   <span className={`kpi-compact-value ${engineResult.projectDeviation < 0 ? 'negative-deviation' : 'positive-deviation'}`} style={{ color: engineResult.projectDeviation < 0 ? 'var(--apple-red)' : 'var(--apple-green)' }}>
                     {engineResult.projectDeviation > 0 ? '+' : ''}{engineResult.projectDeviation.toFixed(2)}%
                   </span>
                 </div>
                 <div className="kpi-compact-card">
-                  <span className="kpi-compact-label">مدة المشروع</span>
-                  <span className="kpi-compact-value">{totalDays} يوم</span>
+                  <span className="kpi-compact-label">{t('app.kpi.duration')}</span>
+                  <span className="kpi-compact-value">{totalDays} {t('app.kpi.days')}</span>
                 </div>
                 <div className="kpi-compact-card">
-                  <span className="kpi-compact-label">الفقرات الفعالة</span>
+                  <span className="kpi-compact-label">{t('app.kpi.activeItems')}</span>
                   <span className="kpi-compact-value">{engineResult.tasks.filter(t => !t.isGroup).length}</span>
                 </div>
                 <div className={`kpi-compact-card ${engineResult.warnings.length ? 'warning' : ''}`}>
-                  <span className="kpi-compact-label">التنبيهات</span>
+                  <span className="kpi-compact-label">{t('app.kpi.warnings')}</span>
                   <span className="kpi-compact-value">{engineResult.warnings.length}</span>
                 </div>
               </div>
@@ -616,28 +763,28 @@ function App() {
                 <div className="project-lifecycle-control">
                   {projectMeta.status === 'draft' ? (
                     <button className="apple-btn primary" onClick={() => { setSignOffBy(''); setSignOffOpen(true); }}>
-                      🔒 توقيع واعتماد المشروع
+                      {t('app.toolbar.signOff')}
                     </button>
                   ) : (
                     <>
                       <span className={`project-status-badge status-${projectMeta.status}`}>
-                        {STATUS_LABELS[projectMeta.status] || projectMeta.status}
+                        {STATUS_KEYS[projectMeta.status] ? t(STATUS_KEYS[projectMeta.status]) : projectMeta.status}
                       </span>
                       {projectMeta.status === 'signed' && (
                         <button className="apple-btn secondary" onClick={() => handleSetStatus('executing')}>
-                          ▶ بدء التنفيذ
+                          {t('app.toolbar.startExecution')}
                         </button>
                       )}
                       {projectMeta.status === 'executing' && (
                         <button className="apple-btn secondary" onClick={() => handleSetStatus('completed')}>
-                          ✓ إكمال المشروع
+                          {t('app.toolbar.complete')}
                         </button>
                       )}
-                      <button className="apple-btn secondary" onClick={() => { setSignOffBy(projectMeta.baseline?.signedBy || ''); setSignOffOpen(true); }} title="إعادة أخذ الخط الأساس">
-                        ↻ إعادة الاعتماد
+                      <button className="apple-btn secondary" onClick={() => { setSignOffBy(projectMeta.baseline?.signedBy || ''); setSignOffOpen(true); }} title={t('app.toolbar.reBaselineTitle')}>
+                        {t('app.toolbar.reBaseline')}
                       </button>
-                      <button className="apple-btn secondary" onClick={() => setVoOpen(true)} title="أوامر التغيير">
-                        📝 أوامر التغيير ({(projectMeta.variations || []).length})
+                      <button className="apple-btn secondary" onClick={() => setVoOpen(true)} title={t('app.toolbar.voTitle')}>
+                        {t('app.toolbar.voButton')} ({(projectMeta.variations || []).length})
                       </button>
                     </>
                   )}
@@ -648,41 +795,41 @@ function App() {
                     onClick={() => setViewMode('week')}
                     style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', background: viewMode === 'week' ? 'var(--apple-blue-action)' : 'transparent', color: viewMode === 'week' ? '#fff' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s' }}
                   >
-                    أسابيع
+                    {t('app.toolbar.weeks')}
                   </button>
                   <button 
                     className={`toggle-btn ${viewMode === 'month' ? 'active' : ''}`}
                     onClick={() => setViewMode('month')}
                     style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', background: viewMode === 'month' ? 'var(--apple-blue-action)' : 'transparent', color: viewMode === 'month' ? '#fff' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s' }}
                   >
-                    أشهر
+                    {t('app.toolbar.months')}
                   </button>
                 </div>
 
                 {isEditMode && canUndo && (
-                  <button className="apple-btn secondary" onClick={undo} title="تراجع عن التغيير الأخير">
-                    ↩ تراجع
+                  <button className="apple-btn secondary" onClick={undo} title={t('app.toolbar.undoTitle')}>
+                    {t('app.toolbar.undo')}
                   </button>
                 )}
                 <button
                   className="apple-btn secondary"
                   onClick={handleExport}
-                  title="تنزيل نسخة احتياطية من كافة بيانات المشروع (المهام، الخط الأساس، الحسابات، التقارير)"
+                  title={t('app.toolbar.backupTitle')}
                 >
-                  ⬇ نسخة احتياطية
+                  {t('app.toolbar.backup')}
                 </button>
                 <button
                   className="apple-btn secondary"
                   onClick={handleImportClick}
-                  title="استعادة بيانات المشروع من ملف نسخة احتياطية"
+                  title={t('app.toolbar.restoreTitle')}
                 >
-                  ⬆ استعادة
+                  {t('app.toolbar.restore')}
                 </button>
                 <button
                   className={`apple-btn ${isEditMode ? 'primary' : 'secondary'}`}
                   onClick={() => setIsEditMode(!isEditMode)}
                 >
-                  {isEditMode ? 'إنهاء التعديل' : 'وضع التعديل'}
+                  {isEditMode ? t('app.toolbar.endEdit') : t('app.toolbar.editMode')}
                 </button>
               </div>
 
@@ -722,15 +869,15 @@ function App() {
         <div className="modal-overlay" onClick={cancelDeleteTask}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-icon">!</div>
-            <h3 className="modal-title">تأكيد الحذف</h3>
+            <h3 className="modal-title">{t('app.modal.deleteTitle')}</h3>
             <p className="modal-text">
-              هل أنت متأكد من حذف {deletePreview?.task?.wbs || 'هذه الفقرة'}؟
-              {deletePreview?.count > 1 && ` سيتم حذف ${deletePreview.count} فقرات مرتبطة بها.`}
-              {deletePreview?.dependencyCount > 0 && ` وسيتم إلغاء ${deletePreview.dependencyCount} علاقات تعتمد عليها.`}
+              {t('app.modal.deleteConfirm')} {deletePreview?.task?.wbs || t('app.modal.deleteThis')}؟
+              {deletePreview?.count > 1 && ` ${t('app.modal.deleteLinkedPrefix')} ${deletePreview.count} ${t('app.modal.deleteLinkedSuffix')}`}
+              {deletePreview?.dependencyCount > 0 && ` ${t('app.modal.deleteDepsPrefix')} ${deletePreview.dependencyCount} ${t('app.modal.deleteDepsSuffix')}`}
             </p>
             <div className="modal-actions">
-              <button className="apple-btn secondary" onClick={cancelDeleteTask}>إلغاء</button>
-              <button className="apple-btn destructive" onClick={confirmDeleteTask}>حذف الفقرة</button>
+              <button className="apple-btn secondary" onClick={cancelDeleteTask}>{t('common.cancel')}</button>
+              <button className="apple-btn destructive" onClick={confirmDeleteTask}>{t('app.modal.deleteAction')}</button>
             </div>
           </div>
         </div>
@@ -741,20 +888,20 @@ function App() {
         <div className="modal-overlay" onClick={() => setSignOffOpen(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-icon">🔒</div>
-            <h3 className="modal-title">توقيع واعتماد المشروع</h3>
+            <h3 className="modal-title">{t('app.modal.signOffTitle')}</h3>
             <p className="modal-text">
-              سيتم تجميد الكميات التعاقدية والأسعار كخط أساس (Baseline). بعد الاعتماد، أي تعديل على الكميات التعاقدية أو النطاق يتطلب أمر تغيير (Variation Order)، بينما تبقى الكميات المنفذة قابلة للتحديث.
+              {t('app.modal.signOffText')}
             </p>
             <input
               className="modal-input"
-              placeholder="اسم المعتمد / التوقيع"
+              placeholder={t('app.modal.signOffName')}
               value={signOffBy}
               onChange={e => setSignOffBy(e.target.value)}
             />
             <div className="modal-actions">
-              <button className="apple-btn secondary" onClick={() => setSignOffOpen(false)}>إلغاء</button>
+              <button className="apple-btn secondary" onClick={() => setSignOffOpen(false)}>{t('common.cancel')}</button>
               <button className="apple-btn primary" onClick={() => { handleSignOff(signOffBy); setSignOffOpen(false); }}>
-                اعتماد وتوقيع
+                {t('app.modal.signOffAction')}
               </button>
             </div>
           </div>
@@ -766,15 +913,13 @@ function App() {
         <div className="modal-overlay" onClick={() => setRestoreOpen(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-icon">⬆</div>
-            <h3 className="modal-title">استعادة البيانات</h3>
+            <h3 className="modal-title">{t('app.modal.restoreTitle')}</h3>
             <p className="modal-text">
-              سيتم استبدال بيانات المشروع الحالية بمحتوى النسخة الاحتياطية
-              ({restoreInfo.keys} أقسام، {(restoreInfo.bytes / 1024).toFixed(0)} كيلوبايت).
-              هذا الإجراء لا يمكن التراجع عنه، وستُعاد تحميل الصفحة تلقائياً.
+              {t('app.modal.restoreText', { keys: restoreInfo.keys, kb: (restoreInfo.bytes / 1024).toFixed(0) })}
             </p>
             <div className="modal-actions">
-              <button className="apple-btn secondary" onClick={() => setRestoreOpen(false)}>إلغاء</button>
-              <button className="apple-btn primary" onClick={handleConfirmRestore}>استعادة الآن</button>
+              <button className="apple-btn secondary" onClick={() => setRestoreOpen(false)}>{t('common.cancel')}</button>
+              <button className="apple-btn primary" onClick={handleConfirmRestore}>{t('app.modal.restoreAction')}</button>
             </div>
           </div>
         </div>
@@ -785,8 +930,8 @@ function App() {
         <div className="modal-overlay" onClick={() => setVoOpen(false)}>
           <div className="modal-content vo-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-icon">📝</div>
-            <h3 className="modal-title">أوامر التغيير (Variation Orders)</h3>
-            <p className="modal-text">عدّل الكميات التعاقدية أو الأسعار المعتمدة. يُسجَّل كل تغيير مع سببه ومعتمده ويظهر الانحراف عن الخط الأساس.</p>
+            <h3 className="modal-title">{t('app.vo.title')}</h3>
+            <p className="modal-text">{t('app.vo.text')}</p>
             <div className="vo-form">
               <select
                 className="modal-input"
@@ -796,7 +941,7 @@ function App() {
                   setVoDraft({ ...voDraft, taskId: e.target.value, newValue: t ? String(t[voDraft.field] ?? '') : '' });
                 }}
               >
-                <option value="">— اختر البند —</option>
+                <option value="">{t('app.vo.pickTask')}</option>
                 {tasks.filter(t => !t.isGroup).map(t => (
                   <option key={t.id} value={t.id}>{t.wbs} — {t.name}</option>
                 ))}
@@ -809,37 +954,76 @@ function App() {
                   setVoDraft({ ...voDraft, field: e.target.value, newValue: t ? String(t[e.target.value] ?? '') : '' });
                 }}
               >
-                <option value="quantity">الكمية التعاقدية</option>
-                <option value="unitPrice">سعر الوحدة</option>
+                <option value="quantity">{t('app.vo.contractQty')}</option>
+                <option value="unitPrice">{t('app.vo.unitPriceField')}</option>
               </select>
-              <input className="modal-input" type="number" placeholder="القيمة الجديدة" value={voDraft.newValue} onChange={e => setVoDraft({ ...voDraft, newValue: e.target.value })} />
-              <input className="modal-input" placeholder="سبب التغيير" value={voDraft.reason} onChange={e => setVoDraft({ ...voDraft, reason: e.target.value })} />
-              <input className="modal-input" placeholder="المعتمد" value={voDraft.approver} onChange={e => setVoDraft({ ...voDraft, approver: e.target.value })} />
-              <button className="apple-btn primary" disabled={!voDraft.taskId} onClick={handleRaiseVariation}>تسجيل أمر التغيير</button>
+              <input className="modal-input" type="number" placeholder={t('app.vo.newValue')} value={voDraft.newValue} onChange={e => setVoDraft({ ...voDraft, newValue: e.target.value })} />
+              <div className="vo-form-row" style={{ display: 'flex', gap: '8px' }}>
+                <select className="modal-input" value={voDraft.urgency} onChange={e => setVoDraft({ ...voDraft, urgency: e.target.value })} title={t('app.vo.classification')}>
+                  <option value="low">{t('app.vo.urgencyLow')}</option>
+                  <option value="medium">{t('app.vo.urgencyMedium')}</option>
+                  <option value="high">{t('app.vo.urgencyHigh')}</option>
+                </select>
+                <select className="modal-input" value={voDraft.classification} onChange={e => setVoDraft({ ...voDraft, classification: e.target.value })} title={t('app.vo.classification')}>
+                  <option value="">{t('app.vo.classAuto')}</option>
+                  <option value="qty">{t('app.vo.classQty')}</option>
+                  <option value="price">{t('app.vo.classPrice')}</option>
+                  <option value="scope">{t('app.vo.classScope')}</option>
+                  <option value="add">{t('app.vo.classAdd')}</option>
+                  <option value="remove">{t('app.vo.classRemove')}</option>
+                </select>
+              </div>
+              <div className="vo-form-row" style={{ display: 'flex', gap: '8px' }}>
+                <input className="modal-input" type="number" placeholder={t('app.vo.costImpact')} value={voDraft.estCostImpact} onChange={e => setVoDraft({ ...voDraft, estCostImpact: e.target.value })} title={t('app.vo.costImpactTitle')} />
+                <input className="modal-input" type="number" placeholder={t('app.vo.scheduleImpact')} value={voDraft.estScheduleDays} onChange={e => setVoDraft({ ...voDraft, estScheduleDays: e.target.value })} />
+              </div>
+              <input className="modal-input" placeholder={t('app.vo.changeReason')} value={voDraft.reason} onChange={e => setVoDraft({ ...voDraft, reason: e.target.value })} />
+              <div className="vo-form-row" style={{ display: 'flex', gap: '8px' }}>
+                <input className="modal-input" placeholder={t('app.vo.approver')} value={voDraft.approver} onChange={e => setVoDraft({ ...voDraft, approver: e.target.value })} />
+                <input className="modal-input" placeholder={t('app.vo.clauseRef')} value={voDraft.clauseRef} onChange={e => setVoDraft({ ...voDraft, clauseRef: e.target.value })} />
+              </div>
+              <button className="apple-btn primary" disabled={!voDraft.taskId} onClick={handleRaiseVariation}>{t('app.vo.record')}</button>
             </div>
             <div className="vo-list">
               {(projectMeta.variations || []).length === 0 ? (
-                <p className="vo-empty">لا توجد أوامر تغيير بعد.</p>
+                <p className="vo-empty">{t('app.vo.empty')}</p>
               ) : (
                 [...(projectMeta.variations || [])].reverse().map(v => (
                   <div key={v.id} className="vo-item">
                     <div className="vo-item-head">
                       <strong>{v.taskWbs} {v.taskName}</strong>
-                      <span className="vo-field">{v.field === 'unitPrice' ? 'سعر الوحدة' : 'الكمية'}</span>
-                    </div>
+                      <span className="vo-field">{v.field === 'unitPrice' ? t('app.vo.unitPriceField') : t('app.vo.qtyField')}</span>
+                      {v.urgency === 'high' && <span className="vo-urgency high">{t('app.vo.urgencyHigh')}</span>}
+                      </div>
                     <div className="vo-delta">{String(v.oldValue)} ← <strong>{String(v.newValue)}</strong></div>
-                    {v.reason && <div className="vo-reason">السبب: {v.reason}</div>}
+                    {v.classification && <div className="vo-class">{voClassLabel(v.classification)}{v.clauseRef ? ` · ${v.clauseRef}` : ''}</div>}
+                    {(v.estCostImpact > 0 || v.estScheduleDays != null) && (
+                      <div className="vo-impact">
+                        {v.estCostImpact > 0 && <span>{t('app.vo.impactCost')} {formatCurrency(v.estCostImpact)}</span>}
+                        {v.estScheduleDays != null && v.estScheduleDays !== 0 && <span>{t('app.vo.impactSchedule')} {v.estScheduleDays > 0 ? '+' : ''}{v.estScheduleDays} {t('app.vo.impactDays')}</span>}
+                      </div>
+                    )}
+                    {v.reason && <div className="vo-reason">{t('app.vo.reasonPrefix')} {v.reason}</div>}
                     <div className="vo-meta">{v.approver}{v.approver && ' · '}{new Date(v.date).toLocaleDateString('en-GB')}</div>
                   </div>
                 ))
               )}
             </div>
             <div className="modal-actions">
-              <button className="apple-btn secondary" onClick={() => setVoOpen(false)}>إغلاق</button>
+              <button className="apple-btn secondary" onClick={() => setVoOpen(false)}>{t('common.close')}</button>
             </div>
           </div>
         </div>
       )}
+      {/* ── IDENTITY PICKER (who is using the app) ── */}
+      <IdentityPicker
+        open={identityOpen}
+        onClose={() => setIdentityOpen(false)}
+        onSaved={(saved) => {
+          setIdentity(saved);
+          setAppEvents(loadAppEvents());
+        }}
+      />
     </div>
   );
 }

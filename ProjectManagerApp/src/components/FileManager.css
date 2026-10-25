@@ -213,6 +213,13 @@
   height: 14px;
 }
 
+/* LTR (English) — the delete button is pinned to the "trailing" corner,
+   which is the right side instead of the RTL left side. */
+[dir="ltr"] .fm-delete-btn {
+  left: auto;
+  right: 8px;
+}
+
 .fm-loading-overlay {
   position: absolute;
   inset: 0;

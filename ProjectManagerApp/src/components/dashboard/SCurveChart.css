@@ -181,3 +181,16 @@
   background: rgba(255, 69, 58, 0.14);
   color: #c0392b;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   LTR (English) — flip physical alignments that assumed RTL.
+   (The SVG chart itself stays LTR in both languages: the time
+   axis reads left→right by convention.)
+   ───────────────────────────────────────────────────────────── */
+[dir="ltr"] .wbs-evm-table th {
+  text-align: left;
+}
+
+[dir="ltr"] .wbs-evm-table .num {
+  text-align: right;
+}

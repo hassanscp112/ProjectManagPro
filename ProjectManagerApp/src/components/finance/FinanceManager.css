@@ -305,6 +305,18 @@
   background: var(--bg-app);
 }
 
+/* LTR (English) — the physical rules above assume RTL layout: the sidebar
+   sits on the start side, so its separator and cell alignment flip. */
+[dir="ltr"] .ledger-sidebar {
+  border-left: none;
+  border-right: 1px solid var(--border-soft);
+}
+
+[dir="ltr"] .ledger-table th,
+[dir="ltr"] .ledger-table td {
+  text-align: left;
+}
+
 @media print {
   body * {
     visibility: hidden;

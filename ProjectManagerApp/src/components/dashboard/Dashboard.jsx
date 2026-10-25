@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import './Dashboard.css';
 import SCurveChart from './SCurveChart';
+import { useI18n } from '../../i18n/useI18n.js';
+import { formatNumber } from '../../i18n/index.js';
 
 // Color tone for an SPI/CPI index: ≥1 good (on/under), 0.9–1 warn, <0.9 bad.
 const evmTone = (idx) => {
@@ -11,12 +13,12 @@ const evmTone = (idx) => {
 };
 
 const Dashboard = ({ tasks, summary }) => {
+  const { t, dir } = useI18n();
   const today = new Date().toISOString().split('T')[0];
   const evm = summary?.evm;
   const sCurve = summary?.sCurve;
   const perWbsEvm = summary?.perWbsEvm;
-  const fmtCur = (n) =>
-    new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(Number(n) || 0));
+  const fmtCur = (n) => formatNumber(Math.round(Number(n) || 0));
   const fmtIdx = (n) => (Number(n) || 0).toFixed(2);
 
   // Per-WBS rows, sorted by WBS numeric order.
@@ -92,69 +94,75 @@ const Dashboard = ({ tasks, summary }) => {
   }, [processedData, today]);
 
   return (
-    <div className="dashboard-container" dir="rtl">
+    <div className="dashboard-container" dir={dir}>
       <div className="dashboard-header">
-        <h2>مرحباً بك في نظام إدارة المشاريع.</h2>
-        <p>اختر وحدة وظيفية أساسية لإدارة المهام، الأصول، والتدفقات المالية داخل النظام.</p>
+        <h2>{t('dashboard.welcome')}</h2>
+        <p>{t('dashboard.welcomeSubtitle')}</p>
       </div>
 
       <div className="dashboard-summary">
         <div className="summary-card overdue">
-          <span className="card-title">مهام متأخرة (عالية الأولوية)</span>
+          <span className="card-title">{t('dashboard.cardOverdue')}</span>
           <span className="card-value">{processedData.overdue.length}</span>
         </div>
         <div className="summary-card active">
-          <span className="card-title">قيد التنفيذ (متوسطة الأولوية)</span>
+          <span className="card-title">{t('dashboard.cardActive')}</span>
           <span className="card-value">{processedData.active.length}</span>
         </div>
         <div className="summary-card upcoming">
-          <span className="card-title">مهام قادمة</span>
+          <span className="card-title">{t('dashboard.cardUpcoming')}</span>
           <span className="card-value">{processedData.upcoming.length}</span>
         </div>
         <div className="summary-card completed">
-          <span className="card-title">مهام مكتملة</span>
+          <span className="card-title">{t('dashboard.cardCompleted')}</span>
           <span className="card-value">{processedData.completed.length}</span>
         </div>
       </div>
 
       {evm && evm.bac > 0 && (
         <div className="dashboard-evm">
-          <h3>تحليل قيمة العمل المكتسبة (EVM — Earned Value Management)</h3>
+          <h3>{t('dashboard.evmTitle')}</h3>
           <div className="evm-grid">
             <div className="evm-tile">
-              <span className="evm-label">الميزانية الإجمالية (BAC)</span>
+              <span className="evm-label">{t('dashboard.evmBac')}</span>
               <span className="evm-value">{fmtCur(evm.bac)}</span>
             </div>
             <div className="evm-tile">
-              <span className="evm-label">القيمة المخططة (PV)</span>
+              <span className="evm-label">{t('dashboard.evmPv')}</span>
               <span className="evm-value">{fmtCur(evm.pv)}</span>
             </div>
             <div className="evm-tile">
-              <span className="evm-label">القيمة المكتسبة (EV)</span>
+              <span className="evm-label">{t('dashboard.evmEv')}</span>
               <span className="evm-value">{fmtCur(evm.ev)}</span>
             </div>
             <div className="evm-tile">
-              <span className="evm-label">التكلفة الفعلية (AC)</span>
+              <span className="evm-label">{t('dashboard.evmAc')}</span>
               <span className="evm-value">{fmtCur(evm.ac)}</span>
             </div>
             <div className={`evm-tile evm-index ${evm.spi >= 1 ? 'good' : 'bad'}`}>
-              <span className="evm-label">مؤشر الأداء الزمني (SPI)</span>
+              <span className="evm-label">{t('dashboard.evmSpi')}</span>
               <span className="evm-value">{fmtIdx(evm.spi)}</span>
-              <span className="evm-hint">{evm.spi >= 1 ? 'متقدم على الجدول' : 'متأخر عن الجدول'}</span>
+              <span className="evm-hint">
+                {evm.spi >= 1 ? t('dashboard.aheadOfSchedule') : t('dashboard.behindSchedule')}
+              </span>
             </div>
             <div className={`evm-tile evm-index ${evm.cpi >= 1 ? 'good' : 'bad'}`}>
-              <span className="evm-label">مؤشر أداء التكلفة (CPI)</span>
+              <span className="evm-label">{t('dashboard.evmCpi')}</span>
               <span className="evm-value">{fmtIdx(evm.cpi)}</span>
-              <span className="evm-hint">{evm.cpi >= 1 ? 'تحت الميزانية' : 'فوق الميزانية'}</span>
+              <span className="evm-hint">
+                {evm.cpi >= 1 ? t('dashboard.underBudget') : t('dashboard.overBudget')}
+              </span>
             </div>
             <div className="evm-tile">
-              <span className="evm-label">التكلفة المتوقعة عند الإكمال (EAC)</span>
+              <span className="evm-label">{t('dashboard.evmEac')}</span>
               <span className="evm-value">{fmtCur(evm.eac)}</span>
             </div>
             <div className={`evm-tile ${evm.vac >= 0 ? 'good' : 'bad'}`}>
-              <span className="evm-label">الانحراف عند الإكمال (VAC)</span>
+              <span className="evm-label">{t('dashboard.evmVac')}</span>
               <span className="evm-value">{fmtCur(evm.vac)}</span>
-              <span className="evm-hint">{evm.vac >= 0 ? 'تحت الميزانية' : 'تجاوز الميزانية'}</span>
+              <span className="evm-hint">
+                {evm.vac >= 0 ? t('dashboard.underBudget') : t('dashboard.budgetOverrun')}
+              </span>
             </div>
           </div>
         </div>
@@ -163,10 +171,8 @@ const Dashboard = ({ tasks, summary }) => {
       {/* S-curve: cumulative PV vs EV vs AC over time */}
       {sCurve && sCurve.length > 1 && (
         <div className="scurve-section">
-          <h3>منحنى القيمة (S-Curve)</h3>
-          <p className="scurve-subtitle">
-            القيمة المخططة (PV) مقابل المكتسبة (EV) مقابل التكلفة الفعلية (AC) عبر زمن المشروع.
-          </p>
+          <h3>{t('dashboard.scurveTitle')}</h3>
+          <p className="scurve-subtitle">{t('dashboard.scurveSubtitle')}</p>
           <SCurveChart points={sCurve} />
         </div>
       )}
@@ -174,21 +180,19 @@ const Dashboard = ({ tasks, summary }) => {
       {/* Per-WBS EVM roll-up */}
       {wbsRows.length > 0 && (
         <div className="wbs-evm-section">
-          <h3>تحليل EVM حسب الفقرة الرئيسية (WBS)</h3>
-          <p className="wbs-evm-subtitle">
-            مؤشر الأداء الزمني (SPI) وأداء التكلفة (CPI) لكل مجموعة رئيسية، مع الميزانية (BAC) والتكلفة الفعلية (AC).
-          </p>
+          <h3>{t('dashboard.wbsTitle')}</h3>
+          <p className="wbs-evm-subtitle">{t('dashboard.wbsSubtitle')}</p>
           <div className="wbs-evm-table-wrap">
             <table className="wbs-evm-table">
               <thead>
                 <tr>
-                  <th>الرمز</th>
-                  <th>الاسم</th>
-                  <th>عدد البنود</th>
-                  <th>BAC (د.ع)</th>
-                  <th>PV (د.ع)</th>
-                  <th>EV (د.ع)</th>
-                  <th>AC (د.ع)</th>
+                  <th>{t('dashboard.colCode')}</th>
+                  <th>{t('common.name')}</th>
+                  <th>{t('dashboard.colItemCount')}</th>
+                  <th>{t('dashboard.colBac', { unit: t('dashboard.currencyUnit') })}</th>
+                  <th>{t('dashboard.colPv', { unit: t('dashboard.currencyUnit') })}</th>
+                  <th>{t('dashboard.colEv', { unit: t('dashboard.currencyUnit') })}</th>
+                  <th>{t('dashboard.colAc', { unit: t('dashboard.currencyUnit') })}</th>
                   <th>SPI</th>
                   <th>CPI</th>
                 </tr>
@@ -218,23 +222,23 @@ const Dashboard = ({ tasks, summary }) => {
       )}
 
       <div className="dashboard-action-items">
-        <h3>المهام المطلوبة (حسب الأولوية)</h3>
+        <h3>{t('dashboard.actionTitle')}</h3>
         <div className="action-table-wrapper">
           <table className="action-table">
             <thead>
               <tr>
                 <th>WBS</th>
-                <th>اسم المهمة</th>
-                <th>تاريخ البدء</th>
-                <th>تاريخ الانتهاء</th>
-                <th>نسبة الإنجاز</th>
-                <th>الأولوية / الحالة</th>
+                <th>{t('dashboard.colTaskName')}</th>
+                <th>{t('dashboard.colStartDate')}</th>
+                <th>{t('dashboard.colEndDate')}</th>
+                <th>{t('dashboard.colProgress')}</th>
+                <th>{t('dashboard.colPriority')}</th>
               </tr>
             </thead>
             <tbody>
               {actionItems.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>لا توجد مهام مطلوبة حالياً.</td>
+                  <td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{t('dashboard.noActionItems')}</td>
                 </tr>
               ) : (
                 actionItems.map(item => (
@@ -252,9 +256,9 @@ const Dashboard = ({ tasks, summary }) => {
                       </div>
                     </td>
                     <td>
-                      {item.priorityType === 'critical' && <span className="priority-badge critical">متأخرة (عالية)</span>}
-                      {item.priorityType === 'medium' && <span className="priority-badge medium">قيد التنفيذ (متوسطة)</span>}
-                      {item.priorityType === 'low' && <span className="priority-badge low">تبدأ قريباً (عادية)</span>}
+                      {item.priorityType === 'critical' && <span className="priority-badge critical">{t('dashboard.priorityCritical')}</span>}
+                      {item.priorityType === 'medium' && <span className="priority-badge medium">{t('dashboard.priorityMedium')}</span>}
+                      {item.priorityType === 'low' && <span className="priority-badge low">{t('dashboard.priorityLow')}</span>}
                     </td>
                   </tr>
                 ))

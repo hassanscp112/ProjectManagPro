@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
+import { useI18n } from '../../i18n/useI18n.js';
 import { calculateRow } from '../../utils/CalculatorEngine';
 
 const CalculatorGrid = ({ template, onUpdateTemplate }) => {
+  const { t } = useI18n();
   // NOTE: hooks must run before any early return, so guard for a null
   // template inside the memo rather than returning early above it.
   const totals = useMemo(() => {
@@ -23,7 +25,8 @@ const CalculatorGrid = ({ template, onUpdateTemplate }) => {
   const handleAddRow = () => {
     const newRow = {
       id: 'row_' + Date.now(),
-      name: `عنصر ${template.rows.length + 1}`,
+      // Default name is fresh row data — generated in the active UI language.
+      name: t('calculator.defaultRowName', { n: template.rows.length + 1 }),
       values: {}
     };
     onUpdateTemplate({ ...template, rows: [...template.rows, newRow] });
@@ -58,7 +61,7 @@ const CalculatorGrid = ({ template, onUpdateTemplate }) => {
         <thead>
           <tr>
             <th style={{ width: '40px' }}></th>
-            <th>الاسم (المرجع)</th>
+            <th>{t('calculator.nameRefHeader')}</th>
             {template.columns.map(col => (
               <th key={col.id}>{col.name}</th>
             ))}
@@ -75,7 +78,7 @@ const CalculatorGrid = ({ template, onUpdateTemplate }) => {
                   className="calc-grid-input" 
                   value={row.name || ''} 
                   onChange={e => handleUpdateRowName(row.id, e.target.value)} 
-                  placeholder="اسم العنصر"
+                  placeholder={t('calculator.rowNamePlaceholder')}
                 />
               </td>
               {template.columns.map(col => (
@@ -94,7 +97,7 @@ const CalculatorGrid = ({ template, onUpdateTemplate }) => {
                       type="number"
                       value={row.values[col.id] !== undefined ? row.values[col.id] : ''} 
                       onChange={e => handleUpdateCell(row.id, col.id, e.target.value)} 
-                      placeholder="استيراد..."
+                      placeholder={t('calculator.designPlaceholder')}
                       style={{ background: 'rgba(255, 149, 0, 0.05)' }}
                     />
                   ) : (
@@ -112,7 +115,7 @@ const CalculatorGrid = ({ template, onUpdateTemplate }) => {
           
           <tr className="total-row">
             <td></td>
-            <td>المجموع الكلي</td>
+            <td>{t('calculator.grandTotal')}</td>
             {template.columns.map(col => (
               <td key={`total_${col.id}`} className="num center">
                 {col.source === 'formula' || col.source === 'input' || col.source === 'design' ? parseFloat(totals[col.id] || 0).toFixed(2) : ''}
@@ -123,7 +126,7 @@ const CalculatorGrid = ({ template, onUpdateTemplate }) => {
       </table>
 
       <button className="calc-btn secondary" onClick={handleAddRow} style={{ marginTop: '16px' }}>
-        + إضافة صف
+        {t('calculator.addRow')}
       </button>
     </div>
   );

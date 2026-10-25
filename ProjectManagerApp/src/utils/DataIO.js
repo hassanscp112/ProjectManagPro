@@ -15,6 +15,15 @@ export const APP_STORAGE_KEYS = [
   'project-manager-finance-config',// finance dropdown lists
   'pm-calculator-templates',       // calculator templates
   'project-manager-daily-reports', // daily site reports
+  'pm-orders',                     // order ledger (value + expense orders)
+  'pm-registries',                 // contractors / teams / workers roster
+  'pm-identity',                   // current user (name picker stub)
+  'pm-plans',                      // lookahead plans (monthly/weekly/daily)
+  'pm-rate-library',               // editable IQD rate catalog
+  'pm-templates',                  // structure templates + parts
+  'pm-activity',                   // app-level activity events
+  'pm-snapshots',                  // version-history checkpoints (auto + named)
+  'pm-language',                   // selected UI language (ar/en)
 ];
 
 const BACKUP_MAGIC = 'projectmanager-backup';
