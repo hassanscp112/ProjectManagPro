@@ -12,6 +12,7 @@ import OrderRow from '../record/OrderRow.jsx';
 import { formatDay } from '../record/orderMeta.js';
 import { useOrderActions } from '../record/useApproval.jsx';
 import s from './Schedule.module.css';
+import { warningText } from './warningText.js';
 
 const STATUS = {
   done: { tone: 'success', key: 'schedule.statusDone' },
@@ -114,11 +115,18 @@ export default function TaskPanel({ taskId, onClose }) {
           )}
           {task.totalFloat != null && !task.isGroup && <StatusBadge size="md">{t('schedule.float', { n: task.totalFloat })}</StatusBadge>}
           {task.warnings?.length > 0 && (
-            <StatusBadge tone="warning" size="md" title={task.warnings.join('\n')}>
+            <StatusBadge tone="warning" size="md">
               {t('schedule.warningsCount', { n: task.warnings.length })}
             </StatusBadge>
           )}
         </div>
+        {task.warnings?.length > 0 && (
+          <ul className={s.warnings}>
+            {task.warnings.map((w, i) => (
+              <li key={i}>{warningText(t, w)}</li>
+            ))}
+          </ul>
+        )}
 
         <div>
           <div className={s.big}>

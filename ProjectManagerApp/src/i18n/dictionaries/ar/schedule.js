@@ -113,4 +113,11 @@ export default {
   'schedule.colDelta': 'فرق القيمة',
   'schedule.newItem': 'جديدة',
   'schedule.noChanges': 'لا تغييرات منذ التوقيع.',
+  // Engine warnings (GanttEngine codes, see app/schedule/warningText.js)
+  'schedule.warnDuplicateWbs': 'المعرّف WBS مكرر ({wbs})',
+  'schedule.warnOverExecuted': 'الكمية المنفذة أكبر من الكمية التعاقدية',
+  'schedule.warnInvalidDepType': 'نوع العلاقة غير محدد أو غير صحيح، تم اعتماد FS',
+  'schedule.warnDependencyCycle': 'توجد دورة في العلاقات: {cycle}',
+  'schedule.warnSelfDependency': 'لا يمكن ربط الفقرة بنفسها',
+  'schedule.warnMissingPredecessor': 'الفقرة السابقة غير موجودة ({id})',
 };

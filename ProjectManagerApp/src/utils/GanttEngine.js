@@ -47,13 +47,26 @@ const compareByWbsDepth = (a, b) => {
   return bDepth - aDepth;
 };
 
-const addTaskWarning = (task, warning, allWarnings) => {
+// Warning codes (stable, translated by the UI) with their Arabic fallback
+// message. Params fill the {placeholders} in both.
+const WARNING_MESSAGES = {
+  duplicateWbs: ({ wbs }) => `المعرّف WBS مكرر (${wbs})`,
+  overExecuted: () => 'الكمية المنفذة أكبر من الكمية المخططة',
+  invalidDepType: () => 'نوع العلاقة غير محدد أو غير صحيح، تم اعتماد FS',
+  dependencyCycle: ({ cycle }) => `توجد دورة في العلاقات: ${cycle}`,
+  selfDependency: () => 'لا يمكن ربط الفقرة بنفسها',
+  missingPredecessor: ({ id }) => `الفقرة السابقة غير موجودة (${id})`,
+};
+
+// task.warnings / result.warnings entries: { code, params, message }.
+const addTaskWarning = (task, code, params, allWarnings) => {
+  const warning = { code, params, message: WARNING_MESSAGES[code](params) };
   task.warnings.push(warning);
   allWarnings.push({
     taskId: task.id,
     wbs: task.wbs,
     name: task.name,
-    message: warning,
+    ...warning,
   });
 };
 
@@ -309,17 +322,17 @@ export class GanttEngine {
     wbsGroups.forEach(group => {
       if (group.length <= 1) return;
       group.forEach(task => {
-        addTaskWarning(task, `المعرّف WBS مكرر (${task.wbs})`, warnings);
+        addTaskWarning(task, 'duplicateWbs', { wbs: task.wbs }, warnings);
       });
     });
 
     computedTasks.forEach(task => {
       if (task.actualQty > task.qty && task.qty > 0) {
-        addTaskWarning(task, 'الكمية المنفذة أكبر من الكمية المخططة', warnings);
+        addTaskWarning(task, 'overExecuted', {}, warnings);
       }
       if (task.dependsOn && !VALID_DEP_TYPES.has(task.depType)) {
         task.depType = 'FS';
-        addTaskWarning(task, 'نوع العلاقة غير محدد أو غير صحيح، تم اعتماد FS', warnings);
+        addTaskWarning(task, 'invalidDepType', {}, warnings);
       }
     });
 
@@ -335,7 +348,7 @@ export class GanttEngine {
 
       if (currentState === 'visiting') {
         const cycle = [...stack, task].map(item => item.wbs || item.id).join(' > ');
-        addTaskWarning(task, `توجد دورة في العلاقات: ${cycle}`, warnings);
+        addTaskWarning(task, 'dependencyCycle', { cycle }, warnings);
         applyBaselineSchedule(task);
         state.set(task.id, 'done');
         return;
@@ -346,12 +359,12 @@ export class GanttEngine {
 
       if (task.dependsOn) {
         if (task.dependsOn === task.id) {
-          addTaskWarning(task, 'لا يمكن ربط الفقرة بنفسها', warnings);
+          addTaskWarning(task, 'selfDependency', {}, warnings);
         } else {
           const dependency = tasksById.get(task.dependsOn);
 
           if (!dependency) {
-            addTaskWarning(task, `الفقرة السابقة غير موجودة (${task.dependsOn})`, warnings);
+            addTaskWarning(task, 'missingPredecessor', { id: task.dependsOn }, warnings);
           } else {
             resolveTaskSchedule(dependency, [...stack, task]);
 

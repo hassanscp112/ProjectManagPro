@@ -220,6 +220,23 @@ describe('GanttEngine.calculate warnings', () => {
     assert.ok(messages.some((m) => m.includes('لا يمكن ربط الفقرة بنفسها')));
   });
 
+  it('gives every warning a stable code and params (translated by the UI)', () => {
+    const tasks = [
+      makeTask({ id: 'd1', wbs: '1.1' }),
+      makeTask({ id: 'd2', wbs: '1.1' }),
+      makeTask({ id: 'ghost', wbs: '1.2', dependsOn: 'missing' }),
+      makeTask({ id: 'self', wbs: '1.3', dependsOn: 'self', depType: 'FS' }),
+    ];
+    const result = GanttEngine.calculate(tasks, '2030-01-01');
+    const codes = result.warnings.map((w) => [w.taskId, w.code, w.params]);
+    assert.deepEqual(codes.find(([id]) => id === 'd1'), ['d1', 'duplicateWbs', { wbs: '1.1' }]);
+    assert.deepEqual(codes.find(([id, code]) => id === 'ghost' && code === 'missingPredecessor'), ['ghost', 'missingPredecessor', { id: 'missing' }]);
+    assert.deepEqual(codes.find(([id]) => id === 'self'), ['self', 'selfDependency', {}]);
+    const ghost = byId(result).get('ghost');
+    const missing = ghost.warnings.find((w) => w.code === 'missingPredecessor');
+    assert.ok(missing.message.includes('(missing)'));
+  });
+
   it('coerces an invalid dependency type to FS with a warning', () => {
     const tasks = [
       makeTask({ id: 'a', wbs: '1.1' }),

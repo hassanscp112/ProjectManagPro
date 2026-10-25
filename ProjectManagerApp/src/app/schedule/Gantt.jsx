@@ -7,6 +7,7 @@ import { Button, IconButton, cx } from '../../ui/index.js';
 import { formatDay } from '../record/orderMeta.js';
 import s from './Gantt.module.css';
 import { lockText } from './lockText.js';
+import { warningsTitle } from './warningText.js';
 
 const COLS = {
   schedule: [
@@ -199,7 +200,7 @@ const Gantt = forwardRef(function Gantt(
                     )}
                     {task.isCritical && !task.isGroup && <span className={s.critDot} title={t('gantt.onCriticalPath')} />}
                     {task.warnings?.length > 0 && (
-                      <span className={s.warn} title={task.warnings.join('\n')} role="img" aria-label={t('schedule.warningsCount', { n: task.warnings.length })}>
+                      <span className={s.warn} title={warningsTitle(t, task.warnings)} role="img" aria-label={t('schedule.warningsCount', { n: task.warnings.length })}>
                         <TriangleAlert size={14} aria-hidden="true" />
                       </span>
                     )}

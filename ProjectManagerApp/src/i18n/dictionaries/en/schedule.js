@@ -113,4 +113,11 @@ export default {
   'schedule.colDelta': 'Value change',
   'schedule.newItem': 'New',
   'schedule.noChanges': 'No changes since sign-off.',
+  // Engine warnings (GanttEngine codes, see app/schedule/warningText.js)
+  'schedule.warnDuplicateWbs': 'Duplicate WBS code ({wbs})',
+  'schedule.warnOverExecuted': 'Executed quantity is more than the contract quantity',
+  'schedule.warnInvalidDepType': 'Missing or invalid relation type — FS was used',
+  'schedule.warnDependencyCycle': 'Circular dependency: {cycle}',
+  'schedule.warnSelfDependency': 'An item cannot depend on itself',
+  'schedule.warnMissingPredecessor': 'The predecessor does not exist ({id})',
 };
