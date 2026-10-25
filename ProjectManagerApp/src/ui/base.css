@@ -88,3 +88,32 @@
     animation-duration: 0ms !important;
   }
 }
+
+/* ── Print ──
+   Paper is black on white with small accent touches. `.ui-no-print` hides
+   on-screen controls; `.ui-print-sheet` marks what a printable page prints
+   and stays visible even where legacy CSS hides `body *` when printing. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body,
+  #root {
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  .ui-no-print {
+    display: none !important;
+  }
+  .ui-print-sheet,
+  .ui-print-sheet * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -83,3 +83,9 @@
 .langButton {
   min-width: 44px;
 }
+
+@media print {
+  .tabs {
+    display: none;
+  }
+}

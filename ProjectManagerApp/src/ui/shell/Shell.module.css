@@ -332,3 +332,19 @@ button.user:hover {
     display: none;
   }
 }
+
+/* Printing: only the page content, flowing over as many sheets as needed. */
+@media print {
+  .shell,
+  .main {
+    display: block;
+    height: auto;
+    overflow: visible;
+    padding: 0;
+  }
+  .sidebar,
+  .bottomNav,
+  .topBar {
+    display: none !important;
+  }
+}
