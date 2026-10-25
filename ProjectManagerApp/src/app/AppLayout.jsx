@@ -29,7 +29,9 @@ export default function AppLayout() {
   const { pathname } = useLocation();
   const { identity, openIdentity, pendingApprovals, refreshStores, tasks } = useProject();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [immersive, setImmersive] = useState(false);
   const activeKey = areaKeyForPath(pathname);
+  const shell = useMemo(() => ({ openSearch: () => setSearchOpen(true), setImmersive }), []);
 
   // Same contract as the old tab switch: re-read the module stores on navigation.
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function AppLayout() {
   const hasUser = Boolean(identity?.name);
 
   return (
-    <ShellContext.Provider value={{ openSearch: () => setSearchOpen(true) }}>
+    <ShellContext.Provider value={shell}>
       <AppShell
         sidebar={
           <Sidebar
@@ -90,6 +92,7 @@ export default function AppLayout() {
           />
         }
         bottomNav={
+          !immersive && (
           <BottomNav
             activeKey={activeKey}
             primary={{ label: t('ui.recordOrder'), href: hrefFor('/record') }}
@@ -100,6 +103,7 @@ export default function AppLayout() {
               { key: MORE_AREA.key, label: t(MORE_AREA.labelKey), icon: MORE_AREA.icon, href: hrefFor(MORE_AREA.path) },
             ]}
           />
+          )
         }
       >
         <Outlet />

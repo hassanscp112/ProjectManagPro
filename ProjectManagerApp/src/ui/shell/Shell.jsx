@@ -10,7 +10,7 @@ import s from './Shell.module.css';
 export function AppShell({ sidebar, bottomNav, children, className }) {
   const { dir } = useI18n();
   return (
-    <div dir={dir} className={cx('ui-root', s.shell, className)}>
+    <div dir={dir} className={cx('ui-root', s.shell, !bottomNav && s.noBottomNav, className)}>
       {sidebar}
       <main className={s.main}>{children}</main>
       {bottomNav}

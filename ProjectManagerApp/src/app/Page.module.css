@@ -61,6 +61,16 @@
   background: var(--ui-accent);
 }
 
+.count {
+  margin-inline-start: var(--ui-space-2);
+  padding: 0 var(--ui-space-2);
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-warning-soft);
+  color: var(--ui-warning);
+  font-size: var(--ui-fs-xs);
+  font-weight: 600;
+}
+
 .langButton {
   min-width: 44px;
 }

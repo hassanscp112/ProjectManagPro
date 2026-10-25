@@ -5,6 +5,15 @@ import { Button, IconButton } from './Button.jsx';
 import { cx } from './cx.js';
 import s from './Overlay.module.css';
 
+/** On open, focus the field marked data-autofocus (else Radix picks the first control). */
+const focusMarkedField = (e) => {
+  const target = e.currentTarget?.querySelector?.('[data-autofocus]');
+  if (target) {
+    e.preventDefault();
+    target.focus();
+  }
+};
+
 /** Shared header + body + footer used by Dialog and Drawer. */
 function PanelChrome({ title, description, footer, children }) {
   const { t } = useI18n();
@@ -31,14 +40,18 @@ function PanelChrome({ title, description, footer, children }) {
 
 /**
  * Centered modal dialog. Controlled: pass `open` + `onOpenChange`.
- * Focus is trapped inside; Esc and the close button dismiss it.
+ * Focus is trapped inside; Esc and the close button dismiss it. Put
+ * data-autofocus on the field that should take focus when it opens.
  */
 export function Dialog({ open, onOpenChange, title, description, footer, size = 'md', children }) {
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
         <RadixDialog.Overlay className={cx('ui-portal', s.overlay)} />
-        <RadixDialog.Content className={cx('ui-portal', s.panel, s.dialog, size === 'lg' && s.dialogLg)}>
+        <RadixDialog.Content
+          className={cx('ui-portal', s.panel, s.dialog, size === 'lg' && s.dialogLg)}
+          onOpenAutoFocus={focusMarkedField}
+        >
           <PanelChrome title={title} description={description} footer={footer}>
             {children}
           </PanelChrome>
@@ -98,7 +111,7 @@ export function Drawer({ open, onOpenChange, title, description, footer, wide = 
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
         <RadixDialog.Overlay className={cx('ui-portal', s.overlay)} />
-        <RadixDialog.Content className={cx('ui-portal', s.panel, wide ? s.drawerWide : s.drawer)}>
+        <RadixDialog.Content className={cx('ui-portal', s.panel, wide ? s.drawerWide : s.drawer)} onOpenAutoFocus={focusMarkedField}>
           <span className={s.handle} aria-hidden="true" />
           <PanelChrome title={title} description={description} footer={footer}>
             {children}

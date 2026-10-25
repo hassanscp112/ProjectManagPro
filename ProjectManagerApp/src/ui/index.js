@@ -20,4 +20,5 @@ export { UiProvider } from './UiProvider.jsx';
 export { useToast } from './toastContext.js';
 export { useField } from './fieldContext.js';
 export { useHotkey } from './useHotkey.js';
+export { useMediaQuery, usePhone } from './useMediaQuery.js';
 export { cx } from './cx.js';

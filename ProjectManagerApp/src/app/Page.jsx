@@ -35,14 +35,15 @@ function GlobalActions() {
   );
 }
 
-/** Sub-pages of an area as router tabs. */
-function AreaTabs({ tabs }) {
+/** Sub-pages of an area as router tabs; counts[to] shows a small pill. */
+function AreaTabs({ tabs, counts = {} }) {
   const { t } = useI18n();
   return (
     <nav aria-label={t('ui.sectionNav')} className={s.tabs}>
       {tabs.map((tab) => (
         <NavLink key={tab.to} to={tab.to} end={tab.end} className={s.tab}>
           {t(tab.labelKey)}
+          {counts[tab.to] ? <span className={s.count}>{counts[tab.to]}</span> : null}
         </NavLink>
       ))}
     </nav>
@@ -55,19 +56,23 @@ const ALL_AREAS = [...AREAS, SETTINGS_AREA, MORE_AREA];
  * Standard page frame: area title + project subtitle + global actions,
  * the area's sub-page tabs (if any), then the page content.
  * `fill` lets the content take the remaining window height (Gantt).
+ * `tabCounts` puts a count on sub-page tabs ({ '/record/pending': 2 }).
+ * `bare` drops header and tabs (full-screen phone flows draw their own).
  */
-export function Page({ area, fill = false, children }) {
+export function Page({ area, fill = false, tabCounts, bare = false, children }) {
   const { t } = useI18n();
   const def = ALL_AREAS.find((a) => a.key === area);
   const tabs = AREA_TABS[area];
   return (
     <div className={cx(s.page, fill && s.fill)}>
-      <TopBar
-        title={def ? t(def.labelKey) : ''}
-        subtitle={`${t('ui.projectName')} · ${t('ui.projectContract')}`}
-        actions={<GlobalActions />}
-      />
-      {tabs && <AreaTabs tabs={tabs} />}
+      {!bare && (
+        <TopBar
+          title={def ? t(def.labelKey) : ''}
+          subtitle={`${t('ui.projectName')} · ${t('ui.projectContract')}`}
+          actions={<GlobalActions />}
+        />
+      )}
+      {tabs && !bare && <AreaTabs tabs={tabs} counts={tabCounts} />}
       <div className={s.content}>{children}</div>
     </div>
   );

@@ -45,6 +45,7 @@
 /* Segmented control: a well with one raised option */
 .segmented {
   display: inline-flex;
+  align-self: flex-start;
   flex-wrap: wrap;
   gap: 2px;
   padding: 3px;

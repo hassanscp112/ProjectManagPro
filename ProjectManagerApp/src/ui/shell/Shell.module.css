@@ -25,6 +25,10 @@
     padding: var(--ui-space-4) var(--ui-space-4) calc(96px + env(safe-area-inset-bottom));
     gap: var(--ui-space-4);
   }
+  /* No bottom bar (focused task): only the safe-area gap at the bottom */
+  .noBottomNav .main {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 /* ── Sidebar ── */

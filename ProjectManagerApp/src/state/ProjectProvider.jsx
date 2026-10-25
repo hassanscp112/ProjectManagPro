@@ -213,6 +213,7 @@ export function ProjectProvider({ children }) {
     tasks,
     projectMeta,
     orders,
+    lastWhoByType: ordersData?.lastWhoByType || {},
     registries,
     identity,
     appEvents,
