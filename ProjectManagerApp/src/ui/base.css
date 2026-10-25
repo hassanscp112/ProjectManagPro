@@ -18,6 +18,15 @@
   background: var(--ui-canvas);
 }
 
+/* Portals live in <body>, which legacy CSS forces to RTL; take the
+   direction from <html dir> (set by I18nProvider) instead. */
+:root[dir='ltr'] .ui-portal {
+  direction: ltr;
+}
+:root[dir='rtl'] .ui-portal {
+  direction: rtl;
+}
+
 :where(.ui-root, .ui-portal) *,
 :where(.ui-root, .ui-portal) *::before,
 :where(.ui-root, .ui-portal) *::after {

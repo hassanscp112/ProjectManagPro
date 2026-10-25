@@ -8,12 +8,30 @@ import s from './Shell.module.css';
  * Pass the rendered <Sidebar> and <BottomNav> in.
  */
 export function AppShell({ sidebar, bottomNav, children, className }) {
+  const { dir } = useI18n();
   return (
-    <div className={cx('ui-root', s.shell, className)}>
+    <div dir={dir} className={cx('ui-root', s.shell, className)}>
       {sidebar}
       <main className={s.main}>{children}</main>
       {bottomNav}
     </div>
+  );
+}
+
+/** Current user at the foot of the sidebar; a button when user.onClick is set. */
+function SidebarUser({ user }) {
+  const Tag = user.onClick ? 'button' : 'div';
+  const extra = user.onClick ? { type: 'button', onClick: user.onClick, title: user.title } : {};
+  return (
+    <Tag {...extra} className={s.user}>
+      <span className={s.avatar} aria-hidden="true">
+        {user.initial}
+      </span>
+      <span className={s.userText}>
+        <span className={s.userName}>{user.name}</span>
+        {user.role && <span className={s.userRole}>{user.role}</span>}
+      </span>
+    </Tag>
   );
 }
 
@@ -57,17 +75,7 @@ export function Sidebar({ project, primaryAction, items, footerItems = [], activ
       <ul className={s.navList}>{items.map(renderItem)}</ul>
       <div className={s.spacer} />
       {footerItems.length > 0 && <ul className={s.navList}>{footerItems.map(renderItem)}</ul>}
-      {user && (
-        <div className={s.user}>
-          <span className={s.avatar} aria-hidden="true">
-            {user.initial}
-          </span>
-          <span className={s.userText}>
-            <span className={s.userName}>{user.name}</span>
-            {user.role && <span className={s.userRole}>{user.role}</span>}
-          </span>
-        </div>
-      )}
+      {user && <SidebarUser user={user} />}
     </nav>
   );
 }
