@@ -2,15 +2,9 @@
 // Keys use the '<module>.<name>' convention; both language files must stay in sync.
 export default {
   /* ---------- generic ---------- */
-  'taskDetails.noTaskSelected': 'No item selected.',
   'taskDetails.untitledItem': 'Untitled item',
-  'taskDetails.backToGrid': 'Back to the grid',
-  'taskDetails.currentUser': 'Current user',
-  'taskDetails.completionPct': 'Completion',
-  'taskDetails.scheduleWindow': 'Schedule window',
   'taskDetails.dayOne': '{n} day',
   'taskDetails.daysMany': '{n} days',
-  'taskDetails.noDuration': 'No duration set',
 
   /* ---------- header badges & counters ---------- */
   'taskDetails.groupBadge': 'Group',
@@ -18,8 +12,6 @@ export default {
   'taskDetails.signedContract': 'Signed contract',
   'taskDetails.elementOne': '{n} element',
   'taskDetails.elementsMany': '{n} elements',
-  'taskDetails.qtyTypeOne': '{n} quantity type',
-  'taskDetails.qtyTypesMany': '{n} quantity types',
   'taskDetails.boqOne': '{n} BOQ item',
   'taskDetails.boqMany': '{n} BOQ items',
   'taskDetails.orderOne': '{n} order',
@@ -28,8 +20,6 @@ export default {
   /* ---------- mode toggle ---------- */
   'taskDetails.viewModeAria': 'View mode',
   'taskDetails.view': 'View',
-  'taskDetails.viewTitle': 'Item report — everything you need at a glance',
-  'taskDetails.editTitle': 'Edit the item (elements, quantity types, sub-items)',
   'taskDetails.editTitleSigned': 'Project is signed — contract quantities and prices stay locked even in Edit mode',
 
   /* ---------- element status (values stay codes) ---------- */
@@ -44,10 +34,8 @@ export default {
   'taskDetails.overallProgress': 'Overall item progress',
   'taskDetails.rollupFromChildren': 'Auto-rolled up from {n} sub-items (value-weighted)',
   'taskDetails.executedOfTotal': 'Executed {executed} of {total} {unit}',
-  'taskDetails.qtyEmpty': 'No quantity types yet — add them in ✏️ Edit mode to turn the element total into a BOQ item.',
   'taskDetails.qtyTypeFallback': 'Quantity type',
   'taskDetails.linkedBoqTitle': 'Linked to a BOQ item — quantities are managed from the elements',
-  'taskDetails.itemWord': 'item',
   'taskDetails.statContract': 'Contract',
   'taskDetails.statExecuted': 'Executed',
   'taskDetails.statRemaining': 'Remaining',
@@ -63,17 +51,9 @@ export default {
   'taskDetails.locationStation': 'Location / Station',
   'taskDetails.hideCompleted': 'Hide completed',
   'taskDetails.showCompleted': 'Show completed',
-  'taskDetails.allHiddenNote': 'All elements are completed ({n}) — click "Show completed" to view them.',
-  'taskDetails.mapEmpty': 'No elements yet (manholes, sections, stations…) — add them in ✏️ Edit mode to track where the work stands.',
 
   /* ---------- read: orders feed ---------- */
   'taskDetails.secOrders': "Who & what's new",
-  'taskDetails.ordersEmptyLinked': 'No work orders on this item or its children yet — record the work in the Work Orders screen.',
-  'taskDetails.ordersEmptyNoProp': 'Record work in the Work Orders screen — orders linked to this item appear here automatically.',
-  'taskDetails.executedBy': 'Performed by',
-  'taskDetails.qtyOrAmount': 'Qty / Amount',
-  'taskDetails.orderWord': 'Order',
-  'taskDetails.moreOrdersNote': 'Showing the last {shown} of {total} orders — full log in the Work Orders screen.',
   'taskDetails.rollupTitle': 'Contractors on this item:',
   'taskDetails.unknownContractor': 'Unknown contractor',
   'taskDetails.executedQtyLabel': 'Executed qty',
@@ -96,46 +76,30 @@ export default {
   'taskDetails.secEvidence': 'Evidence',
   'taskDetails.evidenceTests': 'Tests (concrete / soil)',
   'taskDetails.evidenceCompletions': 'Handover / completion orders',
-  'taskDetails.evidenceFiles': 'Files — managed in the Files screen',
-  'taskDetails.evidenceFilesTitle': 'The item’s file folder is managed in the Files screen',
 
   /* ---------- sub-items (read + edit) ---------- */
   'taskDetails.secChildren': 'Sub-items',
-  'taskDetails.childrenHint': 'Switch to ✏️ Edit mode to modify or add',
   'taskDetails.childrenEmptyRead': 'No sub-items under this item yet.',
   'taskDetails.childrenEmptyEdit': 'No sub-items yet. Add them here or directly in the grid — they appear here automatically.',
   'taskDetails.colCode': 'Code',
   'taskDetails.colExecutedQty': 'Executed',
   'taskDetails.colUnitPrice': 'Unit price',
   'taskDetails.managedFromElements': 'Managed from the item’s element sum',
-  'taskDetails.contractQtyTitle': 'Contract quantity',
   'taskDetails.approvedContractQty': 'Approved contract quantity',
-  'taskDetails.approvedContractPrice': 'Approved contract price',
-  'taskDetails.fromOrdersTitle': 'From work orders: {count} orders ({formal} formal + {quick} quick)',
   'taskDetails.typeGroup': 'Group',
   'taskDetails.typeManual': 'Manual',
-  'taskDetails.linkedToQtyType': 'Linked to quantity type: {name}',
   'taskDetails.openChildDetails': 'Open this item’s details',
   'taskDetails.deleteChild': 'Delete item',
   'taskDetails.childNamePlaceholder': 'Item name',
-  'taskDetails.addChild': '+ Add sub-item',
 
   /* ---------- edit: help banner + summary cards ---------- */
   'taskDetails.helpTitle': 'How does this work?',
   'taskDetails.helpPre': 'Add elements (e.g. manholes) and enter their quantities by type (C25, C20, C7 …). Totals are calculated automatically per type; by enabling',
   'taskDetails.helpKey': 'BOQ item',
   'taskDetails.helpPost': 'a sub-item is created in the grid (BOQ) whose quantity is bound to that total.',
-  'taskDetails.sumElements': 'Elements',
-  'taskDetails.sumCompleted': 'Completed',
-  'taskDetails.sumInProgress': 'In progress',
-  'taskDetails.sumLinkedBoq': 'Linked BOQ items',
-  'taskDetails.sumTotalQty': 'Total quantities',
 
   /* ---------- edit: quantity types manager ---------- */
   'taskDetails.secQtyTypes': 'Quantity types & totals',
-  'taskDetails.btnDefaults': '+ Default types (C25/C20/C7)',
-  'taskDetails.btnAddType': '+ Quantity type',
-  'taskDetails.typesEmpty': 'No quantity types yet. Click “+ Quantity type” or “Default types” to get started.',
   'taskDetails.colQtyType': 'Quantity type',
   'taskDetails.colWaste': 'Waste %',
   'taskDetails.colTotalWithWaste': 'Total (incl. waste)',
@@ -145,11 +109,8 @@ export default {
   'taskDetails.wasteTitle': 'Waste factor (e.g. 5 adds +5% to the total)',
   'taskDetails.rawLabel': 'Raw: {n}',
   'taskDetails.boqLinkedFallback': 'Linked',
-  'taskDetails.btnUnlink': '✕ Unlink',
   'taskDetails.unlinkTitle': 'Unlink the item (it stays in place and keeps its last value)',
-  'taskDetails.btnNewBoq': '＋ New item',
   'taskDetails.newBoqTitle': 'Create a new BOQ item bound to this total',
-  'taskDetails.linkExisting': '🔗 Link to existing…',
   'taskDetails.linkExistingTitle': 'Link this total to an existing BOQ item (the contract value stays as-is for reconciliation)',
   'taskDetails.recordOnly': 'Record only',
   'taskDetails.deleteType': 'Delete type',
@@ -157,10 +118,7 @@ export default {
 
   /* ---------- edit: elements table ---------- */
   'taskDetails.secElements': 'Elements',
-  'taskDetails.btnAddElement': '+ Add element',
   'taskDetails.elementsNeedType': 'Add at least one quantity type before entering elements.',
-  'taskDetails.elementsEmpty': 'No elements yet. Click “+ Add element” to add the first one (e.g. Manhole No. 1 with its location and quantities).',
   'taskDetails.elementNamePlaceholder': 'e.g. HR-1',
   'taskDetails.deleteElement': 'Delete element',
-  'taskDetails.confirmDeleteElement': 'Are you sure you want to delete this element?',
 };

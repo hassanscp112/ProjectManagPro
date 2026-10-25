@@ -28,7 +28,6 @@ export default {
   'snapshots.namedTitle': 'Named Snapshots',
   'snapshots.namedHint': 'User-kept restore points — never deleted automatically',
   'snapshots.namePlaceholder': 'Snapshot name (e.g. September report, before handover)…',
-  'snapshots.createNow': '+ Create Snapshot Now',
   'snapshots.createTitle': 'Save a snapshot of the current project state under the entered name',
   'snapshots.namedEmpty':
     'No named snapshots yet. Create one before major experiments or with every important report — for example "before handover" or "September report" — so you can return to it whenever needed.',

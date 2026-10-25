@@ -2,15 +2,9 @@
 // Keys use the '<module>.<name>' convention; both language files must stay in sync.
 export default {
   /* ---------- generic ---------- */
-  'taskDetails.noTaskSelected': 'لا توجد فقرة محددة.',
   'taskDetails.untitledItem': 'فقرة بدون اسم',
-  'taskDetails.backToGrid': 'رجوع إلى الجدول',
-  'taskDetails.currentUser': 'المستخدم الحالي',
-  'taskDetails.completionPct': 'نسبة الإنجاز',
-  'taskDetails.scheduleWindow': 'النافذة الزمنية',
   'taskDetails.dayOne': '{n} يوم',
   'taskDetails.daysMany': '{n} يوم',
-  'taskDetails.noDuration': 'مدة غير محددة',
 
   /* ---------- header badges & counters ---------- */
   'taskDetails.groupBadge': 'مجموعة',
@@ -18,8 +12,6 @@ export default {
   'taskDetails.signedContract': 'تعاقد معتمد',
   'taskDetails.elementOne': '{n} عنصر',
   'taskDetails.elementsMany': '{n} عنصر',
-  'taskDetails.qtyTypeOne': '{n} نوع كمية',
-  'taskDetails.qtyTypesMany': '{n} نوع كمية',
   'taskDetails.boqOne': '{n} بند كميات',
   'taskDetails.boqMany': '{n} بند كميات',
   'taskDetails.orderOne': '{n} أمر',
@@ -28,8 +20,6 @@ export default {
   /* ---------- mode toggle ---------- */
   'taskDetails.viewModeAria': 'وضع العرض',
   'taskDetails.view': 'عرض',
-  'taskDetails.viewTitle': 'تقرير الفقرة — كل ما تحتاج معرفته بلمحة واحدة',
-  'taskDetails.editTitle': 'تحرير الفقرة (العناصر، أنواع الكميات، البنود الفرعية)',
   'taskDetails.editTitleSigned': 'المشروع موقّع — الكميات والأسعار التعاقدية تبقى مقفلة حتى داخل التعديل',
 
   /* ---------- element status (values stay codes) ---------- */
@@ -44,10 +34,8 @@ export default {
   'taskDetails.overallProgress': 'إنجاز الفقرة الإجمالي',
   'taskDetails.rollupFromChildren': 'التجميع تلقائي من {n} بند فرعي (موزون بالقيمة)',
   'taskDetails.executedOfTotal': 'المنفذ {executed} من {total} {unit}',
-  'taskDetails.qtyEmpty': 'لا توجد أنواع كميات بعد — أضفها من وضع ✏️ تعديل ليتحول مجموع العناصر إلى بند كميات (BOQ).',
   'taskDetails.qtyTypeFallback': 'نوع كمية',
   'taskDetails.linkedBoqTitle': 'مرتبط ببند كميات (BOQ) — الكميات تُدار من العناصر',
-  'taskDetails.itemWord': 'بند',
   'taskDetails.statContract': 'تعاقدي',
   'taskDetails.statExecuted': 'منفذ',
   'taskDetails.statRemaining': 'متبقي',
@@ -63,17 +51,9 @@ export default {
   'taskDetails.locationStation': 'الموقع / المحطة',
   'taskDetails.hideCompleted': 'إخفاء المكتملة',
   'taskDetails.showCompleted': 'إظهار المكتملة',
-  'taskDetails.allHiddenNote': 'كل العناصر مكتملة ({n}) — اضغط «إظهار المكتملة» لعرضها.',
-  'taskDetails.mapEmpty': 'لا توجد عناصر بعد (منظمات، مقاطع، محطات…) — أضفها من وضع ✏️ تعديل لتتبع مكان وصول العمل.',
 
   /* ---------- read: orders feed ---------- */
   'taskDetails.secOrders': 'من يعمل وما الجديد',
-  'taskDetails.ordersEmptyLinked': 'لا توجد أوامر عمل على هذه الفقرة أو بنودها بعد — سجّل الأعمال من شاشة أوامر العمل.',
-  'taskDetails.ordersEmptyNoProp': 'سجّل الأعمال من شاشة أوامر العمل — الأوامر المرتبطة بهذه الفقرة تظهر هنا تلقائياً.',
-  'taskDetails.executedBy': 'من نفّذ',
-  'taskDetails.qtyOrAmount': 'الكمية / المبلغ',
-  'taskDetails.orderWord': 'أمر',
-  'taskDetails.moreOrdersNote': 'عرض آخر {shown} من {total} أمراً — السجل الكامل في شاشة أوامر العمل.',
   'taskDetails.rollupTitle': 'المقاولون على هذه الفقرة:',
   'taskDetails.unknownContractor': 'مقاول غير معروف',
   'taskDetails.executedQtyLabel': 'كمية منفذة',
@@ -96,46 +76,30 @@ export default {
   'taskDetails.secEvidence': 'الأدلة',
   'taskDetails.evidenceTests': 'فحصات (خرسانة / تربة)',
   'taskDetails.evidenceCompletions': 'أوامر استلام / إنجاز',
-  'taskDetails.evidenceFiles': 'الملفات — تُدار من شاشة الملفات',
-  'taskDetails.evidenceFilesTitle': 'مجلد ملفات الفقرة يُدار من شاشة الملفات',
 
   /* ---------- sub-items (read + edit) ---------- */
   'taskDetails.secChildren': 'البنود الفرعية',
-  'taskDetails.childrenHint': 'للتعديل أو الإضافة انتقل إلى وضع ✏️ تعديل',
   'taskDetails.childrenEmptyRead': 'لا توجد بنود فرعية لهذه الفقرة بعد.',
   'taskDetails.childrenEmptyEdit': 'لا توجد بنود فرعية بعد. أضفها من هنا أو مباشرةً من الجدول — ستظهر هنا تلقائياً.',
   'taskDetails.colCode': 'الرمز',
   'taskDetails.colExecutedQty': 'المنفذة',
   'taskDetails.colUnitPrice': 'سعر الوحدة',
   'taskDetails.managedFromElements': 'تُدار من مجموع عناصر الفقرة',
-  'taskDetails.contractQtyTitle': 'كمية تعاقدية',
   'taskDetails.approvedContractQty': 'كمية تعاقدية معتمدة',
-  'taskDetails.approvedContractPrice': 'سعر تعاقدي معتمد',
-  'taskDetails.fromOrdersTitle': 'من أوامر العمل: {count} أمر ({formal} نظامي + {quick} سريع)',
   'taskDetails.typeGroup': 'مجموعة',
   'taskDetails.typeManual': 'يدوي',
-  'taskDetails.linkedToQtyType': 'مرتبط بنوع الكمية: {name}',
   'taskDetails.openChildDetails': 'فتح تفاصيل هذا البند',
   'taskDetails.deleteChild': 'حذف البند',
   'taskDetails.childNamePlaceholder': 'اسم البند',
-  'taskDetails.addChild': '+ إضافة بند فرعي',
 
   /* ---------- edit: help banner + summary cards ---------- */
   'taskDetails.helpTitle': 'كيف يعمل هذا؟',
   'taskDetails.helpPre': 'أضف العناصر (مثل المنظمات) وأدخل كمياتها حسب النوع (C25، C20، C7 ...). سيُحسب المجموع تلقائياً لكل نوع، ومن خلال تفعيل',
   'taskDetails.helpKey': 'بند الكميات',
   'taskDetails.helpPost': 'يُنشأ بند فرعي في الجدول (BOQ) ترتبط كميته بهذا المجموع مباشرةً.',
-  'taskDetails.sumElements': 'عدد العناصر',
-  'taskDetails.sumCompleted': 'مكتملة',
-  'taskDetails.sumInProgress': 'قيد التنفيذ',
-  'taskDetails.sumLinkedBoq': 'بنود الكميات المرتبطة',
-  'taskDetails.sumTotalQty': 'مجموع الكميات',
 
   /* ---------- edit: quantity types manager ---------- */
   'taskDetails.secQtyTypes': 'أنواع الكميات والمجاميع',
-  'taskDetails.btnDefaults': '+ أنواع افتراضية (C25/C20/C7)',
-  'taskDetails.btnAddType': '+ نوع كمية',
-  'taskDetails.typesEmpty': 'لا توجد أنواع كميات بعد. اضغط «+ نوع كمية» أو «أنواع افتراضية» للبدء.',
   'taskDetails.colQtyType': 'نوع الكمية',
   'taskDetails.colWaste': 'هدر %',
   'taskDetails.colTotalWithWaste': 'المجموع (مع الهدر)',
@@ -145,11 +109,8 @@ export default {
   'taskDetails.wasteTitle': 'نسبة الهدر/الفاقد (مثال: 5 تعني +5% على المجموع)',
   'taskDetails.rawLabel': 'الخام: {n}',
   'taskDetails.boqLinkedFallback': 'مرتبط',
-  'taskDetails.btnUnlink': '✕ فصل',
   'taskDetails.unlinkTitle': 'فصل البند (يبقى موجوداً ويحتفظ بآخر قيمة)',
-  'taskDetails.btnNewBoq': '＋ بند جديد',
   'taskDetails.newBoqTitle': 'إنشاء بند كميات جديد ومربوط بالمجموع',
-  'taskDetails.linkExisting': '🔗 ربط ببند موجود…',
   'taskDetails.linkExistingTitle': 'ربط المجموع ببند كميات موجود مسبقاً (القيمة التعاقدية تبقى كما هي للمطابقة)',
   'taskDetails.recordOnly': 'سجل فقط',
   'taskDetails.deleteType': 'حذف النوع',
@@ -157,10 +118,7 @@ export default {
 
   /* ---------- edit: elements table ---------- */
   'taskDetails.secElements': 'العناصر',
-  'taskDetails.btnAddElement': '+ إضافة عنصر',
   'taskDetails.elementsNeedType': 'أضف نوع كمية واحداً على الأقل قبل إدخال العناصر.',
-  'taskDetails.elementsEmpty': 'لا توجد عناصر بعد. اضغط «+ إضافة عنصر» لإضافة أول عنصر (مثلاً منظم رقم 1 مع موقعه وكمياته).',
   'taskDetails.elementNamePlaceholder': 'مثال: HR-1',
   'taskDetails.deleteElement': 'حذف العنصر',
-  'taskDetails.confirmDeleteElement': 'هل أنت متأكد من حذف هذا العنصر؟',
 };

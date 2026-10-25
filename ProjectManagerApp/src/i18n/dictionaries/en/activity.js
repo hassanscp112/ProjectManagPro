@@ -27,24 +27,8 @@ export default {
   'activity.feedEmpty': 'No entries match the selected filters.',
   'activity.loadMore': 'Show more ({n} remaining)',
 
-  // ── feed entry figures ──
-  'activity.amount': 'Amount',
-  'activity.value': 'Value',
-
-  // ── who attribution (registries lookup) ──
-  'activity.whoContractor': 'Contractor: {name}',
-  'activity.whoContractorOnly': 'Contractor',
-  'activity.whoTeam': 'Team: {name}',
-  'activity.whoTeamOnly': 'Team',
-  'activity.whoWorkers': 'Workers: {names}',
-  'activity.whoWorkersMore': 'Workers: {names} +{extra}',
-  'activity.whoWorkersOnly': 'Workers',
-  'activity.listSeparator': ', ',
-
   // ── tab 2: per-task history ──
   'activity.taskSearchPlaceholder': 'Search for a task (code or name)…',
-  'activity.taskClearSelection': 'Clear selection',
-  'activity.taskNoMatch': 'No matching task.',
   'activity.executedFromLog': 'Executed (from log)',
   'activity.executedValue': 'Executed Value',
   'activity.contractValue': 'Contract Value',
@@ -61,7 +45,6 @@ export default {
   'activity.emptyDays': 'Empty days (last 90 days)',
   'activity.emptyDayNote': 'Day without records — work may be unrecorded',
   'activity.approvedValue': 'Approved value',
-  'activity.ordersRecorded': 'Orders recorded',
   'activity.orderCountUnit': 'orders',
   'activity.dayAriaLabel': '{date}: {value} — {count} orders',
   'activity.dayDetailsTitle': 'Day details',

@@ -27,24 +27,8 @@ export default {
   'activity.feedEmpty': 'لا توجد مدخلات مطابقة للفلاتر المحددة.',
   'activity.loadMore': 'عرض المزيد ({n} متبقي)',
 
-  // ── feed entry figures ──
-  'activity.amount': 'المبلغ',
-  'activity.value': 'القيمة',
-
-  // ── who attribution (registries lookup) ──
-  'activity.whoContractor': 'المقاول: {name}',
-  'activity.whoContractorOnly': 'مقاول',
-  'activity.whoTeam': 'الفريق: {name}',
-  'activity.whoTeamOnly': 'فريق',
-  'activity.whoWorkers': 'العمال: {names}',
-  'activity.whoWorkersMore': 'العمال: {names} +{extra}',
-  'activity.whoWorkersOnly': 'عمال',
-  'activity.listSeparator': '، ',
-
   // ── tab 2: per-task history ──
   'activity.taskSearchPlaceholder': 'ابحث عن فقرة (الرمز أو الاسم)…',
-  'activity.taskClearSelection': 'إلغاء الاختيار',
-  'activity.taskNoMatch': 'لا توجد فقرة مطابقة للبحث.',
   'activity.executedFromLog': 'المنفذة (من السجل)',
   'activity.executedValue': 'القيمة المنفذة',
   'activity.contractValue': 'القيمة التعاقدية',
@@ -61,7 +45,6 @@ export default {
   'activity.emptyDays': 'أيام فارغة (آخر 90 يوماً)',
   'activity.emptyDayNote': 'يوم بدون تسجيل — قد يكون هناك عمل غير مسجل',
   'activity.approvedValue': 'القيمة المعتمدة',
-  'activity.ordersRecorded': 'أوامر مسجلة',
   'activity.orderCountUnit': 'أمر',
   'activity.dayAriaLabel': '{date}: {value} — {count} أمر',
   'activity.dayDetailsTitle': 'تفاصيل يوم',

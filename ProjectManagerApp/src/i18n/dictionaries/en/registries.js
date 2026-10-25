@@ -1,17 +1,11 @@
 // en dictionary — module: registries
 // Keys use the '<module>.<name>' convention; both language files must stay in sync.
 export default {
-  'registries.title': 'Executing Parties Registry',
-  'registries.subtitle':
-    'A unified registry serving work orders, daily planning, and payroll: ' +
-    'contractors (companies), workers (individuals with a daily rate), ' +
-    'and teams (crews of workers led by a foreman).',
 
   // Tabs + summary strip
   'registries.tabContractors': 'Contractors',
   'registries.tabTeams': 'Teams',
   'registries.tabWorkers': 'Workers',
-  'registries.currentIdentity': 'Current User',
   'registries.identityUnset': 'Not set',
   'registries.identityRoleHint': 'Set who is using the app to stamp reports and payroll with their name',
   'registries.change': 'Change',
@@ -55,12 +49,10 @@ export default {
   'registries.noWorkersHint':
     'No workers registered yet — add workers from the "Workers" tab, then build the team from among them.',
   'registries.foremanChipTitle': 'Team foreman',
-  'registries.memberChipTitle': 'Team member',
   'registries.sizeTitle':
     "The team's usual size — follows the member count automatically until you edit it manually (clear it to return to auto)",
   'registries.sizeResetTitle': 'Return to automatic size (member count)',
   'registries.sizeAuto': 'Auto',
-  'registries.sizeReset': '↻ Auto',
   'registries.deleteContractorTitle': 'Delete contractor',
   'registries.deleteTeamTitle': 'Delete team',
   'registries.deleteWorkerTitle': 'Delete worker',

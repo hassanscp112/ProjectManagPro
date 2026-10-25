@@ -44,7 +44,6 @@ export default {
   'schedule.noRows': 'لا توجد فقرات مطابقة',
   'schedule.noRowsBody': 'غيّر البحث أو ألغِ «الحرجة فقط».',
   'schedule.lockDependency': 'البداية تتبع الفقرة السابقة',
-  'schedule.lockGroup': 'تُحسب من الفقرات الفرعية',
   'schedule.warningsCount': '{n} تحذير',
   'schedule.openItem': 'فتح {name}',
   'schedule.gridLabel': 'جدول الفقرات والمخطط الزمني',

@@ -1,16 +1,11 @@
 // ar dictionary — module: registries
 // Keys use the '<module>.<name>' convention; both language files must stay in sync.
 export default {
-  'registries.title': 'سجل الجهات المنفّذة',
-  'registries.subtitle':
-    'سجل موحّد يخدم أوامر العمل والتخطيط اليومي وحسابات الأجور: المقاولون (شركات)، ' +
-    'العمال (أفراد بأجر يومي)، وفرق العمل (تجميعات من العمال بعريف واحد).',
 
   // Tabs + summary strip
   'registries.tabContractors': 'المقاولون',
   'registries.tabTeams': 'فرق العمل',
   'registries.tabWorkers': 'العمال',
-  'registries.currentIdentity': 'المستخدم الحالي',
   'registries.identityUnset': 'غير محدد',
   'registries.identityRoleHint': 'حدّد من يستخدم التطبيق لختم التقارير والحسابات باسمه',
   'registries.change': 'تغيير',
@@ -54,12 +49,10 @@ export default {
   'registries.noWorkersHint':
     'لا يوجد عمال مسجلون بعد — أضف عمالاً من تبويب «العمال» ثم شكّل الفريق من بينهم.',
   'registries.foremanChipTitle': 'عريف الفريق',
-  'registries.memberChipTitle': 'عضو في الفريق',
   'registries.sizeTitle':
     'الحجم المعتاد للفريق — يتبع عدد الأعضاء تلقائياً حتى تعدّله يدوياً (امسحه للعودة إلى التلقائي)',
   'registries.sizeResetTitle': 'العودة إلى الحجم التلقائي (عدد الأعضاء)',
   'registries.sizeAuto': 'تلقائي',
-  'registries.sizeReset': '↻ تلقائي',
   'registries.deleteContractorTitle': 'حذف المقاول',
   'registries.deleteTeamTitle': 'حذف الفريق',
   'registries.deleteWorkerTitle': 'حذف العامل',

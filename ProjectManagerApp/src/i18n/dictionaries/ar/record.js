@@ -41,7 +41,6 @@ export default {
   'record.pendingEmptyTitle': 'لا شيء بانتظار الاعتماد',
   'record.pendingEmptyBody': 'الأوامر الرسمية (الاستلام وفحوص الخرسانة والتربة) تبقى هنا حتى يعتمدها أحد.',
   'record.logEmptyBody': 'غيّر التصفية أو سجّل أمراً جديداً.',
-  'record.recordedBy': 'سجّله {name}',
   'record.showAll': 'عرض الكل',
   'record.filters': 'تصفية',
   'record.approverLabel': 'اسم المعتمِد',

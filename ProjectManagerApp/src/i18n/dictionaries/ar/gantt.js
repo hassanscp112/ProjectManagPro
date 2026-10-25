@@ -26,15 +26,7 @@ export default {
   'gantt.lockedContractUnit': 'وحدة تعاقدية معتمدة',
   'gantt.autoFromWorkOrders': 'محسوبة تلقائياً من أوامر العمل',
   // Timeline & tooltips
-  'gantt.todayOutOfRange': 'تاريخ اليوم (خارج نطاق المشروع)',
-  'gantt.todayPlanned': 'تاريخ اليوم (نسبة الانجاز المخطط)',
-  'gantt.actualProgress': 'الانجاز الفعلي: {value}%',
-  'gantt.plannedProgress': 'الانجاز المخطط: {value}%',
-  'gantt.days': '{n} يوم',
   'gantt.onCriticalPath': 'على المسار الحرج',
   // Row actions & editing
-  'gantt.viewItemFiles': 'عرض ملفات الفقرة',
-  'gantt.itemDetailsElements': 'تفاصيل الفقرة والعناصر',
   'gantt.addMainGroup': 'إضافة مجموعة رئيسية جديدة',
-  'gantt.addSub': 'فرعية',
 };

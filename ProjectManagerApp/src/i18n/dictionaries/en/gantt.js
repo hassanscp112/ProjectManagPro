@@ -26,15 +26,7 @@ export default {
   'gantt.lockedContractUnit': 'Approved contract unit',
   'gantt.autoFromWorkOrders': 'Calculated automatically from work orders',
   // Timeline & tooltips
-  'gantt.todayOutOfRange': "Today's date (outside project range)",
-  'gantt.todayPlanned': "Today's date (planned progress)",
-  'gantt.actualProgress': 'Actual progress: {value}%',
-  'gantt.plannedProgress': 'Planned progress: {value}%',
-  'gantt.days': '{n} days',
   'gantt.onCriticalPath': 'On the critical path',
   // Row actions & editing
-  'gantt.viewItemFiles': 'View item files',
-  'gantt.itemDetailsElements': 'Item details & elements',
   'gantt.addMainGroup': 'Add new main group',
-  'gantt.addSub': 'Sub-item',
 };

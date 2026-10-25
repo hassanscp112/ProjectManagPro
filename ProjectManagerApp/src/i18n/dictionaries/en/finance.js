@@ -2,18 +2,11 @@
 // Keep keys in sync with ar/finance.js.
 export default {
   // Screen header / summary cards / tabs
-  'finance.title': 'Accounting & Costing System',
-  'finance.settings': 'System Settings',
   'finance.totalCosts': 'Total Costs (Project)',
   'finance.cardMachinery': 'Machinery (incl. Fuel)',
   'finance.cardMaterials': 'Construction Materials',
   'finance.cardPettyCash': 'Daily Expenses',
   'finance.cardPayroll': 'Payroll',
-  'finance.tabMachinery': 'Machinery Costs',
-  'finance.tabMaterials': 'Construction Costs',
-  'finance.tabPettyCash': 'Daily Expenses (Petty Cash)',
-  'finance.tabPayroll': 'Payroll Costs',
-  'finance.confirmDelete': 'Are you sure you want to delete this record?',
 
   // Shared ledger UI
   'finance.dateFrom': 'From Date',
@@ -38,11 +31,8 @@ export default {
   'finance.fuelInfo': 'Fuel Expenditures',
   'finance.fuelLiters': 'Liters',
   'finance.fuelPricePerLiter': 'Price per Liter',
-  'finance.saveFullRecord': 'Save Full Record',
   'finance.thMachine': 'Machine',
   'finance.thDriver': 'Driver',
-  'finance.thMachineEarnings': 'Machine Earnings',
-  'finance.thDriverEarnings': 'Driver Earnings',
   'finance.thFuelCost': 'Fuel Cost',
   'finance.thTotalPrice': 'Total Price',
 
@@ -61,7 +51,6 @@ export default {
   'finance.addPettyExpense': 'Add Daily Expense',
   'finance.expenseType': 'Expense Type',
   'finance.amountIqd': 'Amount (IQD)',
-  'finance.saveExpense': 'Save Expense',
   'finance.thAmount': 'Amount',
 
   // Payroll ledger
@@ -76,7 +65,6 @@ export default {
   'finance.thNetPaid': 'Amount Paid (Net)',
 
   // Settings tab
-  'finance.settingsTitle': 'Database & Dropdown Lists',
   'finance.settingsDesc': 'Edit the employees, machinery, and expense type names that appear in the dropdown lists across all entry screens.',
   'finance.cfgMachines': 'Machine Types',
   'finance.cfgEmployees': 'Employees & Workers',

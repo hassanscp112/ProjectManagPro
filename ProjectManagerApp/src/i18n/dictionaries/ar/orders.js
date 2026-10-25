@@ -46,26 +46,14 @@ export default {
   // ── Families / groups ──
   'orders.familyValue': 'قيمة / إنجاز',
   'orders.familyExpense': 'مصروف',
-  'orders.groupValue': 'في العمل',
-  'orders.groupExpense': 'في المصاريف',
 
   // ── Who widget (recipient / contractor) ──
-  'orders.whoKindContractor': 'مقاول',
-  'orders.whoKindTeam': 'فريق',
-  'orders.whoKindWorkers': 'عمال',
-  'orders.whoKindNone': 'بدون',
-  'orders.noContractor': '— بدون مقاول —',
-  'orders.chooseContractor': '— اختر المقاول —',
-  'orders.chooseTeam': '— اختر الفريق —',
-  'orders.noRecipient': 'بدون مستفيد محدد',
-  'orders.noWorkers': 'لا يوجد عمال في السجلات — أضفهم من شاشة سجلات الموارد.',
   'orders.unknownContractor': 'مقاول غير معروف',
   'orders.unknownTeam': 'فريق غير معروف',
   'orders.workerCount': '{n} عامل',
   'orders.listSep': '، ',
 
   // ── Element select ──
-  'orders.noElements': '— لا توجد عناصر لهذه الفقرة —',
   'orders.noElement': '— بدون عنصر —',
   'orders.elementFallback': 'عنصر',
 
@@ -78,20 +66,8 @@ export default {
 
   // ── New-order card ──
   'orders.newOrder': '⚡ أمر جديد',
-  'orders.newOrderSub': 'كل عمل في الموقع يُسجَّل من هنا — اختر النوع، املأ الحقول، احفظ.',
-  'orders.saveOrder': 'حفظ الأمر',
-  'orders.quickTierHint': 'أمر سريع — يُعتمد فور الحفظ.',
-  'orders.formalTierHint': 'أمر نظامي — يُسجَّل بحالة «مسجّل» ويحتاج اعتماداً صريحاً.',
-  'orders.pickTypeHint':
-    'اختر نوع الأمر من الأعلى للبدء — الأوامر السريعة تُعتمد فوراً، والنظامية تحتاج اعتماداً.',
   'orders.fillRequired': 'الرجاء تعبئة: {fields}',
   'orders.currencySuffix': 'د.ع',
-
-  // ── Flash messages ──
-  'orders.flashSaved': '✓ تم تسجيل {type} بنجاح',
-  'orders.flashSavedApproved': '✓ تم تسجيل {type} واعتماده بنجاح',
-  'orders.flashApproved': '✓ تم اعتماد الأمر',
-  'orders.flashDeleted': 'تم حذف الأمر',
 
   // ── Orders log ──
   'orders.logTitle': 'سجل الأوامر',
@@ -110,7 +86,6 @@ export default {
   'orders.noMatching': 'لا توجد أوامر مطابقة بعد.',
   'orders.approveOrder': 'اعتماد الأمر',
   'orders.deleteOrder': 'حذف الأمر',
-  'orders.theOrder': 'الأمر',
 
   // ── Modals ──
   'orders.deleteConfirmTitle': 'تأكيد حذف الأمر',
@@ -120,16 +95,4 @@ export default {
     'ادخل اسم المعتمد لاعتماد {type} بتاريخ {date}. بعد الاعتماد تُحتسب الكمية ضمن المنفذ.',
   'orders.approverPlaceholder': 'اسم المعتمد / التوقيع',
 
-  // ── OrderTypePicker ──
-  'orders.tierFormal': 'نظامي',
-  'orders.formalChipHint': 'أمر نظامي — يبدأ بحالة «مسجّل» ويتطلب اعتماداً',
-  'orders.quickChipHint': 'أمر سريع — يُعتمد فور الحفظ',
-
-  // ── TaskPicker ──
-  'orders.taskPickerOptional': 'فقرة (اختياري) — ابحث…',
-  'orders.taskPickerSearch': 'ابحث عن فقرة…',
-  'orders.removeTask': 'إزالة الفقرة',
-  'orders.noMatchingTasks': 'لا توجد فقرات مطابقة',
-  'orders.unnamedTask': 'فقرة بدون اسم',
-  'orders.moreTasks': '… و{n} فقرة أخرى — حسّن البحث',
 };

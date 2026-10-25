@@ -46,26 +46,14 @@ export default {
   // ── Families / groups ──
   'orders.familyValue': 'Value / Production',
   'orders.familyExpense': 'Expense',
-  'orders.groupValue': 'On-Site Work',
-  'orders.groupExpense': 'Expenses',
 
   // ── Who widget (recipient / contractor) ──
-  'orders.whoKindContractor': 'Contractor',
-  'orders.whoKindTeam': 'Team',
-  'orders.whoKindWorkers': 'Workers',
-  'orders.whoKindNone': 'None',
-  'orders.noContractor': '— No contractor —',
-  'orders.chooseContractor': '— Select contractor —',
-  'orders.chooseTeam': '— Select team —',
-  'orders.noRecipient': 'No recipient specified',
-  'orders.noWorkers': 'No workers in the registries — add them from the Resources screen.',
   'orders.unknownContractor': 'Unknown contractor',
   'orders.unknownTeam': 'Unknown team',
   'orders.workerCount': '{n} workers',
   'orders.listSep': ', ',
 
   // ── Element select ──
-  'orders.noElements': '— No elements for this BOQ item —',
   'orders.noElement': '— No element —',
   'orders.elementFallback': 'Element',
 
@@ -78,20 +66,8 @@ export default {
 
   // ── New-order card ──
   'orders.newOrder': '⚡ New Order',
-  'orders.newOrderSub': 'Every site operation is recorded here — pick a type, fill the fields, save.',
-  'orders.saveOrder': 'Save Order',
-  'orders.quickTierHint': 'Quick order — approved immediately on save.',
-  'orders.formalTierHint': 'Formal order — recorded as "Recorded" and requires explicit approval.',
-  'orders.pickTypeHint':
-    'Pick an order type above to start — quick orders are approved instantly, formal ones need approval.',
   'orders.fillRequired': 'Please fill in: {fields}',
   'orders.currencySuffix': 'IQD',
-
-  // ── Flash messages ──
-  'orders.flashSaved': '✓ {type} recorded successfully',
-  'orders.flashSavedApproved': '✓ {type} recorded and approved',
-  'orders.flashApproved': '✓ Order approved',
-  'orders.flashDeleted': 'Order deleted',
 
   // ── Orders log ──
   'orders.logTitle': 'Orders Log',
@@ -110,7 +86,6 @@ export default {
   'orders.noMatching': 'No matching orders yet.',
   'orders.approveOrder': 'Approve Order',
   'orders.deleteOrder': 'Delete Order',
-  'orders.theOrder': 'the order',
 
   // ── Modals ──
   'orders.deleteConfirmTitle': 'Confirm Order Deletion',
@@ -120,16 +95,4 @@ export default {
     'Enter the approver name to approve "{type}" dated {date}. Once approved, the quantity counts toward executed work.',
   'orders.approverPlaceholder': 'Approver name / signature',
 
-  // ── OrderTypePicker ──
-  'orders.tierFormal': 'Formal',
-  'orders.formalChipHint': 'Formal order — starts as "Recorded" and requires approval',
-  'orders.quickChipHint': 'Quick order — approved on save',
-
-  // ── TaskPicker ──
-  'orders.taskPickerOptional': 'BOQ item (optional) — search…',
-  'orders.taskPickerSearch': 'Search BOQ items…',
-  'orders.removeTask': 'Clear BOQ item',
-  'orders.noMatchingTasks': 'No matching BOQ items',
-  'orders.unnamedTask': 'Unnamed BOQ item',
-  'orders.moreTasks': '… {n} more — refine your search',
 };

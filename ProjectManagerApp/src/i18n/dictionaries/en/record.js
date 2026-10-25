@@ -41,7 +41,6 @@ export default {
   'record.pendingEmptyTitle': 'Nothing waiting for approval',
   'record.pendingEmptyBody': 'Formal orders (completion, concrete and soil tests) wait here until someone approves them.',
   'record.logEmptyBody': 'Change the filters or record a new order.',
-  'record.recordedBy': 'by {name}',
   'record.showAll': 'Show all',
   'record.filters': 'Filters',
   'record.approverLabel': 'Approver name',

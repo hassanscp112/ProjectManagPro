@@ -44,7 +44,6 @@ export default {
   'schedule.noRows': 'No matching items',
   'schedule.noRowsBody': 'Change the search or turn off Critical only.',
   'schedule.lockDependency': 'Start follows the predecessor',
-  'schedule.lockGroup': 'Rolled up from sub-items',
   'schedule.warningsCount': '{n} warning(s)',
   'schedule.openItem': 'Open {name}',
   'schedule.gridLabel': 'Items and timeline',

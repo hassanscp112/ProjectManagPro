@@ -4,26 +4,20 @@ export default {
   'calculator.title': 'Calculation Templates',
   'calculator.addTemplateTitle': 'Add new template',
   'calculator.noTemplates': 'No templates yet. Click + to add one.',
-  'calculator.editTemplate': 'Edit template',
   'calculator.deleteTemplate': 'Delete template',
-  'calculator.confirmDelete': 'Are you sure you want to delete this entire template?',
   'calculator.emptyPrompt': 'Select a template from the sidebar or create a new one',
-  'calculator.createNew': '+ Create New Template',
 
   // Grid
   'calculator.nameRefHeader': 'Name (Reference)',
   'calculator.rowNamePlaceholder': 'Item name',
   'calculator.defaultRowName': 'Item {n}',
   'calculator.grandTotal': 'Grand Total',
-  'calculator.addRow': '+ Add Row',
   'calculator.designPlaceholder': 'Import...',
 
   // Template editor
   'calculator.templateName': 'Template Name',
   'calculator.namePlaceholder': 'e.g. Earthworks',
   'calculator.saveTemplate': 'Save Template',
-  'calculator.instruction1': '1. Use the first row (Row 1) to enter column names.',
-  'calculator.instruction2': '2. Use the second row (Row 2) to enter test values or Excel formulas such as',
   'calculator.columnSettings': 'Column Settings',
   'calculator.columnLetter': 'Column {col}',
   'calculator.dataSource': 'Data Source',

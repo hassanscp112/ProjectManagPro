@@ -1,18 +1,11 @@
 // ar dictionary — module: finance
 export default {
   // Screen header / summary cards / tabs
-  'finance.title': 'نظام الحسابات والتكاليف',
-  'finance.settings': 'إعدادات النظام',
   'finance.totalCosts': 'إجمالي التكاليف (المشروع)',
   'finance.cardMachinery': 'الآليات (شامل الوقود)',
   'finance.cardMaterials': 'المواد الإنشائية',
   'finance.cardPettyCash': 'المصاريف اليومية',
   'finance.cardPayroll': 'الرواتب',
-  'finance.tabMachinery': 'تكاليف الآليات',
-  'finance.tabMaterials': 'التكاليف الإنشائية',
-  'finance.tabPettyCash': 'التكاليف اليومية (نثريات)',
-  'finance.tabPayroll': 'تكاليف الرواتب',
-  'finance.confirmDelete': 'هل أنت متأكد من حذف هذا السجل؟',
 
   // Shared ledger UI
   'finance.dateFrom': 'من تاريخ',
@@ -37,11 +30,8 @@ export default {
   'finance.fuelInfo': 'صرفيات الوقود',
   'finance.fuelLiters': 'عدد اللترات',
   'finance.fuelPricePerLiter': 'سعر اللتر',
-  'finance.saveFullRecord': 'حفظ السجل الشامل',
   'finance.thMachine': 'الآلية',
   'finance.thDriver': 'السائق',
-  'finance.thMachineEarnings': 'وارد الآلية',
-  'finance.thDriverEarnings': 'وارد السائق',
   'finance.thFuelCost': 'تكلفة الوقود',
   'finance.thTotalPrice': 'السعر الكلي',
 
@@ -60,7 +50,6 @@ export default {
   'finance.addPettyExpense': 'إضافة مصروف يومي',
   'finance.expenseType': 'نوع المصروف',
   'finance.amountIqd': 'المبلغ (د.ع)',
-  'finance.saveExpense': 'حفظ المصروف',
   'finance.thAmount': 'المبلغ',
 
   // Payroll ledger
@@ -75,7 +64,6 @@ export default {
   'finance.thNetPaid': 'المبلغ المدفوع (الصافي)',
 
   // Settings tab
-  'finance.settingsTitle': 'قاعدة البيانات والقوائم المنسدلة',
   'finance.settingsDesc': 'يمكنك تعديل أسماء الموظفين والآليات وأنواع المصاريف التي تظهر في القوائم المنسدلة في كافة شاشات الإدخال.',
   'finance.cfgMachines': 'أنواع الآليات',
   'finance.cfgEmployees': 'أسماء الموظفين والعمال',
