@@ -36,6 +36,7 @@ npm run build   # production build
 npm test        # unit tests: engines + ar/en dictionary parity (node:test)
 npm run test:e2e  # Playwright smoke tests on port 5190: every route in ar/en, desktop + phone (3–5 min)
 npm run icons   # regenerate the app icons from public/app-icon.svg
+npm run test:db # server: SQL / row-level-security tests in PGlite + the app's sync code against the migrations (~5 s, no Docker)
 ```
 
 **Installable app (PWA) + GitHub Pages:** `.github/workflows/deploy-pages.yml`
@@ -72,6 +73,7 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 - Every localStorage key is listed in `src/utils/storeRegistry.js` (full table in `docs/03-data-model.md`) + IndexedDB `ProjectManagerDB` for files. Backups (format v3) hold both; restore downloads a safety copy first.
 - For automated browser checks run on another port (`npm run dev -- --port 5180`) — never test restore/clear on 5173, where the real data lives.
 - i18n: flat `'domain.key'` dictionaries, fallback ar→key, direction from `LANGUAGES`, persisted in `pm-language`.
+- **Server & sync** (optional — with no server set the app works on this device only): Supabase schema + rules in `supabase/` (migrations; `docs/08-server-setup.md`), offline-first sync engine in `src/sync/` (local stores stay the read model; item-level outbox; `changes` = append-only history). A new store syncs once it is in `storeRegistry`; a new collection or permission also needs its rule in `src/sync/rules.js` **and** a new SQL migration (`sqlMirror.test.js` fails otherwise). `pm-session` / `pm-server` never go into backups (`DataIO.LOCAL_ONLY_KEYS`).
 
 ## Current state & next steps
 

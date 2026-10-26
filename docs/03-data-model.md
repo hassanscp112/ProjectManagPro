@@ -384,6 +384,9 @@ days never collide (§14).
 
 ## 12. Backup file format (DataIO)
 
+`pm-session` and `pm-server` (who is signed in, which server) are never
+written into a backup and never restored from one (`DataIO.LOCAL_ONLY_KEYS`).
+
 `exportAppData()` downloads `project-backup-YYYY-MM-DD_HH-MM.json`
 (`…-before-restore-…` / `…-before-delete-…` for the automatic safety copies):
 

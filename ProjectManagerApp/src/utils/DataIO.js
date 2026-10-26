@@ -28,6 +28,11 @@ export const BACKUP_VERSION = 3;
 // Device preferences and session a full restore leaves as they are.
 const DEVICE_KEYS = DEVICE_STORE_KEYS;
 
+// Never in a backup, never restored: who is signed in on this device and
+// which server it talks to (a restore on another device must not sign it in
+// as someone else or point it at another server).
+export const LOCAL_ONLY_KEYS = ['pm-session', 'pm-server'];
+
 /** True for any key this app owns (plain, or a project's prefixed copy). */
 export const isAppStorageKey = (key) => APP_STORAGE_KEYS.includes(key) || parseProjectKey(key) !== null;
 
@@ -114,9 +119,11 @@ export const decodeFileEntries = (entries) => {
  */
 const snapshotStorage = () => {
   const data = {};
-  storedAppKeys().forEach((key) => {
-    data[key] = localStorage.getItem(key); // keep raw string — preserve exact JSON
-  });
+  storedAppKeys()
+    .filter((key) => !LOCAL_ONLY_KEYS.includes(key))
+    .forEach((key) => {
+      data[key] = localStorage.getItem(key); // keep raw string — preserve exact JSON
+    });
   return data;
 };
 
@@ -285,7 +292,7 @@ export const restoreAppData = async (parsed) => {
         });
     }
     Object.entries(parsed.storage).forEach(([key, rawValue]) => {
-      if (isAppStorageKey(key) && typeof rawValue === 'string') {
+      if (isAppStorageKey(key) && !LOCAL_ONLY_KEYS.includes(key) && typeof rawValue === 'string') {
         if (!(key in previous)) previous[key] = localStorage.getItem(key);
         localStorage.setItem(key, rawValue);
         written.push(key);

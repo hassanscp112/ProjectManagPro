@@ -97,6 +97,14 @@ export function ProjectProvider({ children }) {
     // project's own key (utils/Projects.projectKey). Both count.
     const is = (key, base) => key === null || key === base || key === projectKey(base);
     const reload = (key) => {
+      // The plan rewritten from outside (sync, another tab): take it, and drop
+      // the undo steps — undoing would put the older copy back over it.
+      if (is(key, TASKS_STORAGE_KEY)) {
+        setTasks(loadTasks());
+        historyRef.current = [];
+        setCanUndo(false);
+      }
+      if (is(key, META_STORAGE_KEY)) setProjectMeta(loadMeta());
       if (is(key, ORDERS_STORAGE_KEY)) setOrdersData(loadOrdersData());
       if (key === null || key === REGISTRIES_STORAGE_KEY) setRegistries(loadRegistries());
       if (is(key, ACTIVITY_STORAGE_KEY)) setAppEvents(loadAppEvents());

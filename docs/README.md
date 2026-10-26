@@ -19,6 +19,7 @@ the source code**.
 | Work on a **screen** (what each screen does, its flows) | [05-screens-guide.md](05-screens-guide.md) |
 | Add or translate **UI text** (Arabic / English / new language) | [06-i18n-guide.md](06-i18n-guide.md) |
 | Follow project **rules, known quirks, and what's next** | [07-conventions-quirks-roadmap.md](07-conventions-quirks-roadmap.md) |
+| Set up the **server** (self-hosted Supabase on the test laptop, https for phones, backups, moving to hosted) | [08-server-setup.md](08-server-setup.md) |
 
 **AI agents:** read the root [`AGENTS.md`](../AGENTS.md) first — it is a short
 map of this documentation and the project's golden rules.
