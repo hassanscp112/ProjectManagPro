@@ -59,7 +59,7 @@ There is **no server and no database**. Everything is stored in the browser:
 |---|-----|-------|--------------|---------------|
 | 1 | `project-manager-gantt-tasks` | P | ProjectProvider | Task tree (raw array) |
 | 2 | `project-manager-project-meta` | P | ProjectProvider | status / baseline / variations |
-| 3 | `project-manager-finance-data` | P | Finance | cost ledger entries |
+| 3 | `project-manager-finance-data` | P | Finance | old cost ledger (read-only since expenses are orders) + migrated flag |
 | 4 | `project-manager-finance-config` | P | Finance | editable dropdown lists |
 | 5 | `pm-calculator-templates` | P | CalculatorTemplates | BOQ calculator templates |
 | 6 | `project-manager-daily-reports` | P | DailyNotes | daily site notes |
@@ -219,6 +219,30 @@ this calendar (`utils/planning/WorkCalendar.js`).
 }
 ```
 
+**Expense details** (last verified 2026-10-26). Expense orders are the one
+place expenses are entered; the Finance ledgers are views over them. Their
+structured fields sit in `details` (same keys as the form draft; numbers
+stored as numbers, empty fields left out); `amount` / `category` stay as
+before, so EVM, reports and certificates read them unchanged.
+
+| Type | `details` keys | `amount` |
+|---|---|---|
+| `machinery` | `machineType`, `machineSize`, `driver` (finance lists), `machineHours`, `machineRate`, `driverHours`, `driverRate`, `fuelLiters`, `fuelPrice` | computed: hours × rate + driver hours × rate + liters × price |
+| `material` | `material` (list), `materialQty`, `materialUnit`, `unitPrice`, `receipt` | computed: qty × unit price |
+| `payroll` | `employee` (list), `salary`, `advance`, `payStatus` (list) | computed: salary − advance **only when `payStatus === 'مستقطع'`** (a stored data value, quirk #4), else salary |
+| `other_expense` | `expenseType` (list) | typed |
+| `fuel` | — | typed |
+
+Orders moved from the old finance ledger also carry `source:
+'finance-migration'`, `sourceLedger` (machinery / materials / pettyCash /
+payroll), `sourceId` (the old record's id) and `migratedAt`; their id is
+`fin-<ledger>-<old id>` (the same on every device). They keep the old
+date, are `approved`, `recordedBy` = the old record's author or the
+migrating user, and `recordedAt` = the old id's timestamp. Old-only fields
+stay in `details`: machinery `machineName`, `badge`; materials
+`quantityText` (the old free-text quantity, e.g. "150 م3") and `note`
+(the old "details" text).
+
 **Photo evidence.** Photos picked on the Record form are compressed
 (`utils/ImageCompress`: JPEG, longest side 1600 px, quality 0.8) and stored
 *before* the order: `saveFile('order_photos', blob, { orderId })` per photo,
@@ -356,8 +380,8 @@ subtitle, tone, refTaskId, payload}`.
 |-----|-------|
 | `pm-calculator-templates` | `[{ id, name, columns: [{ id, label, source: 'input'\|'design'\|'formula', formula }], rows: [{ …, values: { [colId]: number } }] }]` |
 | `project-manager-daily-reports` | site notes `[{ id, date, engineer, taskId, taskName, taskWbs, details, timestamp, quantity? }]` — the manual part of the daily report (the "work done" part is derived live from orders). `quantity` exists only on notes written before Phase 5 and is shown read-only; new notes don't record quantities |
-| `project-manager-finance-data` | ledger rows per tab (machinery / materials / petty cash / payroll). Payroll status `'مستقطع'` is a stored data value — see quirks doc |
-| `project-manager-finance-config` | editable dropdown option lists for the finance forms |
+| `project-manager-finance-data` | **the old ledger, read-only** (expenses are expense orders now): rows per tab `{ machinery, materials, pettyCash, payroll }` (old record shapes: machinery `{ id, date, machineName, machineType, machineSize, badge, machineHours, machineRate, machineTotal, operator, driverHours, driverRate, driverTotal, fuelLiters, fuelPrice, fuelTotal, totalPrice }`, materials `{ id, date, receipt, details, materialType, quantity (text), totalPrice }`, pettyCash `{ id, date, expenseType, notes, totalPrice }`, payroll `{ id, date, employee, salary, advancePayment, status, totalPrice }`) + `migration: { migratedAt, migratedBy, lastRunAt, count, sourceKeys: ['<ledger>:<id>'] }` once moved into expense orders. Nothing writes the rows any more and the key is never deleted. Payroll status `'مستقطع'` is a stored data value — see quirks doc |
+| `project-manager-finance-config` | the finance lists `{ machines, machineSizes, employees, materials, expenseTypes, statuses }` that expense order details pick from (edited on Finance → Lists) |
 
 ---
 

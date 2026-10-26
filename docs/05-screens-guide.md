@@ -186,6 +186,18 @@ Three sub-pages (tabs; Pending shows a count, as does the sidebar item):
   and re-seeds the same type with smart defaults (today, last who); "Save" saves
   and closes. "Repeat last order" copies type, task, unit and who (never photos).
   Side panel: pending approvals (Approve) and today's orders.
+- **Expense details** (last verified 2026-10-26) — machinery (machine type,
+  size, driver, machine hours × rate, driver hours × rate, fuel liters ×
+  price), material (material, quantity, unit, unit price, receipt no.),
+  payroll (employee, salary, advance, advance status) and other expense
+  (expense type) pick their values from the Finance lists (selects with
+  "— Choose —"; a value no longer in the list stays selectable). Machinery,
+  material and payroll show **the amount computed** in a tinted box with the
+  lines it adds up from ("Machine: 6 h × 40,000 = 240,000"; payroll "Salary
+  … / Less advance … (deducted)"); it updates as you type and cannot be
+  typed. Payroll net = salary − advance only for the status `'مستقطع'`. A
+  computed amount of 0 or less blocks saving ("Fill in the fields above…").
+  Fuel and other expenses keep a typed amount.
 - **Photos** (every type, after the spec fields; `ui/PhotoPicker`) — phone:
   *Take photo* (rear camera, `capture="environment"`) and *Gallery* (several);
   desktop: *Add photos*. At most 6; each is compressed first (thumbnail shows
@@ -341,21 +353,49 @@ Logic: `src/state/reportsModel.js` (diary and delays: `src/state/diaryModel.js`)
 
 ## Finance — `src/app/finance/FinancePage.jsx` (rebuilt in Phase 6)
 
-`#/finance/:ledger` — four ledgers as tabs (machinery, materials, petty cash,
-payroll) plus **Lists**. A totals strip (all ledgers + each one) on top. Each
-ledger: a table with date-range and per-ledger filters (machine type / driver,
-material, expense type, employee), the period total, delete (asks first) and
-Print (only the table prints); the add-record form sits beside it on wide
-screens (≥ 1100 px) and opens in a drawer / bottom sheet otherwise. After a
-save the date and the slow-changing fields stay for fast repeated entry.
-- Machinery total = machine hours × rate + driver hours × rate + fuel liters
-  × price.
-- Payroll net = salary − advance **only when the status is `'مستقطع'`**
-  (stored Arabic data value, deliberately not translated — see quirks).
+(Last verified 2026-10-26.) **Expenses are entered once, as expense orders**
+(Record or here); the ledgers are views over them. `#/finance/:ledger` — four
+ledgers as tabs plus **Lists**:
+
+| Ledger | Shows expense orders of type | "Add" opens |
+|---|---|---|
+| machinery | `machinery` | machinery |
+| materials | `material` | material |
+| petty cash | `other_expense`, `fuel` | other expense |
+| payroll | `payroll` | payroll |
+
+A totals strip (all ledgers + each one; together = every expense order) on
+top. Each ledger: a table with date-range and per-ledger filters on the order
+details (machine type / driver, material, expense type, employee), the
+period total, delete (`finance.edit`; the order delete dialog, its photos go
+too) and Print (only the table prints). **Add** (`finance.edit`) is the
+Record screen's order form for that type (`OrderForm`, photos included),
+beside the table on wide screens (≥ 1100 px) and in a drawer / bottom sheet
+otherwise; it says "Saved as an expense order — it shows in the order log
+too". After a save the date and the slow-changing fields stay (machine type,
+size, driver, rates, fuel price; material, unit, unit price; expense type;
+advance status). Rows of moved orders also show the old machine name /
+badge and the old free-text quantity.
+- **The old ledger** (`project-manager-finance-data`) — until it is moved, a
+  yellow notice: "The old finance ledger is not in these tables yet … holds N
+  records (total)". **Review the move** (`finance.edit`; others read "Someone
+  who can edit finance can move them") opens the dry run: per ledger the old
+  records and total, already moved, to move and the amount; then **Download
+  backup and move N** downloads `project-backup-before-finance-migration-….json`
+  (if the backup fails nothing moves), adds one approved expense order per
+  record (original date and amount, `source: 'finance-migration'`) and sets
+  the migrated flag. After: "The old ledger was moved into expense orders on
+  {date} by {name} (N records). It is kept, read-only." with **Compare the old
+  ledger with its orders** (old records / total vs orders / total per ledger).
+  Records added to the old ledger later (an old app version, another device)
+  show "N records were added … since" and **Move N more**; nothing is ever
+  moved twice and a moved order deleted since is not brought back. The old
+  key is never deleted.
 - **Lists** — the dropdown values (machine types and sizes, employees,
-  materials, expense types, advance statuses): add / remove; they are user
-  data and stay as entered.
-Storage: `utils/Finance.js`; rules: `src/state/financeModel.js`.
+  materials, expense types, advance statuses) the expense order details pick
+  from: add / remove; they are user data and stay as entered.
+Storage: `utils/Finance.js` (old ledger + lists), orders `utils/OrderEngine.js`;
+rules: `src/state/financeModel.js`.
 
 ### Payment certificates (الذرعات) — `src/app/finance/Certificate*.jsx`
 

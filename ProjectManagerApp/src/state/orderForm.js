@@ -9,6 +9,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { createOrderDraft, normalizeWhoForSave, ordersInRange, sumExpenses } from '../utils/OrderEngine.js';
+import { EXPENSE_FIELD_KINDS, expenseDetails, expenseFieldMissing } from '../utils/OrderEngine.js'; // expense details (WS7)
 
 export const toNumberOrNull = (v) => {
   if (v === '' || v === null || v === undefined) return null;
@@ -21,6 +22,7 @@ export const missingRequiredFields = (draft, spec) => {
   if (!draft || !spec) return [];
   return spec.fields.filter((f) => {
     if (!f.required) return false;
+    if (EXPENSE_FIELD_KINDS.includes(f.kind)) return expenseFieldMissing(f, draft); // expense details (OrderEngine)
     if (f.kind === 'task') return !draft.taskId;
     if (f.kind === 'number') return !(Number(draft.quantity) > 0);
     if (f.kind === 'amount') return !(Number(draft.amount) > 0);
@@ -46,6 +48,7 @@ export const buildOrderFromDraft = (draft, spec, { tasks = [], userName = '', id
     const v = typeof draft[k] === 'string' ? draft[k].trim() : '';
     if (v) details[k] = v;
   });
+  Object.assign(details, expenseDetails(draft, spec)); // machinery hours, payroll salary, … (OrderEngine)
   return {
     id,
     type: draft.type,
