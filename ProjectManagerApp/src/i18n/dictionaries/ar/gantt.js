@@ -29,4 +29,8 @@ export default {
   'gantt.onCriticalPath': 'على المسار الحرج',
   // Row actions & editing
   'gantt.addMainGroup': 'إضافة مجموعة رئيسية جديدة',
+  // Several predecessors in one cell
+  'gantt.colPredecessors': 'الفقرات السابقة',
+  'gantt.linksHelp': 'أرقام الفقرات، مثل 2.1FS+3; 2.4SS — نوع العلاقة FS/SS/FF/SF (FS إن لم يُكتب)، والتأخير بأيام العمل، وأضف d لأيام التقويم',
+  'gantt.linksInvalid': 'غير موجودة: {items}',
 };

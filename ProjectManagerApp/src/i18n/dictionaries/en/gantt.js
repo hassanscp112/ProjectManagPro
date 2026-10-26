@@ -29,4 +29,8 @@ export default {
   'gantt.onCriticalPath': 'On the critical path',
   // Row actions & editing
   'gantt.addMainGroup': 'Add new main group',
+  // Several predecessors in one cell
+  'gantt.colPredecessors': 'Predecessors',
+  'gantt.linksHelp': 'Item numbers, e.g. 2.1FS+3; 2.4SS — type FS/SS/FF/SF (FS if left out), lag in working days, add d for calendar days',
+  'gantt.linksInvalid': 'Not found: {items}',
 };

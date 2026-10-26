@@ -1,8 +1,9 @@
 import { ChevronDown, ChevronRight, Link2, Lock, Plus, Trash2, TriangleAlert } from 'lucide-react';
-import { forwardRef, useMemo } from 'react';
+import { forwardRef, useMemo, useState } from 'react';
 import { formatNumber } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
 import { ZOOM_DAY_WIDTH, daysBetween, fieldLock, headerTiers } from '../../state/scheduleModel.js';
+import { formatLinks, linksPatch, parseLinks, readLinks } from '../../utils/planning/links.js';
 import { Button, IconButton, cx } from '../../ui/index.js';
 import { formatDay } from '../record/orderMeta.js';
 import s from './Gantt.module.css';
@@ -14,11 +15,10 @@ const COLS = {
     { key: 'duration', head: 'gantt.colDays', className: s.cDur, field: 'duration', type: 'number' },
     { key: 'start', head: 'gantt.colStart', className: s.cDate },
     { key: 'end', head: 'gantt.colEnd', className: s.cDate },
-    // Dependency columns only while editing (the side panel shows them otherwise),
-    // so the timeline keeps room on normal screens.
-    { key: 'pred', head: 'gantt.colPredecessor', className: s.cPred, editOnly: true },
-    { key: 'rel', head: 'gantt.colRelation', className: s.cRel, editOnly: true },
-    { key: 'lag', head: 'gantt.colLag', className: s.cLag, field: 'lag', type: 'number', editOnly: true },
+    // Predecessors only while editing (the side panel shows them otherwise),
+    // so the timeline keeps room on normal screens. One text cell holds
+    // every link: "2.1FS+3; 2.4SS".
+    { key: 'links', head: 'gantt.colPredecessors', className: s.cPred, editOnly: true },
   ],
   quantities: [
     { key: 'qty', head: 'common.quantity', className: s.cQty, field: 'quantity', type: 'number' },
@@ -29,7 +29,8 @@ const COLS = {
   ],
 };
 
-const DEP_TYPES = ['FS', 'SS', 'FF', 'SF'];
+// Calendar days a bar covers (durations are working days; days off widen the bar).
+const barDays = (task) => (Number.isFinite(task.spanDays) ? task.spanDays : Number(task.duration) || 0);
 
 const num = (n) => (n === 0 || n === null || n === undefined || n === '' ? '—' : formatNumber(n));
 const pct = (p) => `${(Math.min(1, Math.max(0, p || 0)) * 100).toFixed(1)}%`;
@@ -58,14 +59,6 @@ const Gantt = forwardRef(function Gantt(
 
   // Edits send only the changed fields; the page merges them onto the stored task.
   const set = (task, field, value) => onUpdate(task.id, { [field]: value });
-  const setDependency = (task, dependsOn) =>
-    onUpdate(task.id, { dependsOn: dependsOn || null, depType: dependsOn ? task.depType || 'FS' : '', lag: dependsOn ? task.lag || 0 : 0 });
-
-  const predLabel = (id) => {
-    if (!id) return t('common.none');
-    const dep = taskById.get(id);
-    return dep ? `${dep.wbs || ''} ${dep.name || ''}`.trim() : t('gantt.notFound', { id });
-  };
 
   const renderLocked = (task, field, lock, display) => (
     <span className={s.locked} title={lockText(t, lock, field)}>
@@ -86,38 +79,10 @@ const Gantt = forwardRef(function Gantt(
       }
       case 'end':
         return <span className="ui-ltr">{formatDay(task.endDate)}</span>;
-      case 'pred':
+      case 'links':
         if (task.isGroup) return <span className={s.dim}>—</span>;
-        if (editable) {
-          return (
-            <select className={s.cellInput} aria-label={t('gantt.colPredecessor')} value={task.dependsOn || ''} onChange={(e) => setDependency(task, e.target.value)}>
-              <option value="">{t('gantt.noDependency')}</option>
-              {dependencyOptions
-                .filter((d) => d.id !== task.id)
-                .map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.wbs} — {d.name}
-                  </option>
-                ))}
-            </select>
-          );
-        }
-        return <span title={predLabel(task.dependsOn)} className={s.dim}>{task.dependsOn ? predLabel(task.dependsOn) : '—'}</span>;
-      case 'rel':
-        if (task.isGroup) return <span className={s.dim}>—</span>;
-        if (editable) {
-          return (
-            <select className={s.cellInput} aria-label={t('gantt.colRelation')} value={task.depType || ''} disabled={!task.dependsOn} onChange={(e) => set(task, 'depType', e.target.value)}>
-              <option value="">{t('common.none')}</option>
-              {DEP_TYPES.map((d) => (
-                <option key={d} value={d}>
-                  {t(`gantt.dep${d}`)}
-                </option>
-              ))}
-            </select>
-          );
-        }
-        return <span className={s.dim}>{task.depType || '—'}</span>;
+        if (!editable) return <span className={s.dim}>—</span>;
+        return <LinksInput task={task} dependencyOptions={dependencyOptions} taskById={taskById} onUpdate={onUpdate} />;
       case 'amount':
         return num(task.totalCost);
       default: {
@@ -229,11 +194,11 @@ const Gantt = forwardRef(function Gantt(
               <div className={s.timePart} style={{ width: timelineWidth }} aria-hidden="true">
                 {task.startDate &&
                   (task.isGroup ? (
-                    <div className={s.groupBar} style={{ insetInlineStart: offset(task.startDate), width: Math.max(dayWidth, (Number(task.duration) || 0) * dayWidth) }} />
+                    <div className={s.groupBar} style={{ insetInlineStart: offset(task.startDate), width: Math.max(dayWidth, barDays(task) * dayWidth) }} />
                   ) : (
                     <div
                       className={cx(s.bar, task.isCritical && s.barCritical)}
-                      style={{ insetInlineStart: offset(task.startDate), width: Math.max(dayWidth * 2, (Number(task.duration) || 0) * dayWidth) }}
+                      style={{ insetInlineStart: offset(task.startDate), width: Math.max(dayWidth * 2, barDays(task) * dayWidth) }}
                       title={`${name}\n${pct(task.progress)} · ${formatDay(task.startDate)} → ${formatDay(task.endDate)}`}
                     >
                       <div className={s.barFill} style={{ width: pct(task.progress) }} />
@@ -259,6 +224,52 @@ const Gantt = forwardRef(function Gantt(
     </div>
   );
 });
+
+/**
+ * Every predecessor of a task as one text cell ("2.1FS+3; 2.4SS; 3.2FF-2d"):
+ * WBS, link type (FS when left out), lag in working days (a trailing d =
+ * calendar days). Applied on Enter / leaving the cell; text that names no
+ * item keeps the cell open and red.
+ */
+function LinksInput({ task, dependencyOptions, taskById, onUpdate }) {
+  const { t } = useI18n();
+  const links = task.links || readLinks(task);
+  const wbsOf = (id) => taskById.get(id)?.wbs || '';
+  const shown = formatLinks(links, wbsOf);
+  const [draft, setDraft] = useState(null);
+  const [errors, setErrors] = useState([]);
+  const idOf = (wbs) => dependencyOptions.find((d) => d.wbs === wbs && d.id !== task.id)?.id || null;
+
+  const commit = () => {
+    if (draft === null) return;
+    const parsed = parseLinks(draft, idOf);
+    setErrors(parsed.errors);
+    if (parsed.errors.length) return;
+    setDraft(null);
+    if (formatLinks(parsed.links, wbsOf) !== shown) onUpdate(task.id, linksPatch(parsed.links));
+  };
+
+  return (
+    <input
+      className={cx(s.cellInput, errors.length > 0 && s.cellInvalid)}
+      aria-label={t('gantt.colPredecessors')}
+      aria-invalid={errors.length > 0 || undefined}
+      title={errors.length ? t('gantt.linksInvalid', { items: errors.join('، ') }) : t('gantt.linksHelp')}
+      placeholder={t('gantt.noDependency')}
+      dir="ltr"
+      value={draft ?? shown}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') commit();
+        if (e.key === 'Escape') {
+          setDraft(null);
+          setErrors([]);
+        }
+      }}
+    />
+  );
+}
 
 /**
  * Vertical lines + today marker, drawn once under the bars. The table is

@@ -179,6 +179,60 @@
   background: var(--ui-sunken);
 }
 
+/* ── Predecessor list (quick edit) ── */
+.fieldTitle {
+  display: block;
+  margin-block-end: var(--ui-space-2);
+  font-size: var(--ui-fs-sm);
+  font-weight: 600;
+}
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+}
+.linkRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 64px 40px;
+  gap: var(--ui-space-2);
+  align-items: center;
+  padding-block-end: var(--ui-space-2);
+  border-block-end: 1px solid var(--ui-divider);
+}
+/* Line 1: the item it waits for + remove; line 2: type, lag unit, lag. */
+.linkTask {
+  grid-column: 1 / 4;
+  grid-row: 1;
+  min-width: 0;
+}
+.linkRemove {
+  grid-column: 4;
+  grid-row: 1;
+}
+.linkType {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+}
+.linkUnit {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+}
+.linkLag {
+  grid-column: 3 / 5;
+  grid-row: 2;
+  min-width: 0;
+}
+.linkRow select,
+.linkLag input {
+  width: 100%;
+  min-width: 0;
+}
+.factLine {
+  display: block;
+}
+
 /* ── Baseline ── */
 .summary {
   display: grid;

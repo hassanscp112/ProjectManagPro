@@ -120,4 +120,17 @@ export default {
   'schedule.warnDependencyCycle': 'توجد دورة في العلاقات: {cycle}',
   'schedule.warnSelfDependency': 'لا يمكن ربط الفقرة بنفسها',
   'schedule.warnMissingPredecessor': 'الفقرة السابقة غير موجودة ({id})',
+  // Predecessor list and pinning (quick edit)
+  'schedule.predecessors': 'الفقرات السابقة',
+  'schedule.addPredecessor': 'إضافة فقرة سابقة',
+  'schedule.removePredecessor': 'حذف الفقرة السابقة',
+  'schedule.chooseItem': 'اختر فقرة…',
+  'schedule.lagUnit': 'يُحسب التأخير بـ',
+  'schedule.lagWorkingDays': 'أيام العمل',
+  'schedule.lagCalendarDays': 'أيام التقويم',
+  'schedule.calendarDaysShort': 'يوم تقويمي',
+  'schedule.pinLabel': 'المواعيد',
+  'schedule.pin': 'تثبيت المواعيد',
+  'schedule.pinned': 'مثبّتة',
+  'schedule.pinHint': 'موازنة الموارد لا تحرّك فقرة مثبّتة أبداً',
 };

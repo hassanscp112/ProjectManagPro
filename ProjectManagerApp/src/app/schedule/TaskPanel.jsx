@@ -1,4 +1,4 @@
-import { ClipboardList, FileText, FolderOpen, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ClipboardList, FileText, FolderOpen, Pencil, Pin, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { compactCurrency, formatNumber } from '../../i18n/index.js';
@@ -6,11 +6,13 @@ import { useI18n } from '../../i18n/useI18n.js';
 import { childrenOf, fieldLock, ordersInScope, scheduleStatus } from '../../state/scheduleModel.js';
 import { useProject } from '../../state/projectContext.js';
 import { todayStr } from '../../utils/OrderEngine.js';
-import { Button, Drawer, Field, Input, ListRow, NumberInput, ProgressBar, Select, StatusBadge } from '../../ui/index.js';
+import { readLinks } from '../../utils/planning/links.js';
+import { Button, Drawer, Field, Input, ListRow, NumberInput, ProgressBar, StatusBadge } from '../../ui/index.js';
 import { ltr } from '../bidi.js';
 import OrderRow from '../record/OrderRow.jsx';
 import { formatDay } from '../record/orderMeta.js';
 import { useOrderActions } from '../record/useApproval.jsx';
+import LinksEditor from './LinksEditor.jsx';
 import s from './Schedule.module.css';
 import { warningText } from './warningText.js';
 
@@ -20,7 +22,6 @@ const STATUS = {
   active: { tone: 'accent', key: 'schedule.statusActive' },
   notStarted: { tone: 'neutral', key: 'schedule.statusNotStarted' },
 };
-const DEP_TYPES = ['FS', 'SS', 'FF', 'SF'];
 const ORDERS_SHOWN = 5;
 
 const pctText = (p) => `${Math.floor(Math.min(1, Math.max(0, p || 0)) * 1000) / 10}%`;
@@ -45,7 +46,13 @@ export default function TaskPanel({ taskId, onClose }) {
 
   const today = todayStr();
   const status = STATUS[scheduleStatus(task, today)];
-  const pred = raw.dependsOn ? tasks.find((x) => x.id === raw.dependsOn) : null;
+  const links = readLinks(raw);
+  const linkLabel = (l) => {
+    const p = tasks.find((x) => x.id === l.id);
+    const lag = Number(l.lag) || 0;
+    const rel = ltr(`${l.type || 'FS'}${lag ? ` ${lag > 0 ? '+' : ''}${lag}${l.lagUnit === 'cd' ? ` ${t('schedule.calendarDaysShort')}` : ''}` : ''}`);
+    return p ? `${p.wbs} ${p.name} · ${rel}` : `${t('gantt.notFound', { id: l.id })} · ${rel}`;
+  };
   const unit = task.unit || '';
   const qty = Number(task.qty ?? task.quantity) || 0;
   const done = Number(task.actualQty) || 0;
@@ -74,8 +81,8 @@ export default function TaskPanel({ taskId, onClose }) {
         ['gantt.colEnd', formatDay(task.endDate)],
         ['schedule.duration', t('schedule.durationDays', { n: task.duration })],
         [
-          'schedule.predecessor',
-          pred ? `${pred.wbs} ${pred.name} · ${ltr(`${raw.depType || 'FS'}${raw.lag ? ` ${raw.lag > 0 ? '+' : ''}${raw.lag}` : ''}`)}` : t('schedule.noPredecessor'),
+          links.length > 1 ? 'schedule.predecessors' : 'schedule.predecessor',
+          links.length ? links.map((l) => <span key={l.id} className={s.factLine}>{linkLabel(l)}</span>) : t('schedule.noPredecessor'),
         ],
       ];
 
@@ -163,36 +170,20 @@ export default function TaskPanel({ taskId, onClose }) {
                   <Field label={t('gantt.colStart')} hint={lock('manualStart') ? t('schedule.lockDependency') : undefined}>
                     <Input type="date" value={raw.manualStart || ''} disabled={Boolean(lock('manualStart'))} onChange={(e) => set('manualStart', e.target.value)} />
                   </Field>
-                  <Field label={t('gantt.colPredecessor')} className={s.wide}>
-                    <Select
-                      value={raw.dependsOn || ''}
-                      onChange={(e) =>
-                        updateTask({ ...raw, dependsOn: e.target.value || null, depType: e.target.value ? raw.depType || 'FS' : '', lag: e.target.value ? raw.lag || 0 : 0 })
-                      }
-                    >
-                      <option value="">{t('gantt.noDependency')}</option>
-                      {tasks
-                        .filter((x) => !x.isGroup && x.id !== raw.id)
-                        .map((x) => (
-                          <option key={x.id} value={x.id}>
-                            {x.wbs} — {x.name}
-                          </option>
-                        ))}
-                    </Select>
+                  <Field label={t('schedule.pinLabel')} hint={t('schedule.pinHint')}>
+                    <Button size="sm" icon={Pin} variant={raw.pinned ? 'outline' : 'secondary'} aria-pressed={Boolean(raw.pinned)} onClick={() => set('pinned', !raw.pinned)}>
+                      {raw.pinned ? t('schedule.pinned') : t('schedule.pin')}
+                    </Button>
                   </Field>
-                  <Field label={t('gantt.colRelation')}>
-                    <Select value={raw.depType || ''} disabled={!raw.dependsOn} onChange={(e) => set('depType', e.target.value)}>
-                      <option value="">{t('common.none')}</option>
-                      {DEP_TYPES.map((d) => (
-                        <option key={d} value={d}>
-                          {t(`gantt.dep${d}`)}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label={t('schedule.lagDays')}>
-                    <NumberInput value={raw.lag ?? 0} disabled={!raw.dependsOn} onChange={(e) => set('lag', e.target.value)} />
-                  </Field>
+                  <div className={s.wide}>
+                    <span className={s.fieldTitle}>{t('schedule.predecessors')}</span>
+                    <LinksEditor
+                      key={JSON.stringify(links)}
+                      task={raw}
+                      tasks={tasks}
+                      onChange={(patch) => updateTask({ ...raw, ...patch })}
+                    />
+                  </div>
                   <Field label={t('common.contractQty')} hint={lock('quantity') ? (lock('quantity') === 'boq' ? t('gantt.lockedFromDetails') : t('gantt.lockedContractQty')) : undefined}>
                     <NumberInput value={raw.quantity ?? ''} disabled={Boolean(lock('quantity'))} unit={unit} onChange={(e) => set('quantity', e.target.value)} />
                   </Field>

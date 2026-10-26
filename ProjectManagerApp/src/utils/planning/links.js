@@ -61,6 +61,15 @@ export const writeLinks = (task, links = []) => {
   return next;
 };
 
+/**
+ * The changed fields for a task that gets these links (an editor's patch):
+ * dependsOn/depType/lag plus predecessors (undefined = no extra links).
+ */
+export const linksPatch = (links) => {
+  const next = writeLinks({}, links);
+  return { dependsOn: next.dependsOn, depType: next.depType, lag: next.lag, predecessors: next.predecessors };
+};
+
 /** The leveling links of a task ([] when none). */
 export const readLevelLinks = (task) => (Array.isArray(task?.levelLinks) ? task.levelLinks.filter(isLinkEntry) : []);
 
