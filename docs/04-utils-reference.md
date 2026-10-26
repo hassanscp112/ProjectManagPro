@@ -12,6 +12,7 @@ Projects                                                               (imports 
 CalculatorEngine, CriticalPath, Identity, RateLibrary                  (standalone)
 FileDB, DataIO                                                         (import Projects)
 ActivityLog, PlanningStore, Registries, Snapshots                      (import i18n / Projects)
+SiteDiary, Delays                                                      (import Identity / Projects)
 OrderEngine                                                            (imports i18n)
 TemplateEngine                                                         (imports RateLibrary)
 GanttEngine                                                            (imports OrderEngine + CriticalPath)
@@ -136,6 +137,37 @@ Pure, no storage. Tests: `criticalPath.test.js`.
 engineer, task, details })` → a new note (no quantity: executed quantities come
 from orders). Same key and shape as the legacy DailyReports screen.
 
+## SiteDiary.js — site diary
+
+**Storage:** `pm-site-diary` (project). Shape in [03-data-model §10a](03-data-model.md).
+- `loadSiteDiary()` → `{ days }` (drops malformed days) / `saveSiteDiary(diary)` (notifies)
+- `getDiaryDay(diary, day)`; `putDiaryDay(diary, day, entry, actor?, now?)` → new diary,
+  stamps `recordedBy/At` on the first save and `updatedBy/At` on every save; an
+  empty entry removes the day; `removeDiaryDay(diary, day)`
+- `normalizeDiaryDay(raw)`, `emptyDiaryDay()`, `isDiaryDayEmpty(entry)`,
+  `createDiaryRowId()`, `WEATHER_KINDS`
+
+## Delays.js — delay register
+
+**Storage:** `pm-delays` (project). Shape in [03-data-model §10a](03-data-model.md).
+- `loadDelays()` → `{ events }` / `saveDelays(state)` (notifies)
+- `upsertDelay(state, event, actor?, now?)` — adds (stamps `recordedBy`,
+  `recordedById`, `createdAt` from `currentActor()`) or replaces (keeps those,
+  stamps `updatedBy/At`); `removeDelay(state, id)`
+- `normalizeDelay(raw)`, `createDelayId()`, `DELAY_CAUSES`, `DELAY_STATUSES`
+
+The rules for both live in `state/diaryModel.js`: `manpowerFromPlan` (day plan
+crews → manpower by trade; a worker counts once, a team's head count above its
+members is general labour, a contractor crew is a row to fill in),
+`diaryDraft`, `previousDiaryDay` / `copyDiaryDay` ("same as yesterday":
+weather, hours, manpower, equipment — not visitors or issues), `diaryTotals`,
+`diaryDaysInRange`, `tradeSuggestions` / `equipmentSuggestions`; delays:
+`delaySpan` (an open event runs to today), `unionDays` (a day under two events
+counts once), `noticeCheck` (`ok` / `late` = more than 28 days / `open` /
+`overdue`, FIDIC 20.1), `delayTotals`, `delaysInMonth`, `sortDelays`,
+`filterDelays`, `delayErrors`. Tests: `state/__tests__/diaryModel.test.js`,
+`utils/__tests__/diaryStores.test.js`.
+
 ## PlanningStore.js — lookahead plans
 
 **Storage:** `pm-plans`. Shape in [03-data-model §6](03-data-model.md).
@@ -248,8 +280,8 @@ the recorder, once accounts exist). In components: `useCan()` /
   (no-op outside the browser, so node tests are unaffected)
 - `onStoreChange(handler)` → unsubscribe; handler gets the storage key
 
-Called by `saveOrdersData`, `saveRegistries`, `saveIdentity` and
-`saveAppEvents` after writing; `ProjectProvider` listens and re-reads that
+Called by `saveOrdersData`, `saveRegistries`, `saveIdentity`,
+`saveAppEvents`, `saveSiteDiary` and `saveDelays` after writing; `ProjectProvider` listens and re-reads that
 store immediately. A new persisted store that other screens read should do
 the same.
 

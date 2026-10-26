@@ -2,7 +2,7 @@
 
 There is **no server and no database**. Everything is stored in the browser:
 
-- **localStorage** — all structured data (18 keys, listed first)
+- **localStorage** — all structured data (20 keys, listed first)
 - **IndexedDB** (`ProjectManagerDB`) — uploaded file blobs only
 
 > If you add a new localStorage key, you MUST add it to
@@ -12,8 +12,9 @@ There is **no server and no database**. Everything is stored in the browser:
 > project-scoped key is read / written through `projectKey(KEY)`.
 >
 > Registered ahead for the roadmap (`plans/roadmap-plan.md`), not used yet:
-> `pm-certificates`, `pm-site-diary`, `pm-delays` (project) and the device-only
-> `pm-server`, `pm-session`. Files may carry `orderId` (an order's photo).
+> `pm-certificates` (project) and the device-only `pm-server`, `pm-session`.
+> Files may carry `orderId` (an order's photo). `pm-site-diary` and
+> `pm-delays` are in use (§10a).
 
 ---
 
@@ -66,6 +67,8 @@ There is **no server and no database**. Everything is stored in the browser:
 | 16 | `pm-theme` | shared | Theme | `'light'` \| `'dark'` \| `'system'` (default light) |
 | 17 | `pm-projects` | shared | Projects | the project list (§0) |
 | 18 | `pm-last-project` | shared | Projects | id of the last project opened on this device |
+| 19 | `pm-site-diary` | P | SiteDiary | site diary, one entry per day (§10a) |
+| 20 | `pm-delays` | P | Delays | delay register events (§10a) |
 
 ---
 
@@ -275,6 +278,46 @@ subtitle, tone, refTaskId, payload}`.
 | `project-manager-daily-reports` | site notes `[{ id, date, engineer, taskId, taskName, taskWbs, details, timestamp, quantity? }]` — the manual part of the daily report (the "work done" part is derived live from orders). `quantity` exists only on notes written before Phase 5 and is shown read-only; new notes don't record quantities |
 | `project-manager-finance-data` | ledger rows per tab (machinery / materials / petty cash / payroll). Payroll status `'مستقطع'` is a stored data value — see quirks doc |
 | `project-manager-finance-config` | editable dropdown option lists for the finance forms |
+
+---
+
+## 10a. Site diary & delay register (`pm-site-diary`, `pm-delays`)
+
+```js
+// pm-site-diary — one entry per day; a day with nothing in it is removed
+{ days: { 'YYYY-MM-DD': {
+    weather: '' | 'sunny' | 'dusty' | 'rain' | 'heat',
+    maxTemp: number | null,                    // °C
+    hours: number | null,                      // working hours, 0–24
+    manpower:  [{ id, trade, count }],         // trade '' = general labour
+    equipment: [{ id, type, count }],
+    visitors:  [{ id, name, org, purpose }],
+    issues: string,
+    recordedBy, recordedById, recordedAt,      // first save (Identity.currentActor)
+    updatedBy, updatedById, updatedAt,         // last save
+} } }
+
+// pm-delays — list path 'events', id 'id'
+{ events: [{
+    id, title,
+    cause: 'weather' | 'client' | 'design' | 'access' | 'supply' | 'other',
+    start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' | '',   // '' = still going on (counts to today)
+    taskIds: [],                                   // affected BOQ items
+    excusable: boolean,                            // default true
+    noticeDate: 'YYYY-MM-DD' | '',                 // FIDIC 20.1: within 28 days of start
+    daysClaimed: number,
+    status: 'draft' | 'submitted' | 'granted' | 'rejected',
+    daysGranted: number,                           // counted only when granted
+    notes,
+    recordedBy, recordedById, createdAt,           // currentActor() on create, kept on edits
+    updatedBy, updatedById, updatedAt,
+}] }
+```
+
+Trades and equipment types are free text (suggestions come from the roster's
+worker trades, earlier diary days and a built-in list). The manpower prefill
+reads `pm-plans` day assignments and never writes them. The diary store is
+synced as one document (no `lists`: days are keyed by date, not an array).
 
 ---
 
