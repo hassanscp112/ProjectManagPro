@@ -3,6 +3,8 @@
 export default {
   // ── Header + tabs ──
   'templates.tabRates': 'مكتبة الأسعار',
+  'templates.navWorkTypes': 'أنواع الأعمال',
+  'templates.workTypesPlaceholder': 'مكتبة أنواع الأعمال قيد البناء.',
 
   // ── Seeded template display names (storage keeps the Arabic name) ──
   'templates.nameSchool': 'مدرسة',

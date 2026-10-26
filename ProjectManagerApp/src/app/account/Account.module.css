@@ -1,0 +1,178 @@
+/* Sign-in page, server form, account dialog and the users / server screens. */
+
+/* Stands alone (no app shell): the page itself does not scroll (base.css),
+   so this does. */
+.loginPage {
+  box-sizing: border-box;
+  block-size: 100%;
+  overflow-y: auto;
+  background: var(--ui-canvas);
+  padding-block: var(--ui-space-6);
+  padding-inline: var(--ui-space-4);
+}
+.loginColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+  max-inline-size: 28rem;
+  margin-inline: auto;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+}
+.brandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--ui-r-md);
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
+  flex: 0 0 auto;
+}
+.brandTitle {
+  margin: 0;
+  font-size: var(--ui-fs-xl);
+  font-weight: 700;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+}
+.lead {
+  margin: 0;
+  color: var(--ui-text-2);
+  font-size: var(--ui-fs-sm);
+}
+.error {
+  margin: 0;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger);
+  font-size: var(--ui-fs-sm);
+}
+.ok {
+  margin: 0;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-success-soft);
+  color: var(--ui-success);
+  font-size: var(--ui-fs-sm);
+}
+.linkButton {
+  align-self: center;
+}
+.serverLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-2);
+}
+.serverHost {
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-fs-sm);
+  overflow-wrap: anywhere;
+}
+.mono {
+  font-family: var(--ui-font-mono);
+  overflow-wrap: anywhere;
+}
+.languages {
+  display: flex;
+  justify-content: center;
+}
+
+.memberList {
+  display: flex;
+  flex-direction: column;
+}
+.member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2) var(--ui-space-3);
+  padding-block: var(--ui-space-2);
+  border-block-end: 1px solid var(--ui-border);
+}
+.member:last-child {
+  border-block-end: 0;
+}
+.memberText {
+  flex: 1 1 12rem;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.memberName {
+  font-weight: 600;
+}
+.memberEmail {
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+  overflow-wrap: anywhere;
+}
+.memberRole {
+  flex: 0 0 auto;
+  min-inline-size: 12rem;
+}
+.inviteRow {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+  gap: var(--ui-space-2);
+  align-items: end;
+}
+@media (max-width: 767px) {
+  .inviteRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .memberRole {
+    min-inline-size: 0;
+    flex: 1 1 100%;
+  }
+}
+.roles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--ui-space-3);
+  margin: 0;
+}
+.roleCard {
+  padding: var(--ui-space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-md);
+}
+.roleCard h3 {
+  margin: 0 0 var(--ui-space-2);
+  font-size: var(--ui-fs-md);
+}
+.roleCard ul {
+  margin: 0;
+  padding-inline-start: var(--ui-space-4);
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.steps {
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--ui-space-1) var(--ui-space-3);
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+}
+.facts dt {
+  color: var(--ui-text-2);
+}
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

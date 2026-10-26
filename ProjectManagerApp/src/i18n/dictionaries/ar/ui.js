@@ -77,4 +77,24 @@ export default {
   // Project identity (shown in the sidebar and page headers)
   'ui.userUnset': 'من يستخدم التطبيق؟',
   'ui.skipToContent': 'انتقل إلى المحتوى',
+
+  // Photos (PhotoPicker, PhotoStrip)
+  'ui.photos': 'الصور',
+  'ui.photosCount': '{n} من {max}',
+  'ui.takePhoto': 'التقاط صورة',
+  'ui.gallery': 'من المعرض',
+  'ui.addPhotos': 'إضافة صور',
+  'ui.photoPreparing': 'جارٍ تجهيز الصورة…',
+  'ui.photoN': 'صورة {n}',
+  'ui.removePhoto': 'إزالة الصورة {n}',
+  'ui.photosLimit': 'الحد الأقصى {max} صور — لم تُضف الصور الزائدة',
+  'ui.photosFull': 'وصلت إلى الحد الأقصى ({max} صور)',
+  'ui.photosLoading': 'جارٍ تحميل الصور',
+  'ui.openPhoto': 'فتح الصورة {n} من {count}',
+  'ui.photoOf': 'الصورة {n} من {count}',
+  'ui.photoCounter': '{n} من {count}',
+  'ui.prevPhoto': 'الصورة السابقة',
+  'ui.nextPhoto': 'الصورة التالية',
+  'ui.downloadPhoto': 'تنزيل',
+  'ui.noPhotos': 'لا توجد صور',
 };

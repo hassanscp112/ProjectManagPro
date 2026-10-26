@@ -3,7 +3,7 @@
 <!-- Planning sections (task links, meta.planning) last verified 2026-10-26. -->
 There is **no server and no database**. Everything is stored in the browser:
 
-- **localStorage** — all structured data (18 keys, listed first)
+- **localStorage** — all structured data (20 keys, listed first)
 - **IndexedDB** (`ProjectManagerDB`) — uploaded file blobs only
 
 > If you add a new localStorage key, you MUST add it to
@@ -13,8 +13,13 @@ There is **no server and no database**. Everything is stored in the browser:
 > project-scoped key is read / written through `projectKey(KEY)`.
 >
 > Registered ahead for the roadmap (`plans/roadmap-plan.md`), not used yet:
-> `pm-certificates`, `pm-site-diary`, `pm-delays` (project) and the device-only
-> `pm-server`, `pm-session`. Files may carry `orderId` (an order's photo).
+> Files may carry `orderId` (an order's photo). In use: `pm-certificates`
+> (project, owner `Certificates`, §13), `pm-site-diary` and `pm-delays`
+> (project, §10a). Also registered ahead for auto-planning
+> (`plans/auto-planning-plan.md`): the global `pm-work-types`
+> (`{ items: [...] }`, owner `utils/planning/WorkTypes.js`). The device-only
+> `pm-server` / `pm-session` and the server copy of the shared data are
+> described in §14.
 
 ---
 
@@ -23,7 +28,10 @@ There is **no server and no database**. Everything is stored in the browser:
 `pm-projects` lists the projects:
 
 ```js
-{ projects: [ { id, name, contract, location, startDate: 'YYYY-MM-DD', createdAt, legacy? } ] }
+{ projects: [ { id, name, contract, location, startDate: 'YYYY-MM-DD', createdAt, legacy?,
+                serverId?, revoked? } ] }
+// serverId: shared on the server under this id (a project pulled from the server uses it as id too)
+// revoked:  this account lost access on the server — kept here, no longer synced (§14)
 ```
 
 - **Project-scoped keys** (`Projects.PROJECT_SCOPED_KEYS`, marked *P* below):
@@ -67,6 +75,11 @@ There is **no server and no database**. Everything is stored in the browser:
 | 16 | `pm-theme` | shared | Theme | `'light'` \| `'dark'` \| `'system'` (default light) |
 | 17 | `pm-projects` | shared | Projects | the project list (§0) |
 | 18 | `pm-last-project` | shared | Projects | id of the last project opened on this device |
+| 19 | `pm-site-diary` | P | SiteDiary | site diary, one entry per day (§10a) |
+| 20 | `pm-delays` | P | Delays | delay register events (§10a) |
+| 21 | `pm-certificates` | P | Certificates | payment certificates, agreed rates, default terms (§13) |
+| 22 | `pm-server` | device | sync/serverConfig | `{ url, anonKey }` — the server this device uses (§14) |
+| 23 | `pm-session` | device | sync/session | who is signed in, organization, role per project (§14) |
 
 ---
 
@@ -202,8 +215,18 @@ this calendar (`utils/planning/WorkCalendar.js`).
   approvedBy,
   recordedAt: 'ISO', recordedBy,
   details,
+  evidence: [fileId, …],       // photo ids in IndexedDB (folder 'order_photos'), [] when none
 }
 ```
+
+**Photo evidence.** Photos picked on the Record form are compressed
+(`utils/ImageCompress`: JPEG, longest side 1600 px, quality 0.8) and stored
+*before* the order: `saveFile('order_photos', blob, { orderId })` per photo,
+then the order is saved with `evidence: ids` (at most 6). If IndexedDB fails
+the order is saved with `evidence: []` and a warning toast. Deleting an order
+deletes its photos (`deleteFiles(order.evidence)`); deleting a photo in
+Files → *Order photos* removes its id from the order. "Repeat last order"
+never copies photos.
 
 ---
 
@@ -340,12 +363,55 @@ subtitle, tone, refTaskId, payload}`.
 
 ---
 
+## 10a. Site diary & delay register (`pm-site-diary`, `pm-delays`)
+
+```js
+// pm-site-diary — one entry per day; a day with nothing in it is removed
+{ days: { 'YYYY-MM-DD': {
+    weather: '' | 'sunny' | 'dusty' | 'rain' | 'heat',
+    maxTemp: number | null,                    // °C
+    hours: number | null,                      // working hours, 0–24
+    manpower:  [{ id, trade, count }],         // trade '' = general labour
+    equipment: [{ id, type, count }],
+    visitors:  [{ id, name, org, purpose }],
+    issues: string,
+    recordedBy, recordedById, recordedAt,      // first save (Identity.currentActor)
+    updatedBy, updatedById, updatedAt,         // last save
+} } }
+
+// pm-delays — list path 'events', id 'id'
+{ events: [{
+    id, title,
+    cause: 'weather' | 'client' | 'design' | 'access' | 'supply' | 'other',
+    start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' | '',   // '' = still going on (counts to today)
+    taskIds: [],                                   // affected BOQ items
+    excusable: boolean,                            // default true
+    noticeDate: 'YYYY-MM-DD' | '',                 // FIDIC 20.1: within 28 days of start
+    daysClaimed: number,
+    status: 'draft' | 'submitted' | 'granted' | 'rejected',
+    daysGranted: number,                           // counted only when granted
+    notes,
+    recordedBy, recordedById, createdAt,           // currentActor() on create, kept on edits
+    updatedBy, updatedById, updatedAt,
+}] }
+```
+
+Trades and equipment types are free text (suggestions come from the roster's
+worker trades, earlier diary days and a built-in list). The manpower prefill
+reads `pm-plans` day assignments and never writes them. The diary syncs day
+by day (registry list `days`, `keyed: true`): two people editing different
+days never collide (§14).
+
+---
+
 ## 11. IndexedDB — `ProjectManagerDB` (files)
 
 - DB `ProjectManagerDB` v1, object store **`files`** (keyPath `id`, index `folderId`).
-- Record: `{ id, folderId, projectId, name, size, type, blob, createdAt }`
-  (`getFiles` returns only the open project's files; no `projectId` = the first project).
-- Folder tree itself is virtual — root → per-task folders derived from the task list.
+- Record: `{ id, folderId, projectId, name, size, type, blob, createdAt, orderId? }`
+  (`getFiles` returns only the open project's files; no `projectId` = the first project;
+  `orderId` = the order a photo belongs to).
+- Folder tree itself is virtual — root → *Items* (one folder per top-level
+  section, `task_<id>`) and *Order photos* (`order_photos`, every order's photos).
 - Managed only through `utils/FileDB.js` (`initDB/saveFile/getFiles/deleteFile`,
   plus `getAllFiles/replaceAllFiles` for the backup).
 - Included in the backup file since version 2 (§12).
@@ -353,6 +419,9 @@ subtitle, tone, refTaskId, payload}`.
 ---
 
 ## 12. Backup file format (DataIO)
+
+`pm-session` and `pm-server` (who is signed in, which server) are never
+written into a backup and never restored from one (`DataIO.LOCAL_ONLY_KEYS`).
 
 `exportAppData()` downloads `project-backup-YYYY-MM-DD_HH-MM.json`
 (`…-before-restore-…` / `…-before-delete-…` for the automatic safety copies):
@@ -381,3 +450,126 @@ theme and last-project stay). Older backups only write the keys they hold
 (they restore into the first project). When the backup has a `files` section it replaces ALL
 stored files in one IndexedDB transaction; a version-1 backup leaves the files
 alone. If any write fails, the localStorage keys are put back as they were.
+
+---
+
+## 13. Payment certificates (`pm-certificates`, per project)
+
+Owner: `utils/Certificates.js` (the only reader / writer, always through
+`projectKey`); rules: `state/certificateModel.js`.
+
+```js
+{
+  settings: {                  // defaults for the first certificate of a series
+    retentionPct: 5,           // 0–100
+    retentionLimit: 0,         // most that may be held back; 0 = no limit
+    advanceAmount: 0,          // the MAIN CONTRACT's advance (a subcontractor starts at 0)
+    advanceRecoveryPct: 0,     // share of each period's work recovered, 0–100
+    currencyLabel: '',         // '' = the UI's IQD label
+  },
+  rates: { [contractorId]: { [taskId]: rate } },   // agreed subcontract rates (≥ 0; 0 is a rate)
+  certificates: [ /* Certificate, below */ ],
+}
+```
+
+### Certificate
+
+```js
+{
+  id, kind: 'subcontractor' | 'employer',
+  contractorId,                // null for 'employer' (the main contract)
+  number,                      // 1, 2, 3 … per series = kind + contractor
+  periodEnd: 'YYYY-MM-DD',     // approved orders dated up to here count
+  status: 'draft' | 'issued',  // one draft per series at a time
+  terms: { retentionPct, retentionLimit, advanceAmount, advanceRecoveryPct },
+                               // copied from the series' previous certificate, else settings
+  deductions: [{ id, label, amount }],   // other deductions on THIS certificate
+  note, createdAt, createdBy,
+  // set when issued — frozen, never changed afterwards:
+  issuedAt, issuedBy: { id, name, role },   // Identity.currentActor()
+  periodStart,                 // day after the previous certificate (or the first order)
+  lines: [{ taskId, wbs, name, unit, rate, missingRate, missingTask,
+            prevQty, thisQty, cumQty, prevAmount, thisAmount, cumAmount, orderCount }],
+  totals: { gross, retention, advance, deductions, netDue,   // each { prev, this, cum }
+            previousNet, netPayable, missingRates },         // (+ retention.limited, advance.remaining/capped)
+  orderIds: [],                // the orders this certificate certified (new this period)
+}
+```
+
+- A **draft is live**: lines and totals are recomputed from the order ledger
+  every time. Issuing copies them in, with `orderIds`; an issued certificate
+  never changes (`updateDraft` / `deleteDraft` refuse it).
+- Counted orders: `family 'value'`, `status 'approved'`, a `taskId`, quantity
+  > 0, `date` ≤ `periodEnd`, not already in an issued certificate of the same
+  series; a subcontractor certificate only that contractor's
+  (`who.kind 'contractor'`). Rate: the agreed rate, or for `'employer'` the
+  task's `unitPrice`. No rate → the line is flagged (`missingRate`, amounts
+  `null`), left out of the totals, and the draft can't be issued.
+- "Previous" columns come from the series' last issued certificate (frozen).
+  `certifiedOrderIds()` = every order id in an issued certificate (for locking).
+
+---
+
+## 14. Server sync (`src/sync`, `supabase/`)
+
+The local stores above stay the read model on every device; the server
+keeps the shared copy, item by item, plus the full history.
+Setup: [08-server-setup.md](08-server-setup.md).
+
+### On the device
+
+```js
+// pm-server (device) — which server; without it the build's VITE_SUPABASE_URL / _ANON_KEY
+{ url: 'https://pm-laptop.tailxxxx.ts.net', anonKey: '<public anon key>' }
+
+// pm-session (device) — readable synchronously by currentActor(); no secrets
+{ mode: 'account' | 'local' | null,      // local = "use without an account"
+  server,                                 // the url the account is on
+  user: { id, email, name } | null,
+  needsSignIn,                            // sign-in expired: works offline, syncs after signing in
+  signedInAt, hasOrg,
+  org: { id, name, role } | null,         // the organization role
+  projectRoles: { [serverProjectId]: role },
+  deviceId }
+```
+
+IndexedDB **`pm-sync`** (never in a backup): `kv` (device id, the sign-in
+token `auth:*`, pull cursors `cursor:<scope>`, flags), `shadow` (per scope
+and store: the base of each item — what the server had — `{ h, rev, pos,
+data, deleted, by, pending?, sup?, lo? }`), `outbox` (queued changes:
+`{ seq, scopeKey, orgId, projectId, collection, key, op, data, before,
+deleted, pos, baseRev, rev, actorId, deviceId, clientAt, restoredFrom?,
+attempts, failed? }`).
+
+### How a store becomes items
+
+Each store in `SYNCED_STORES` (storeRegistry) except `pm-projects` is split
+by its `lists`: a record of list `path` is item `'<path>/<id>'` (`'<id>'`
+when the stored value is the list), everything else is item `'$doc'` (lists
+left as `[]`). A list marked `keyed: true` in the registry is an object of
+records by key (diary days by date …): item `'<path>/<key>'`, `{}` left in
+`'$doc'`. A store without lists is one `'$doc'`. Uploaded files are
+items of collection `files` (`{ id, folderId, name, size, type, createdAt,
+orderId? }`) with the bytes in Storage `files/<server project id>/<file id>`.
+Scopes: the organization (global stores: `pm-registries`, `pm-rate-library`,
+`pm-templates`) and each shared project (project stores). The project list
+itself syncs through the server's `projects` table.
+
+### On the server (Postgres, schema in `supabase/migrations/`)
+
+| Table | Holds |
+|---|---|
+| `orgs`, `org_members(org_id, user_id, role)` | the company and the organization role |
+| `profiles(id, email, name)` | one per account (made on sign-up) |
+| `projects(id, org_id, name, contract, location, start_date, local_id, archived)` | shared projects |
+| `project_members(project_id, user_id, role)` | role per project (an org admin is admin everywhere) |
+| `invites(org_id, project_id?, email, role)` | e-mails waiting to sign up |
+| `items(org_id, project_id?, collection, item_id, data, pos, rev, deleted, recorded_by, updated_by, updated_at, txid, seq)` | one row per record; `project_id` null = organization store; deleting keeps the data |
+| `changes(id, org_id, project_id?, collection, item_id, op, before, after, rev, outcome, note, actor, actor_name, device_id, client_at, server_at, restored_from)` | append-only history: every applied write (`outcome 'applied'`, by trigger) and every version that lost a conflict or was refused (`'rejected'`); `op` = insert / update / delete / restore / import |
+
+Row-level security: members read; writes need the action of
+`app_private.collection_rules` (mirror of `src/sync/rules.js`, from the
+`permissions.js` matrix) for the version before and after; approving a
+formal order needs an approver who is not `recorded_by`; `changes` only
+grows. Conflicts (`push_changes`): approved beats recorded, else the
+higher `rev`, a tie keeps the server's version.

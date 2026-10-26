@@ -1,6 +1,6 @@
 // Unit tests for the pure parts of src/utils/DataIO.js (node:test).
-// exportAppData / restoreAppData touch localStorage, IndexedDB and the DOM
-// at call time and are not covered here.
+// exportAppData touches IndexedDB and the DOM at call time and is not covered
+// here; restoreAppData is, for a backup without files (localStorage only).
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,6 +11,8 @@ import {
   bytesToBase64,
   decodeFileEntries,
   encodeFileRecord,
+  LOCAL_ONLY_KEYS,
+  restoreAppData,
   validateBackup,
 } from '../DataIO.js';
 
@@ -116,5 +118,36 @@ describe('validateBackup', () => {
     const result = validateBackup(backup({ files: [{ id: 'a', data }, { id: 'b', data }] }));
     assert.equal(result.stats.files, 2);
     assert.equal(result.stats.bytes, '{"orders":[]}'.length + 600);
+  });
+});
+
+describe('restore keeps this device signed in', () => {
+  // In-memory localStorage (restoreAppData only touches localStorage when the
+  // backup has no files section).
+  const installStorage = (data) => {
+    const map = new Map(Object.entries(data));
+    globalThis.localStorage = {
+      get length() {
+        return map.size;
+      },
+      key: (i) => [...map.keys()][i] ?? null,
+      getItem: (k) => (map.has(k) ? map.get(k) : null),
+      setItem: (k, v) => map.set(k, String(v)),
+      removeItem: (k) => map.delete(k),
+    };
+    return map;
+  };
+
+  it('never writes the session or server address from a backup', async () => {
+    const map = installStorage({ 'pm-session': 'mine', 'pm-server': 'my-server', 'pm-orders': 'old' });
+    await restoreAppData(backup({ storage: { 'pm-orders': 'new', 'pm-session': 'theirs', 'pm-server': 'their-server' } }));
+    assert.equal(map.get('pm-orders'), 'new');
+    assert.equal(map.get('pm-session'), 'mine');
+    assert.equal(map.get('pm-server'), 'my-server');
+    delete globalThis.localStorage;
+  });
+
+  it('lists the keys that stay on the device', () => {
+    assert.deepEqual(LOCAL_ONLY_KEYS, ['pm-session', 'pm-server']);
   });
 });

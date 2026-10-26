@@ -27,5 +27,11 @@ export default {
   'settings.storage_best-effort': 'May be cleared by the browser',
   'settings.storage_unsupported': 'Status unknown',
   'settings.storageAsk': 'Protect',
+  'settings.storageDevice': 'Space used on this device',
+  'settings.storageData': 'Project data',
+  'settings.storageOf': '{used} of {total} · {pct}',
+  'settings.storagePhotos': 'Order photos',
+  'settings.storagePhotosValue': '{n} · {size}',
+  'settings.storageWarn': 'Storage is almost full. Download a backup now, then delete old snapshots or photos you no longer need.',
   'settings.storageRefused': 'The browser did not allow it yet. Bookmark this page or install it as an app, then try again — and keep downloading backups.',
 };

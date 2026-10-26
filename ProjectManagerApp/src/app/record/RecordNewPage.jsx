@@ -38,14 +38,14 @@ function DesktopRecord() {
     if (location.state) navigate(location.pathname, { replace: true, state: null });
   }, [location.state, location.pathname, navigate]);
   const actions = useOrderActions();
-  const { draft, spec, missing, showErrors } = entry;
+  const { draft, spec, missing, showErrors, saving, photosBusy } = entry;
   const last = latestOrder(orders);
   const pending = pendingOrders(orders);
   const today = todayStr();
   const todays = ordersOnDay(orders, today);
 
-  const saveAnd = (next) => {
-    const order = entry.save();
+  const saveAnd = async (next) => {
+    const order = await entry.save();
     if (!order) return;
     toast({ title: savedMessage(t, order) });
     if (next === 'same') entry.start(order.type);
@@ -95,9 +95,11 @@ function DesktopRecord() {
                 <Button variant="ghost" onClick={entry.clear}>
                   {t('common.cancel')}
                 </Button>
-                <Button onClick={() => saveAnd('close')}>{t('record.save')}</Button>
-                <Button variant="primary" type="submit">
-                  {t('record.saveNext')}
+                <Button onClick={() => saveAnd('close')} disabled={saving || photosBusy}>
+                  {t('record.save')}
+                </Button>
+                <Button variant="primary" type="submit" disabled={saving || photosBusy} aria-busy={saving || undefined}>
+                  {saving ? t('record.saving') : photosBusy ? t('record.photosPreparing') : t('record.saveNext')}
                 </Button>
               </div>
             </form>

@@ -11,13 +11,16 @@ storeRegistry, permissions                                             (standalo
 Projects                                                               (imports storeRegistry; every project-scoped owner imports it)
 planning/WorkCalendar, planning/links                                  (standalone: working days, task links)
 planning/network                                                       (imports WorkCalendar: the forward pass)
-CalculatorEngine, Identity, RateLibrary                                (standalone)
+CalculatorEngine, ImageCompress, RateLibrary                           (standalone)
 CriticalPath                                                           (imports planning/*)
+Identity                                                               (imports Projects + src/sync/session)
 FileDB, DataIO                                                         (import Projects)
 ActivityLog, PlanningStore, Registries, Snapshots                      (import i18n / Projects)
+SiteDiary, Delays                                                      (import Identity / Projects)
 OrderEngine                                                            (imports i18n)
 TemplateEngine                                                         (imports RateLibrary)
 GanttEngine                                                            (imports OrderEngine + CriticalPath + planning/*)
+Certificates                                                           (imports i18n / Projects / ActivityLog / Identity / Registries)
 ```
 
 ---
@@ -31,8 +34,9 @@ GanttEngine                                                            (imports 
 - `currentProject()` (cached per page load) / `openProject(id)` / `closeProject()` / `lastProjectId()` / `projectStartDate(project?)`
 - `loadProjects()` / `saveProjects(list)` / `getProject(id)` / `createProject(details)` / `updateProject(id, changes)` / `deleteProject(id)` (removes its keys)
 - `ensureProjects()` — startup migration: plain project data → the first project
+- Shared projects (src/sync): a record may carry `serverId` (its id on the server; a project pulled from the server uses it as its local id too) and `revoked` (this account lost access: kept here, no longer synced). `projectByServerId(id)`, `linkProject(id, serverId)`, `fromServerProject(row)` (server row → local fields), `mergeServerProjects(serverProjects, { hidden, changedOnServer })` → `{ added, updated, revoked }` — adds the server's projects, updates linked details, marks lost access, never re-adds `hidden` ones
 
-Storage functions take an optional storage argument (tests). Tests: `projects.test.js`.
+Storage functions take an optional storage argument (tests). Tests: `projects.test.js`, `src/sync/__tests__/account.test.js`.
 
 ---
 
@@ -236,12 +240,75 @@ storage. Tests: `criticalPath.test.js`, `engineParity.test.js`.
 
 ---
 
+## Certificates.js — payment certificates (ذرعات)
+
+**Storage:** `pm-certificates` (project-scoped, shape in `docs/03` §13); every
+write calls `notifyStoreChange`. The line math lives in
+`state/certificateModel.js` (below).
+- `loadCertificates()` → normalized `{ settings, rates, certificates }` / `saveCertificates(doc)`
+- Series (one numbering per kind + contractor): `seriesKey`, `seriesOf(certificates, kind, contractorId)`,
+  `nextNumber`, `openDraft`, `previousCertificates(certificates, cert)` (issued, lower number)
+- `certificateProblem(certificates, { kind, contractorId, periodEnd }, selfId?)` →
+  `null` | `'kind' | 'contractor' | 'date' | 'openDraft' | 'beforePrevious'`
+- `defaultTerms(doc, kind, contractorId)` — the series' last terms, else the settings
+  (a subcontractor starts with no advance / retention limit)
+- Changes (load → change → save; `null` / `false` when refused):
+  `createCertificate({ kind, contractorId, periodEnd }, actor?)`,
+  `updateDraft(id, { periodEnd, terms, deductions, note })`, `deleteDraft(id)`,
+  `issueCertificate(id, { periodStart, lines, totals, orderIds }, actor?)` — freezes,
+  stamps `issuedBy` from `currentActor()`, logs an activity event (`kind: 'certificate'`),
+  `saveSettings(patch)`, `setRate(contractorId, taskId, rate)` (`''` clears)
+- **`certifiedOrderIds(doc?)`** → `Set` of order ids in issued certificates (for the
+  order lock); `certificatesByOrder(doc?)` → `Map` orderId → `[{ id, number, kind, contractorId }]`
+
+`state/certificateModel.js` (pure): `eligibleOrders(orders, cert)`,
+`rateFor(kind, contractorId, taskId, task, rates)` (null = missing),
+`certificateTotals(lines, cert, previous)`,
+**`computeCertificate(cert, { certificates, rates, tasks, orders })`** →
+`{ frozen, periodStart, lines, totals, orderIds, problems, issuable }` (an issued
+certificate returns what it froze), `filterCertificates`, `rateRows` (the
+contractor × item rates editor), `compareWbs`. Tests:
+`utils/__tests__/certificates.test.js`, `state/__tests__/certificateModel.test.js`.
+
+---
+
 ## DailyNotes.js — daily report site notes
 
 `DAILY_NOTES_STORAGE_KEY = 'project-manager-daily-reports'`. `loadDailyNotes()`
 (drops malformed rows), `saveDailyNotes(notes)`, `createDailyNote({ date,
 engineer, task, details })` → a new note (no quantity: executed quantities come
 from orders). Same key and shape as the legacy DailyReports screen.
+
+## SiteDiary.js — site diary
+
+**Storage:** `pm-site-diary` (project). Shape in [03-data-model §10a](03-data-model.md).
+- `loadSiteDiary()` → `{ days }` (drops malformed days) / `saveSiteDiary(diary)` (notifies)
+- `getDiaryDay(diary, day)`; `putDiaryDay(diary, day, entry, actor?, now?)` → new diary,
+  stamps `recordedBy/At` on the first save and `updatedBy/At` on every save; an
+  empty entry removes the day; `removeDiaryDay(diary, day)`
+- `normalizeDiaryDay(raw)`, `emptyDiaryDay()`, `isDiaryDayEmpty(entry)`,
+  `createDiaryRowId()`, `WEATHER_KINDS`
+
+## Delays.js — delay register
+
+**Storage:** `pm-delays` (project). Shape in [03-data-model §10a](03-data-model.md).
+- `loadDelays()` → `{ events }` / `saveDelays(state)` (notifies)
+- `upsertDelay(state, event, actor?, now?)` — adds (stamps `recordedBy`,
+  `recordedById`, `createdAt` from `currentActor()`) or replaces (keeps those,
+  stamps `updatedBy/At`); `removeDelay(state, id)`
+- `normalizeDelay(raw)`, `createDelayId()`, `DELAY_CAUSES`, `DELAY_STATUSES`
+
+The rules for both live in `state/diaryModel.js`: `manpowerFromPlan` (day plan
+crews → manpower by trade; a worker counts once, a team's head count above its
+members is general labour, a contractor crew is a row to fill in),
+`diaryDraft`, `previousDiaryDay` / `copyDiaryDay` ("same as yesterday":
+weather, hours, manpower, equipment — not visitors or issues), `diaryTotals`,
+`diaryDaysInRange`, `tradeSuggestions` / `equipmentSuggestions`; delays:
+`delaySpan` (an open event runs to today), `unionDays` (a day under two events
+counts once), `noticeCheck` (`ok` / `late` = more than 28 days / `open` /
+`overdue`, FIDIC 20.1), `delayTotals`, `delaysInMonth`, `sortDelays`,
+`filterDelays`, `delayErrors`. Tests: `state/__tests__/diaryModel.test.js`,
+`utils/__tests__/diaryStores.test.js`.
 
 ## PlanningStore.js — lookahead plans
 
@@ -309,6 +376,19 @@ No storage, no imports. Excel-style evaluation for calculator rows:
 
 ---
 
+## ImageCompress.js — shrink photos before storing
+
+`fitWithin(w, h, maxSide)` (pure, tested) → `{ width, height }` with the
+longest side ≤ maxSide, ratio kept, never scaled up.
+`compressImage(file, { maxSide = 1600, quality = 0.8 })` →
+`createImageBitmap(file, { imageOrientation: 'from-image' })` → canvas
+(white background) → `toBlob('image/jpeg')` → a `File` named `<name>.jpg`.
+Always resolves: returns the original file when anything fails or the copy
+is not smaller. `jpegName(name)`; constants `PHOTO_MAX_SIDE`, `PHOTO_QUALITY`.
+Used by `ui/PhotoPicker`.
+
+---
+
 ## FileDB.js — IndexedDB for uploads
 
 DB `ProjectManagerDB` v1, store `files`.
@@ -325,15 +405,69 @@ DB `ProjectManagerDB` v1, store `files`.
 `getPersistenceState()` → `'persisted' | 'best-effort' | 'unsupported'`.
 Shown in Settings → Backup & restore with a Protect button.
 
+**Storage use** (the meter under it):
+- `getStorageUsage()` → `summarizeStorage(...)` of the three readings below
+  (FileDB failures count as no photos).
+- `getStorageEstimate()` → `{ usage, quota }` bytes for the whole origin
+  (`navigator.storage.estimate`: IndexedDB files, the offline cache, …), or
+  null when the browser cannot tell.
+- `localStorageSize(storage?)` → characters of every key + value, all
+  projects (the unit browsers cap at `LOCAL_STORAGE_LIMIT`, 5 M).
+- `photoStats(records)` → `{ count, bytes }` of FileDB records in
+  `ORDER_PHOTOS_FOLDER` (`'order_photos'`).
+- `summarizeStorage({ estimate, localSize, photos })` (pure, tested) →
+  `{ device: { used, total, ratio } | null, data: { used, total, ratio },
+  photos, warn }`; `warn` when either ratio reaches `STORAGE_WARN_RATIO`
+  (0.8).
+
 ---
 
 ## Identity.js — current user
 
-**Storage:** `pm-identity` = `{name, role}`.
-`loadIdentity()` / `saveIdentity({name, role})` / `hasIdentity()`.
-(The store opens the IdentityDialog automatically when `hasIdentity()` is false.)
-`currentActor()` → `{ id, name, role }` — `role` is a permission role
-(`permissions.js`); before accounts exist it is `{ id: null, name, role: 'admin' }`.
+**Storage:** `pm-identity` = `{name, role}` (the local name + job title).
+- `loadIdentity()` — the name and job title to show and stamp: the signed-in
+  account's name (with the local job title), else the local identity;
+  `loadLocalIdentity()` ignores the account
+- `saveIdentity({name, role})` (local; returns `loadIdentity()`), `hasIdentity()`
+  (signed in, or a local name). The store opens the account dialog
+  (`app/IdentityDialog.jsx`) when it is false.
+- `currentActor()` → `{ id, name, role }` — `role` is a permission role
+  (`permissions.js`): not signed in → `{ id: null, name, role: 'admin' }`;
+  signed in → the account, with its role in the open shared project
+  (`viewer` if access was withdrawn), `admin` in a project that exists only
+  on this device, the organization role at the projects level. `useActor()`
+  re-reads it on `pm-session` / `pm-identity` changes.
+
+
+---
+
+## src/sync — server sync, accounts and history
+
+Offline-first sync with Supabase (server: `supabase/`, guide:
+[08-server-setup.md](08-server-setup.md); flow: [02-architecture §8](02-architecture.md)).
+Import from `src/sync/index.js`. Pure modules are tested in
+`src/sync/__tests__/` (`npm test`); the same code runs against the real
+migrations in PGlite with `npm run test:db`.
+
+| Module | What it does |
+|---|---|
+| `itemDiff.js` (pure) | `explodeStore(entry, value)` → items (`'<path>/<id>'`, `'<id>'` for a root list, `'<path>/<key>'` for a `keyed` list, `'$doc'` for the rest); `diffItems(base, items, { staleCheck })` → `{ changes, stale, localOnly }`; `materialize(entry, items)`; `applyItems(entry, value, updates, posOf)`; `assignPositions`; `hashOf` / `stableStringify`; `DOC_ITEM`, `ABSENT` |
+| `conflict.js` (pure) | `pickWinner(current, incoming)` → `{ winner, reason }`: approved beats recorded, else higher rev, tie keeps the server's |
+| `rules.js` (pure) | `COLLECTION_RULES` (mirror of the SQL `app_private.collection_rules`), `writeAction`, `canWriteVersion(role, …)`, `checkChange(actor, { collection, key, before, after, recordedBy, importing })` → `{ ok, reason }` (`role`, `notApprover`, `ownRecord`, `approveUnrecorded`); `scopeOf`, `entryFor`, `FILES_COLLECTION` |
+| `engine.js` | `createEngine({ db, transport, storage, notify, emit, now, deviceId })` → `diffStore` / `diffScope` (queue changes, undo refused ones), `push(actorId, scopes)`, `pullScope`, `applyServerRows`, `queueChanges`, `applyLocalVersion` (restore), `clearStaleMarks`, `dropScope`; helpers `selectBatch`, `sortResults`, `toPushPayload`; `LIVE_STORES`, `PLAN_STORES` |
+| `localDb.js` | the sync database (IndexedDB `pm-sync`: `kv`, `shadow`, `outbox`); `createMemoryDb()` for tests |
+| `files.js` | `pushFiles` / `pullFiles` — FileDB ⇄ Storage `files/<server project>/<file id>`; `fileMeta`, `storagePath` |
+| `transport.js` | `createSupabaseTransport(client)` — every server call; `SyncError` (`offline`, `auth`, `code`), `toSyncError` |
+| `client.js` | `getConnection(db)` (supabase-js loaded on first use; token kept in `pm-sync`), `probeServer({ url, anonKey })` |
+| `serverConfig.js` | `pm-server`: `loadServerConfig()` (device value, else `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`), `saveServerConfig`, `resetServerConfig`, `validateServerConfig` (codes `url` / `key` / `https`), `normalizeServerUrl`, `isServerConfigured` |
+| `session.js` | `pm-session`: `loadSession`, `saveSession`, `clearAccount`, `chooseLocalMode`, `isSignedIn`, `needsLogin`, `projectRole` |
+| `runtime.js` | the browser loop: `startSync` / `stopSync`, `requestSync`, `syncNow`, `onSyncStatus` / `getSyncStatus`, `onSyncEvent` (`denied`, `overruled`, `ignored`, `applied`, `signedOut`), `refreshAccess`, `applyAccess`, `buildScopes`, `scopeFor`, `withSyncLock`, `pendingChanges`, `retryFailed`, `discardFailed`, `resetPullCursors` |
+| `account.js` | `signIn`, `signUp`, `signOut`, `createOrganization`, `refreshAccount`, `renameMe`, `listMembers`, `listOrgMembers`, `listInvites`, `inviteMember`, `setMemberRole`, `removeMember`, `setOrgRole`, `removeOrgMember`, `cancelInvite` — all return `{ ok }` or `{ ok: false, code }` (`account.err.<code>`) |
+| `upload.js` | `uploadDeviceData({ onStep })` (safety backup → server projects → import → full sync), `canUpload`, `localOnlyProjects` |
+| `history.js` | `getHistory(collection, itemId, { project })`, `getProjectTimeline({ project, actor, collection, from, to, beforeId, limit, shared })` → `{ ok, rows, next }`, `restoreVersion(changeId)` (a new change, never a rewrite), `itemKeysFor`. Rows: `{ id, collection, itemId, op, before, after, rev, outcome, note, actor: { id, name }, deviceId, clientAt, serverAt, restoredFrom, pending }`; this device's queued changes come first with `pending: true` |
+
+React hooks for screens: `app/account/useAccount.js` (`useSession`,
+`useServerConfig`, `useSyncStatus`, `usePlanEpoch`).
 
 ---
 
@@ -343,7 +477,9 @@ Shown in Settings → Backup & restore with a Protect button.
 Derived: `ALL_STORE_KEYS` (= `DataIO.APP_STORAGE_KEYS`), `PROJECT_STORE_KEYS`
 (= `Projects.PROJECT_SCOPED_KEYS`), `DEVICE_STORE_KEYS` (a full restore keeps
 them), `SYNCED_STORES`; `storeFor(key)`. `lists` name the record arrays inside
-a stored value (`''` = the value is the array) for item-level sync and history.
+a stored value (`''` = the value is the array) for item-level sync and history;
+`{ path, keyed: true }` = an object of records by key (`pm-site-diary` days,
+`pm-plans` months / weeks / days, `meta.planning`), each key one sync item.
 
 ---
 
@@ -363,8 +499,8 @@ the recorder, once accounts exist). In components: `useCan()` /
   (no-op outside the browser, so node tests are unaffected)
 - `onStoreChange(handler)` → unsubscribe; handler gets the storage key
 
-Called by `saveOrdersData`, `saveRegistries`, `saveIdentity` and
-`saveAppEvents` after writing; `ProjectProvider` listens and re-reads that
+Called by `saveOrdersData`, `saveRegistries`, `saveIdentity`,
+`saveAppEvents`, `saveCertificates`, `saveSiteDiary` and `saveDelays` after writing; `ProjectProvider` listens and re-reads that
 store immediately. A new persisted store that other screens read should do
 the same.
 

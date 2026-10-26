@@ -16,6 +16,8 @@ describe('permissions', () => {
     assert.ok(can('site', 'record.work'));
     assert.ok(!can('site', 'orders.approve'));
     assert.ok(!can('site', 'plan.edit'));
+    assert.ok(can('site', 'plan.lookahead'));
+    assert.ok(!can('accountant', 'plan.lookahead'));
     assert.ok(can('accountant', 'finance.edit'));
     assert.ok(!can('accountant', 'plan.edit'));
     assert.ok(can('accountant', 'certificates.prepare'));

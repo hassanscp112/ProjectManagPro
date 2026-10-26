@@ -6,6 +6,8 @@ export default {
   'schedule.tabGantt': 'المخطط الزمني',
   'schedule.tabLookahead': 'التخطيط القادم',
   'schedule.tabBaseline': 'مقارنة بخط الأساس',
+  'schedule.tabResources': 'الموارد',
+  'schedule.resourcesPlaceholder': 'شاشة الموارد والتسوية قيد البناء.',
 
   // Toolbar
   'schedule.zoom': 'التكبير',

@@ -2,7 +2,7 @@ import { formatNumber } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
 import { taskQuantityStatus } from '../../state/orderForm.js';
 import { useProject } from '../../state/projectContext.js';
-import { DateChips, Field, Input, NumberInput, Select, TaskPicker, Textarea, WhoPicker } from '../../ui/index.js';
+import { DateChips, Field, Input, NumberInput, PhotoPicker, Select, TaskPicker, Textarea, WhoPicker } from '../../ui/index.js';
 import s from './Record.module.css';
 
 // Who-field modes from the order spec → the WhoPicker kinds they offer.
@@ -12,7 +12,8 @@ const WHO_KINDS = {
 };
 
 /**
- * The fields of one order type, driven by its spec in OrderEngine.
+ * The fields of one order type, driven by its spec in OrderEngine, then
+ * photos (every type; kept beside the draft by useOrderEntry).
  * Required fields are plain; optional ones say "(optional)". Errors show
  * per field after a save attempt (showErrors). size="lg": phone inputs.
  */
@@ -124,5 +125,10 @@ export default function OrderForm({ entry, size = 'md' }) {
     }
   };
 
-  return <div className={s.formGrid}>{spec.fields.map(renderField)}</div>;
+  return (
+    <div className={s.formGrid}>
+      {spec.fields.map(renderField)}
+      <PhotoPicker className={s.wide} photos={entry.photos} onChange={entry.setPhotos} disabled={entry.saving} />
+    </div>
+  );
 }

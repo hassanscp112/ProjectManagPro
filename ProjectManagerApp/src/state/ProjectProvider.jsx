@@ -15,6 +15,7 @@ import {
   TASKS_STORAGE_KEY,
   addMainTask,
   addSubTask,
+  applyTaskPatchList,
   applyVariation,
   countPendingApprovals,
   createTaskId,
@@ -23,6 +24,7 @@ import {
   linkExistingBoq,
   loadMeta,
   loadTasks,
+  mergePlanning,
   normalizeTaskUpdate,
   replaceTask,
   signOffProject,
@@ -95,6 +97,14 @@ export function ProjectProvider({ children }) {
     // project's own key (utils/Projects.projectKey). Both count.
     const is = (key, base) => key === null || key === base || key === projectKey(base);
     const reload = (key) => {
+      // The plan rewritten from outside (sync, another tab): take it, and drop
+      // the undo steps — undoing would put the older copy back over it.
+      if (is(key, TASKS_STORAGE_KEY)) {
+        setTasks(loadTasks());
+        historyRef.current = [];
+        setCanUndo(false);
+      }
+      if (is(key, META_STORAGE_KEY)) setProjectMeta(loadMeta());
       if (is(key, ORDERS_STORAGE_KEY)) setOrdersData(loadOrdersData());
       if (key === null || key === REGISTRIES_STORAGE_KEY) setRegistries(loadRegistries());
       if (is(key, ACTIVITY_STORAGE_KEY)) setAppEvents(loadAppEvents());
@@ -174,6 +184,17 @@ export function ProjectProvider({ children }) {
     setTasks((prev) => linkExistingBoq(prev, parentTaskId, column, leafTaskId));
   };
 
+  /** Several task changes at once (planner, leveling): [{ id, patch }], one undo step. */
+  const applyTaskPatches = (patches) => {
+    const next = applyTaskPatchList(tasks, patches);
+    if (next === tasks) return;
+    pushToHistory(tasks);
+    setTasks((prev) => applyTaskPatchList(prev, patches));
+  };
+
+  /** Merge into meta.planning: an object patch, or (planning) => nextPlanning. Not on the undo stack. */
+  const setPlanning = (updaterOrPatch) => setProjectMeta((prev) => mergePlanning(prev, updaterOrPatch));
+
   /* ── lifecycle ── */
 
   const signOff = (signedBy) => {
@@ -247,6 +268,8 @@ export function ProjectProvider({ children }) {
     deletePreview,
     setBoqLink,
     linkBoqToExisting,
+    applyTaskPatches,
+    setPlanning,
     undo,
     canUndo,
     ganttView,

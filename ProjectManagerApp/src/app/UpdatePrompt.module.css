@@ -1,0 +1,31 @@
+/* "A new version is ready" banner: top centre, over the page, until the
+   user reloads or dismisses it. */
+.banner {
+  position: fixed;
+  z-index: 65;
+  inset-block-start: calc(var(--ui-space-3) + env(safe-area-inset-top));
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--ui-space-4));
+  margin-inline: auto;
+  padding-block: var(--ui-space-2);
+  padding-inline: var(--ui-space-4) var(--ui-space-2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-lg);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: var(--ui-shadow-pop);
+}
+
+.icon {
+  flex: none;
+  color: var(--ui-accent);
+}
+
+.text {
+  font-size: var(--ui-fs-md);
+  font-weight: 600;
+}

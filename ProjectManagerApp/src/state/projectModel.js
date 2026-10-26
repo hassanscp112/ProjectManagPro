@@ -411,3 +411,31 @@ export const appendGeneratedTasks = (tasks, generated) => {
 /** Formal orders still awaiting approval (the Record badge). */
 export const countPendingApprovals = (orders = []) =>
   orders.filter((o) => o && o.tier === 'formal' && o.status === 'recorded').length;
+
+/* ── planning (auto-planning, leveling) ─────────────────────────────────── */
+
+/**
+ * Apply several task patches at once — [{ id, patch }] → the new task list.
+ * Patches for the same id merge in order; each patched task is normalized
+ * like a single edit (normalizeTaskUpdate); unknown ids are skipped.
+ */
+export const applyTaskPatchList = (tasks, patches = []) => {
+  const byId = new Map();
+  (Array.isArray(patches) ? patches : []).forEach((p) => {
+    if (!p || !p.id || !p.patch || typeof p.patch !== 'object') return;
+    byId.set(p.id, { ...(byId.get(p.id) || {}), ...p.patch });
+  });
+  if (byId.size === 0) return tasks;
+  return tasks.map((t) => (byId.has(t.id) ? normalizeTaskUpdate({ ...t, ...byId.get(t.id), id: t.id }) : t));
+};
+
+/**
+ * meta.planning (calendar, markups, crews, resources …) after a change: an
+ * object is merged in, a function gets the current planning and returns
+ * the next one. Absent planning = {}.
+ */
+export const mergePlanning = (meta, updaterOrPatch) => {
+  const current = meta?.planning && typeof meta.planning === 'object' ? meta.planning : {};
+  const next = typeof updaterOrPatch === 'function' ? updaterOrPatch(current) : { ...current, ...(updaterOrPatch || {}) };
+  return { ...meta, planning: next };
+};

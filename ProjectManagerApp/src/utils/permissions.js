@@ -18,6 +18,7 @@ export const ACTIONS = {
   'members.manage': ['admin'],
   'plan.edit': ['admin', 'pm', 'office'], // tasks, BOQ, templates, rates (before sign-off)
   'plan.signOff': ['admin', 'pm'], // sign off, re-baseline, start, complete
+  'plan.lookahead': ['admin', 'pm', 'office', 'site'], // week and day plans (month targets need plan.edit)
   'vo.draft': ['admin', 'pm', 'office'],
   'vo.approve': ['admin', 'pm'],
   'record.work': ['admin', 'pm', 'office', 'site'], // work and test orders, diary, photos, delays

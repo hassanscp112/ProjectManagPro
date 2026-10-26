@@ -9,10 +9,13 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
 ```
  main.jsx ─ fonts + src/ui tokens/base css ─ applyTheme(loadTheme()) ─ ensureProjects()
    └─ I18nProvider → UiProvider (Radix direction, tooltips, toasts) → App
-        └─ App.jsx = AppErrorBoundary + RouterProvider (hash URLs)
+        └─ App.jsx = AppErrorBoundary + SyncRuntime (server sync, sign-in gate — §8)
+             │         + RouterProvider (hash URLs)
+             │         + UpdatePrompt (service worker, "new version" banner; §7)
+             ├─ /login (stand-alone: sign in, server address, "use without an account")
              ├─ projects level: PortfolioLayout → /projects, /projects/new,
              │                  /templates, /templates/new, /rates  (no project open)
-             └─ inside a project: ProjectGate → ProjectProvider key=project.id
+             └─ inside a project: ProjectGate → ProjectProvider key=project.id(:plan epoch)
                                   → AppLayout → every other route
 
  ┌──────────────── src/state/ProjectProvider.jsx ─────────────────┐
@@ -90,6 +93,9 @@ global state library** — React state + localStorage + change notifications.
 | Library | `/library/boq` (`?grid=`) · `/library/files(/:taskId)` (`?folder=`) | **Rebuilt (Phase 6)** — `app/library/`; the old `/library/templates` and `/library/rates` links redirect to the projects level |
 | People | `/people/:kind` (`contractors` · `teams` · `workers`) | **Rebuilt (Phase 6)** — `app/people/PeoplePage.jsx` |
 | Settings | `/settings` | **Rebuilt (Phase 6)** — `app/settings/SettingsPage.jsx` |
+| | `/settings/users` | `app/settings/UsersPage.jsx` — members of the open project and their roles, invite by e-mail, company roles, what each role may do (needs a signed-in account and a shared project) |
+| | `/settings/server` | `app/settings/ServerPage.jsx` — server address (device setting), the account, sync status, *Upload this device's data* |
+| (account) | `/login` | `app/account/LoginPage.jsx` — outside the shell: sign in / create account, company setup on a new server, the server address, *Use without an account* |
 | (phone) | `/more` | `app/pages/MorePage.jsx` — every area + identity |
 | (dev) | `/dev/ui` | `dev/UiReview.jsx`, dev builds only |
 
@@ -116,7 +122,7 @@ over. Sub-pages show as tabs under the page title (`AREA_TABS` in
 | Engine | `engineResult = useMemo(() => GanttEngine.calculate(...), [tasks, projectMeta, orders])` |
 | Undo | 50-step history; a 1 s typing burst counts as one step; `ganttView` (edit mode, zoom, columns, critical-only, search, collapsed groups) survives navigation |
 | Auto snapshot | `writeAutoSnapshot()` on any tasks/meta/identity change (no-op if today's exists) |
-| Task actions | `updateTask`, `addMainTask`, `addSubTask`, `requestDeleteTask` → `confirmDeleteTask` (dialog in `AppLayout`), `setBoqLink`, `linkBoqToExisting` |
+| Task actions | `updateTask`, `addMainTask`, `addSubTask`, `requestDeleteTask` → `confirmDeleteTask` (dialog in `AppLayout`), `setBoqLink`, `linkBoqToExisting`, `applyTaskPatches([{ id, patch }])` (several tasks, one undo step — `projectModel.applyTaskPatchList`), `setPlanning(patch \| updater)` (merges into `meta.planning`, not undoable — `projectModel.mergePlanning`) |
 | Lifecycle | `signOff(signedBy)`, `setStatus(status)`, `raiseVariation(draft)` → true when recorded |
 | Backup/restore | Schedule toolbar's More menu and Settings via `utils/DataIO` (validate → confirm → safety download → write keys + files → reload) |
 | Crashes | `app/ErrorPage.jsx`: a screen crash shows the error page inside the shell (router `errorElement` on a pathless route); a shell crash shows it full-window; `AppErrorBoundary` in `App.jsx` catches the project store. All offer a backup download |
@@ -190,7 +196,8 @@ order-derived and read-only.
 | Project meta (status/baseline/VOs) | ProjectProvider (Schedule dialogs) | Monthly, Activity, Baseline, engine | `project-manager-project-meta` |
 | Order ledger | Record pages (OrderEngine `addOrder` / `approveOrder` / `deleteOrder`) | engine, Planning, Reports, Activity | `pm-orders` |
 | Registries | PeoplePage | Orders, Planning, Reports, task details | `pm-registries` |
-| Identity | IdentityDialog (first launch, sidebar user, Settings) | stamps everywhere | `pm-identity` |
+| Identity | IdentityDialog — the account dialog when signed in, else the local name (first launch, sidebar user, Settings) | stamps everywhere | `pm-identity` (+ the account in `pm-session`) |
+| Server address, sign-in | ServerForm (login page, `/settings/server`), `src/sync` | `currentActor`, sync | `pm-server`, `pm-session` (device) |
 | App events | `logAppEvent` from ProjectProvider/screens | Activity feed | `pm-activity` |
 | Plans | LookaheadPage (via PlanningStore) | itself | `pm-plans` |
 | Snapshots | SettingsPage + auto-writer | restore | `pm-snapshots` |
@@ -238,3 +245,118 @@ ProjectProvider also listens to the `storage` event for the same four keys.
 | A new computed metric | Add to `GanttEngine.calculate()` return; consume in Home / the monthly report |
 | A new stored entity | New util module with its own `STORAGE_KEY` + load/save; add one entry to `utils/storeRegistry.js` (backup, per-project keys and sync follow) |
 | A new UI string | Both `dictionaries/ar/` and `dictionaries/en/` — never hardcode text ([06-i18n-guide.md](06-i18n-guide.md)) |
+
+---
+
+## 7. Build, installable app (PWA), deployment and E2E tests
+
+**Base path.** `vite.config.js` sets `base: process.env.VITE_BASE || '/'`.
+Locally the app lives at the root (dev server `localhost:5173`, fixed port);
+the GitHub Pages build uses `VITE_BASE=/ProjectManagPro/`. The hash router
+needs no server rewrites, so any static host works.
+
+**Installable / offline (vite-plugin-pwa 2, Workbox `generateSW`).**
+- `npm run build` also writes `dist/manifest.webmanifest`, `dist/sw.js` and a
+  Workbox runtime file. The manifest: «مدير المشروع», `lang: 'ar'`,
+  `dir: 'rtl'`, standalone, theme `#553285`, white background,
+  `start_url` / `scope` `'.'` (relative to the base), the icons below.
+- The service worker precaches every `js, css, html, svg, png, ico, woff2`
+  file of the build (≤ 4 MB each; the largest chunk is BoqPage with
+  jspreadsheet) and answers every navigation with `index.html`. Cache name
+  `workbox-precache-v2-<scope>`. After the first visit the whole app, every
+  lazy screen and the fonts open offline.
+- No service worker in dev (`devOptions.enabled: false`): there
+  `virtual:pwa-register/react` is a stub, so dev servers never cache.
+- `registerType: 'prompt'`, `injectRegister: false`: `src/app/UpdatePrompt.jsx`
+  (mounted beside `RouterProvider`) registers the worker with `useRegisterSW`.
+  A new deployment installs in the background and **waits**; the banner
+  "A new version is ready · Reload" appears and only the user's Reload
+  switches over (skip-waiting + one reload). It never reloads by itself — a
+  half-filled order would be lost. While open, the app checks for a new
+  version every hour (when online). The first install shows the toast "Ready
+  to work offline" once.
+
+**Icons.** One source, `public/app-icon.svg` (aubergine tile, white roof over
+three plan bars). `npm run icons` (`pwa-assets.config.js`,
+`@vite-pwa/assets-generator`, preset `minimal-2023` with an aubergine instead
+of white background for the maskable and Apple icons) writes next to it:
+`pwa-64x64.png`, `pwa-192x192.png`, `pwa-512x512.png`,
+`maskable-icon-512x512.png`, `apple-touch-icon-180x180.png`, `favicon.ico`.
+They are committed; rerun the script after changing the SVG. `index.html`
+links the favicon, the SVG icon and the Apple icon, and sets `theme-color`
+and the "standalone on the home screen" metas.
+
+**Deployment.** `.github/workflows/deploy-pages.yml` runs on every push to
+`main` (and by hand): in `ProjectManagerApp/`, Node 22, `npm ci`, `npm test`,
+`npm run build` with `VITE_BASE=/ProjectManagPro/`, then
+`upload-pages-artifact` (`dist`) and `deploy-pages` →
+https://hassanscp112.github.io/ProjectManagPro/. The repository's Pages
+source must be set once to **GitHub Actions** (Settings → Pages).
+The Pages site is a **different origin** from `localhost:5173`: it starts
+with empty storage. Move data with Backup on one and Restore on the other.
+
+**Checking a Pages build locally.** Build with the base, then preview:
+`VITE_BASE=/ProjectManagPro/ npm run build` and
+`VITE_BASE=/ProjectManagPro/ npm run preview -- --port 4173`, open
+http://localhost:4173/ProjectManagPro/. In Git Bash prefix both with
+`MSYS_NO_PATHCONV=1` (it otherwise rewrites `/ProjectManagPro/` into a
+Windows path); in PowerShell set `$env:VITE_BASE='/ProjectManagPro/'`.
+DevTools → Application shows the manifest, the worker and the precache.
+
+**E2E smoke tests.** `npm run test:e2e` (Playwright, `playwright.config.js`,
+specs in `e2e/`). It starts its own dev server on port **5190** with empty
+browser profiles, so real data is never touched; first run
+`npx playwright install chromium`. `smoke.spec.js` creates a project from the
+first template and opens every route (with real ids) as a fresh deep link
+in Arabic and English, desktop and 375 px phone: no console errors, no error
+page. `record-order.spec.js` records a quick work order and finds it in the
+order log. Tests run one at a time (parallel full page loads exhaust the
+browser against the unbundled dev server); the suite takes about 3 minutes.
+Helpers (`e2e/helpers.js`) seed the language and a user name (so the
+first-run identity dialog stays closed) and click through the DOM
+(`element.click()`), because pointer clicks can time out in some
+environments. Output goes to `test-results/` (git-ignored).
+
+---
+
+## 8. Accounts and server sync (`src/sync`)
+
+Optional: without a server (or with *Use without an account*) the app is a
+single-device app exactly as above. With one (Supabase, address in
+`pm-server`, guide [08-server-setup.md](08-server-setup.md)):
+
+```
+ screens ──write──▶ localStorage stores (unchanged: still the read model)
+                          │ notifyStoreChange · every 20 s · page visible · back online
+                          ▼
+             src/sync engine (one cycle at a time, all tabs — Web Locks)
+   diff ── each SYNCED_STORES store split into items (registry `lists`) and
+   │        compared with its base (IndexedDB pm-sync) → checkChange(role) →
+   │        outbox entry { actor, device, client time } — or undo on the spot
+   push ── push_changes RPC: row-level security + conflict rules; lost /
+   │        refused versions come back into the store (kept in `changes`)
+   pull ── pull_items since the scope's cursor (+ Realtime poke) → write
+            the store → notifyStoreChange → screens refresh
+   files ── FileDB blobs ⇄ Storage files/<project>/<file>
+```
+
+- **Gate:** `SyncRuntime` (in `App.jsx`) starts the engine and sends every
+  route to `#/login` while a server is set, nobody is signed in and local
+  mode was not chosen; `ProjectGate` does the same for project routes.
+- **Who acts:** `Identity.currentActor()` = the signed-in account with its
+  role in the open project (`pm-session.projectRoles`); `useCan()` follows
+  it. The server enforces the same matrix (row-level security).
+- **Scopes:** the organization (people, templates, rates) and each shared
+  project. A project created on a device after signing in is shared
+  automatically (admin / PM); older local projects go up with *Upload this
+  device's data* (a safety backup is downloaded first).
+- **Screens unchanged, two safeguards:** ProjectProvider keeps the plan in
+  memory, so `ProjectGate` remounts it (key `project.id:epoch`) when the
+  engine rewrites tasks / meta; and a screen that saves an older copy of a
+  record a remote change replaced is not taken as an edit (until the next
+  navigation) — the store is put back instead. A store emptied or removed
+  at once is restored from the base, never deleted on the server.
+- **History:** every applied write and every lost / refused version is in
+  the server's append-only `changes`; `src/sync/history.js` reads it
+  (`getHistory`, `getProjectTimeline`) and `restoreVersion` writes an old
+  version as a new change.

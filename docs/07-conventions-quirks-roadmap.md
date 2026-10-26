@@ -69,6 +69,14 @@ The rules that prevent mistakes. Read this before changing anything.
   to disk instead of piping Arabic through heredocs.
 - **Browser automation:** Playwright element clicks can time out — use DOM
   `evaluate` clicks instead; verify app state via DOM queries, not screenshots.
+- **GitHub Pages / PWA builds:** in Git Bash, prefix
+  `MSYS_NO_PATHCONV=1` to `VITE_BASE=/ProjectManagPro/ npm run build`,
+  otherwise the base becomes `/Git/ProjectManagPro/`. The built-in browser
+  pane cannot register service workers — check them in Playwright's
+  Chromium. The hosted site has its own (empty) storage; move data with
+  Backup → Restore.
+- E2E: `npm run test:e2e` (Playwright, its own dev server on 5190, one
+  worker — parallel workers ran out of browser resources).
 - Dev server: `npm run dev` → http://localhost:5173 (run.cmd opens it). The
   port is fixed — stop the other server if it says the port is in use. For
   automated checks use another port (`npm run dev -- --port 5180`) so the real

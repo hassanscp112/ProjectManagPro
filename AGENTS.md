@@ -34,7 +34,20 @@ npm run dev     # dev server → http://localhost:5173, port fixed (data is per 
 npm run lint    # ESLint
 npm run build   # production build
 npm test        # unit tests: engines + ar/en dictionary parity (node:test)
+npm run test:e2e  # Playwright smoke tests on port 5190 (E2E_PORT=… for a parallel worktree): every route in ar/en, desktop + phone (3–5 min)
+npm run icons   # regenerate the app icons from public/app-icon.svg
+npm run test:db # server: SQL / row-level-security tests in PGlite + the app's sync code against the migrations (~5 s, no Docker)
 ```
+
+**Installable app (PWA) + GitHub Pages:** `.github/workflows/deploy-pages.yml`
+builds with `VITE_BASE=/ProjectManagPro/` and publishes
+https://hassanscp112.github.io/ProjectManagPro/ on every push to `main` (Pages
+must be switched on once: repo Settings → Pages → Source: GitHub Actions). The
+service worker exists only in builds. Check a Pages build locally with
+`MSYS_NO_PATHCONV=1 VITE_BASE=/ProjectManagPro/ npm run build` then
+`npm run preview` (Git Bash rewrites `/ProjectManagPro/` without
+`MSYS_NO_PATHCONV=1`). The Pages site is its own origin: it starts with
+**empty storage** — move data there with Backup (on 5173) → Restore.
 
 Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/ui
 
@@ -57,9 +70,10 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 - Projects: `src/utils/Projects.js` — list in `pm-projects`, open project per tab (sessionStorage), per-project keys `pm-p:<id>:<key>`; the first (legacy) project keeps the plain keys. Routes inside a project go through `app/ProjectGate.jsx`; the projects level is `app/portfolio/` + `app/templates/`.
 - Order ledger keys: `pm-orders`; 9 types; families value/expense; tiers quick (auto-approved)/formal (needs Approve).
 - Screens persist their own stores via `src/utils`; orders/registries/identity/activity owners announce writes (`utils/storeEvents.js`) and the provider re-reads them instantly (also on every navigation).
-- 16 localStorage keys + IndexedDB `ProjectManagerDB` — full table in `docs/03-data-model.md`. Backups (format v2) hold both; restore downloads a safety copy first.
+- Every localStorage key is listed in `src/utils/storeRegistry.js` (full table in `docs/03-data-model.md`) + IndexedDB `ProjectManagerDB` for files. Backups (format v3) hold both; restore downloads a safety copy first.
 - For automated browser checks run on another port (`npm run dev -- --port 5180`) — never test restore/clear on 5173, where the real data lives.
 - i18n: flat `'domain.key'` dictionaries, fallback ar→key, direction from `LANGUAGES`, persisted in `pm-language`.
+- **Server & sync** (optional — with no server set the app works on this device only): Supabase schema + rules in `supabase/` (migrations; `docs/08-server-setup.md`), offline-first sync engine in `src/sync/` (local stores stay the read model; item-level outbox; `changes` = append-only history). A new store syncs once it is in `storeRegistry`; a new collection or permission also needs its rule in `src/sync/rules.js` **and** a new SQL migration (`sqlMirror.test.js` fails otherwise). `pm-session` / `pm-server` never go into backups (`DataIO.LOCAL_ONLY_KEYS`).
 
 ## Current state & next steps
 

@@ -5,6 +5,7 @@ import {
   addMainTask,
   addSubTask,
   appendGeneratedTasks,
+  applyTaskPatchList,
   applyVariation,
   countPendingApprovals,
   deleteTaskCascade,
@@ -12,6 +13,7 @@ import {
   linkExistingBoq,
   loadMeta,
   loadTasks,
+  mergePlanning,
   normalizeTaskUpdate,
   signOffProject,
   toggleBoqLink,
@@ -170,4 +172,42 @@ test('countPendingApprovals counts formal recorded orders only', () => {
     ]),
     1
   );
+});
+
+test('applyTaskPatchList patches several tasks at once and normalizes them', () => {
+  const tasks = tree();
+  const next = applyTaskPatchList(tasks, [
+    { id: 'a', patch: { manualStart: '2026-01-05', duration: 4 } },
+    { id: 'b', patch: { dependsOn: null } },
+    { id: 'a', patch: { duration: 6 } },
+    { id: 'missing', patch: { duration: 1 } },
+    { id: 'c' },
+  ]);
+  assert.equal(next.length, tasks.length);
+  assert.equal(next.find((t) => t.id === 'a').manualStart, '2026-01-05');
+  assert.equal(next.find((t) => t.id === 'a').duration, 6);
+  const b = next.find((t) => t.id === 'b');
+  assert.equal(b.dependsOn, null);
+  assert.equal(b.depType, '');
+  assert.equal(b.lag, 0);
+  assert.equal(next.find((t) => t.id === 'c'), tasks.find((t) => t.id === 'c'));
+  assert.equal(tasks.find((t) => t.id === 'a').duration, undefined);
+});
+
+test('applyTaskPatchList returns the same list when there is nothing to apply', () => {
+  const tasks = tree();
+  assert.equal(applyTaskPatchList(tasks, []), tasks);
+  assert.equal(applyTaskPatchList(tasks, null), tasks);
+});
+
+test('mergePlanning merges an object or applies an updater to meta.planning', () => {
+  const meta = { status: 'draft', baseline: null, variations: [] };
+  const a = mergePlanning(meta, { markups: { profit: 10 } });
+  assert.deepEqual(a.planning, { markups: { profit: 10 } });
+  assert.equal(meta.planning, undefined);
+  const b = mergePlanning(a, { calendar: { weekRest: [5] } });
+  assert.deepEqual(b.planning, { markups: { profit: 10 }, calendar: { weekRest: [5] } });
+  const c = mergePlanning(b, (p) => ({ ...p, version: 1 }));
+  assert.equal(c.planning.version, 1);
+  assert.equal(c.status, 'draft');
 });

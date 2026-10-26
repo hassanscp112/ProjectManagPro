@@ -61,3 +61,10 @@ Temporary output from a Codex session (`workbook_inventory.mjs` + scratch
 - `.agents/` was an **empty** directory at the repo root and was removed (it contained nothing to keep).
 - `.agent/` and `.codex_tmp/` kept their original names here so the existing
   `.gitignore` rules (`.agent/`, `.codex_tmp/`) still cover them at this location.
+
+### `platform/` *(git-tracked — moved via `git mv`, 2026-10-26)*
+Replaced by the installable app (PWA) work, roadmap WS2.
+
+| File | Original path | Replaced by |
+|---|---|---|
+| `vite-favicon.svg` | `ProjectManagerApp/public/favicon.svg` (the default Vite logo) | `public/app-icon.svg` + the icons `npm run icons` generates from it |
