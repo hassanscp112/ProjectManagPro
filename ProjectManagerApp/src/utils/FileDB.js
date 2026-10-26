@@ -28,7 +28,9 @@ export const initDB = () => {
   });
 };
 
-export const saveFile = async (folderId, fileObj) => {
+// `extra` adds link fields to the record, e.g. { orderId } for an order's
+// photo evidence.
+export const saveFile = async (folderId, fileObj, extra = {}) => {
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['files'], 'readwrite');
@@ -42,7 +44,8 @@ export const saveFile = async (folderId, fileObj) => {
       size: fileObj.size,
       type: fileObj.type,
       blob: fileObj, // Store the native File/Blob object directly
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      ...(extra.orderId ? { orderId: extra.orderId } : {}),
     };
 
     const request = store.add(fileData);
@@ -78,6 +81,41 @@ export const deleteFile = async (fileId) => {
   });
 };
 
+// The records with these ids, in the same order; missing ids are skipped.
+export const getFilesByIds = async (ids = []) => {
+  const wanted = (Array.isArray(ids) ? ids : []).filter(Boolean);
+  if (wanted.length === 0) return [];
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const store = db.transaction(['files'], 'readonly').objectStore('files');
+    const found = [];
+    let pending = wanted.length;
+    wanted.forEach((id, i) => {
+      const request = store.get(id);
+      request.onsuccess = () => {
+        if (request.result) found[i] = request.result;
+        pending -= 1;
+        if (pending === 0) resolve(found.filter(Boolean));
+      };
+      request.onerror = (e) => reject(e.target.error);
+    });
+  });
+};
+
+// Delete several files in one transaction (e.g. an order's photos).
+export const deleteFiles = async (ids = []) => {
+  const doomed = (Array.isArray(ids) ? ids : []).filter(Boolean);
+  if (doomed.length === 0) return;
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['files'], 'readwrite');
+    const store = transaction.objectStore('files');
+    doomed.forEach((id) => store.delete(id));
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = (e) => reject(e.target.error);
+  });
+};
+
 // Every stored file (all folders) — used by the full backup (DataIO).
 export const getAllFiles = async () => {
   const db = await initDB();
@@ -105,7 +143,7 @@ export const deleteProjectFiles = async (projectId) => {
 };
 
 // Replace ALL stored files with `records` ({ id, folderId, projectId, name,
-// size, type, blob, createdAt }) in one transaction: if any write fails, nothing changes.
+// size, type, blob, createdAt, orderId? }) in one transaction: if any write fails, nothing changes.
 export const replaceAllFiles = async (records) => {
   const db = await initDB();
   return new Promise((resolve, reject) => {

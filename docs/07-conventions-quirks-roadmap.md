@@ -9,7 +9,9 @@ The rules that prevent mistakes. Read this before changing anything.
 1. **Archive, never delete.** Cleanup moves clutter into `_archive/` (with a
    restore note in `_archive/README.md`), never `rm`. Applies to repo files.
 2. **Every new localStorage key must be registered** in
-   `DataIO.APP_STORAGE_KEYS` — otherwise backups silently lose that data.
+   `utils/storeRegistry.js` — backups (`DataIO.APP_STORAGE_KEYS`), the
+   per-project key list and the server sync are derived from it; an
+   unregistered key is silently lost.
 3. **No hardcoded UI text** — both `ar/` and `en/` dictionaries
    ([06-i18n-guide.md](06-i18n-guide.md)).
 4. **Components never touch `localStorage` directly** — always through
@@ -82,6 +84,7 @@ The rules that prevent mistakes. Read this before changing anything.
 | `plans/ecosystem-plan.md` | Master vision "orders as foundation, enter once read everywhere" — **implemented** |
 | `plans/advanced-lifecycle-plan.md` | Baseline / VO / lifecycle design — **implemented** |
 | `plans/study-folder-analysis.md` | Notes on the Study research folder |
+| `plans/roadmap-plan.md` | Full multi-user app, built by parallel sessions (accounts, sync, history, auto-planning, photos, PWA, certificates, diary) — **in progress** |
 
 ## 6. Current state (as of 2026-10-25)
 

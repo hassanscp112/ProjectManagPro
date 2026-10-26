@@ -56,17 +56,24 @@ export const AREA_TABS = {
     { to: '/reports/daily', labelKey: 'app.nav.reports' },
     { to: '/reports/monthly', labelKey: 'app.nav.monthly' },
     { to: '/reports/activity', labelKey: 'app.nav.activity' },
+    { to: '/reports/delays', labelKey: 'diary.delaysTab' },
   ],
   finance: [
     { to: '/finance/machinery', labelKey: 'finance.tabMachineryShort' },
     { to: '/finance/materials', labelKey: 'finance.tabMaterialsShort' },
     { to: '/finance/pettyCash', labelKey: 'finance.tabPettyCashShort' },
     { to: '/finance/payroll', labelKey: 'finance.tabPayrollShort' },
+    { to: '/finance/certificates', labelKey: 'certificates.tab' },
     { to: '/finance/lists', labelKey: 'finance.tabLists' },
   ],
   library: [
     { to: '/library/boq', labelKey: 'app.nav.calc' },
     { to: '/library/files', labelKey: 'app.nav.files' },
+  ],
+  settings: [
+    { to: '/settings', labelKey: 'settings.tabGeneral', end: true },
+    { to: '/settings/users', labelKey: 'account.tabUsers' },
+    { to: '/settings/server', labelKey: 'account.tabServer' },
   ],
   people: [
     { to: '/people/contractors', labelKey: 'registries.tabContractors' },

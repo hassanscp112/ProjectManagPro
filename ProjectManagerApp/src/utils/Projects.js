@@ -16,26 +16,17 @@
 // time; with no project open it returns the base key (= the legacy project).
 // ─────────────────────────────────────────────────────────────
 
+import { PROJECT_STORE_KEYS } from './storeRegistry.js';
+
 export const PROJECTS_STORAGE_KEY = 'pm-projects';
 export const LAST_PROJECT_KEY = 'pm-last-project';
 const ACTIVE_SESSION_KEY = 'pm-active-project';
 export const PROJECT_KEY_PREFIX = 'pm-p:';
 export const LEGACY_PROJECT_ID = 'project-1';
 
-// Stores that belong to one project (each gets its own key per project).
-// Everything else in DataIO.APP_STORAGE_KEYS is shared by all projects.
-export const PROJECT_SCOPED_KEYS = [
-  'project-manager-gantt-tasks',
-  'project-manager-project-meta',
-  'project-manager-finance-data',
-  'project-manager-finance-config',
-  'pm-calculator-templates',
-  'project-manager-daily-reports',
-  'pm-orders',
-  'pm-plans',
-  'pm-activity',
-  'pm-snapshots',
-];
+// Stores that belong to one project (each gets its own key per project),
+// from utils/storeRegistry. Everything else is shared by all projects.
+export const PROJECT_SCOPED_KEYS = PROJECT_STORE_KEYS;
 
 // The project that existed before multi-project support (data, not UI text).
 const LEGACY_SEED = {

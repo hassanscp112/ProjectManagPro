@@ -1,6 +1,7 @@
 // en dictionary — module: settings (rebuilt Settings; reuses snapshots.* and registries.* labels).
 // Keys use the '<module>.<name>' convention; both language files must stay in sync.
 export default {
+  'settings.tabGeneral': 'General',
   'settings.you': 'You',
   'settings.role': 'Role',
   'settings.appearance': 'Appearance',

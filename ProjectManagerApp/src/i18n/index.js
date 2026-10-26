@@ -31,6 +31,10 @@ import arPeople from './dictionaries/ar/people.js';
 import arSettings from './dictionaries/ar/settings.js';
 import arDetails from './dictionaries/ar/details.js';
 import arProjects from './dictionaries/ar/projects.js';
+import arAccount from './dictionaries/ar/account.js';
+import arCertificates from './dictionaries/ar/certificates.js';
+import arDiary from './dictionaries/ar/diary.js';
+import arHistory from './dictionaries/ar/history.js';
 
 import enCommon from './dictionaries/en/common.js';
 import enApp from './dictionaries/en/app.js';
@@ -56,6 +60,10 @@ import enPeople from './dictionaries/en/people.js';
 import enSettings from './dictionaries/en/settings.js';
 import enDetails from './dictionaries/en/details.js';
 import enProjects from './dictionaries/en/projects.js';
+import enAccount from './dictionaries/en/account.js';
+import enCertificates from './dictionaries/en/certificates.js';
+import enDiary from './dictionaries/en/diary.js';
+import enHistory from './dictionaries/en/history.js';
 
 export const LANGUAGES = [
   { code: 'ar', label: 'العربية', dir: 'rtl' },
@@ -73,6 +81,7 @@ const DICTIONARIES = {
     templates: arTemplates, registries: arRegistries,
     finance: arFinance, calculator: arCalculator, files: arFiles, ui: arUi, record: arRecord, home: arHome, schedule: arSchedule,
     library: arLibrary, people: arPeople, settings: arSettings, details: arDetails, projects: arProjects,
+    account: arAccount, certificates: arCertificates, diary: arDiary, history: arHistory,
   },
   en: {
     common: enCommon, app: enApp, dashboard: enDashboard, gantt: enGantt,
@@ -81,6 +90,7 @@ const DICTIONARIES = {
     templates: enTemplates, registries: enRegistries,
     finance: enFinance, calculator: enCalculator, files: enFiles, ui: enUi, record: enRecord, home: enHome, schedule: enSchedule,
     library: enLibrary, people: enPeople, settings: enSettings, details: enDetails, projects: enProjects,
+    account: enAccount, certificates: enCertificates, diary: enDiary, history: enHistory,
   },
 };
 

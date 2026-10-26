@@ -12,30 +12,12 @@
 
 import { getAllFiles, replaceAllFiles } from './FileDB.js';
 import { parseProjectKey } from './Projects.js';
+import { ALL_STORE_KEYS, DEVICE_STORE_KEYS } from './storeRegistry.js';
 
-// Every localStorage key the application writes to. The project-scoped ones
-// (utils/Projects.PROJECT_SCOPED_KEYS) also exist once per extra project as
-// 'pm-p:<projectId>:<key>'; backups include those too.
-export const APP_STORAGE_KEYS = [
-  'pm-projects',                   // the list of projects (global)
-  'pm-last-project',               // last project opened on this device
-  'project-manager-gantt-tasks',   // tasks / BOQ
-  'project-manager-project-meta',  // baseline + variations + lifecycle status
-  'project-manager-finance-data',  // finance ledgers (machinery, materials, …)
-  'project-manager-finance-config',// finance dropdown lists
-  'pm-calculator-templates',       // calculator templates
-  'project-manager-daily-reports', // daily site reports
-  'pm-orders',                     // order ledger (value + expense orders)
-  'pm-registries',                 // contractors / teams / workers roster
-  'pm-identity',                   // current user (name picker stub)
-  'pm-plans',                      // lookahead plans (monthly/weekly/daily)
-  'pm-rate-library',               // editable IQD rate catalog
-  'pm-templates',                  // structure templates + parts
-  'pm-activity',                   // app-level activity events
-  'pm-snapshots',                  // version-history checkpoints (auto + named)
-  'pm-language',                   // selected UI language (ar/en)
-  'pm-theme',                      // light / dark / system
-];
+// Every localStorage key the application writes to (utils/storeRegistry).
+// The project-scoped ones (utils/Projects.PROJECT_SCOPED_KEYS) also exist
+// once per extra project as 'pm-p:<projectId>:<key>'; backups include those too.
+export const APP_STORAGE_KEYS = ALL_STORE_KEYS;
 
 const BACKUP_MAGIC = 'projectmanager-backup';
 // 1 = localStorage only. 2 adds `files` (IndexedDB uploads, base64).
@@ -43,8 +25,8 @@ const BACKUP_MAGIC = 'projectmanager-backup';
 //     restoring it replaces ALL app data, older versions only the keys they hold.
 export const BACKUP_VERSION = 3;
 
-// Device preferences a full restore leaves as they are.
-const DEVICE_KEYS = ['pm-language', 'pm-theme', 'pm-last-project'];
+// Device preferences and session a full restore leaves as they are.
+const DEVICE_KEYS = DEVICE_STORE_KEYS;
 
 /** True for any key this app owns (plain, or a project's prefixed copy). */
 export const isAppStorageKey = (key) => APP_STORAGE_KEYS.includes(key) || parseProjectKey(key) !== null;
@@ -95,6 +77,7 @@ export const encodeFileRecord = async (record) => ({
   type: record.type || '',
   createdAt: record.createdAt,
   ...(record.projectId ? { projectId: record.projectId } : {}),
+  ...(record.orderId ? { orderId: record.orderId } : {}),
   data: bytesToBase64(new Uint8Array(await record.blob.arrayBuffer())),
 });
 
@@ -115,6 +98,7 @@ export const decodeFileEntries = (entries) => {
         blob,
         createdAt: entry.createdAt,
         ...(entry.projectId ? { projectId: entry.projectId } : {}),
+        ...(entry.orderId ? { orderId: entry.orderId } : {}),
       };
     });
   } catch {

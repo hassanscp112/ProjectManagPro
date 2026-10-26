@@ -41,7 +41,10 @@ const screenRoutes = [
   { path: 'reports/daily', ...page(() => import('./reports/DailyReportPage.jsx')) },
   { path: 'reports/monthly', ...page(() => import('./reports/MonthlyReportPage.jsx')) },
   { path: 'reports/activity', ...page(() => import('./reports/ActivityPage.jsx')) },
+  { path: 'reports/delays', ...page(() => import('./reports/DelaysPage.jsx')) },
   { path: 'finance', element: <Navigate to="/finance/machinery" replace /> },
+  { path: 'finance/certificates', ...page(() => import('./finance/CertificatesPage.jsx')) },
+  { path: 'finance/certificates/:id', ...page(() => import('./finance/CertificatePage.jsx')) },
   { path: 'finance/:ledger', ...page(() => import('./finance/FinancePage.jsx')) },
   { path: 'library', element: <Navigate to="/library/boq" replace /> },
   { path: 'library/boq', ...page(() => import('./library/BoqPage.jsx')) },
@@ -54,6 +57,9 @@ const screenRoutes = [
   { path: 'people', element: <Navigate to="/people/contractors" replace /> },
   { path: 'people/:kind', ...page(() => import('./people/PeoplePage.jsx')) },
   { path: 'settings', ...page(() => import('./settings/SettingsPage.jsx')) },
+  { path: 'settings/users', ...page(() => import('./settings/UsersPage.jsx')) },
+  { path: 'settings/server', ...page(() => import('./settings/ServerPage.jsx')) },
+  { path: 'history/:collection/:id', ...page(() => import('./history/HistoryPage.jsx')) },
   { path: 'more', element: <MorePage /> },
 ];
 
@@ -102,6 +108,8 @@ const devRoutes = UiReview
 export const router = createHashRouter([
   { path: '/', ...appRoutes },
   portfolioRoutes,
+  // Sign-in stands alone: no project, no shell.
+  { path: 'login', errorElement: <RouteErrorPage />, ...page(() => import('./account/LoginPage.jsx')) },
   ...devRoutes,
   { path: '*', element: <Navigate to="/" replace /> },
 ]);

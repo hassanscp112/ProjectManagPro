@@ -2,7 +2,7 @@
 
 **Complete documentation lives in [`docs/`](docs/README.md). Read only the doc
 you need, on demand — do not crawl the source tree to answer questions this
-file already answers.** Docs last verified 2026-10-25.
+file already answers.** Docs last verified 2026-10-26.
 
 ## What this repo is (30 seconds)
 
@@ -40,7 +40,8 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 
 ## Golden rules (violating these breaks the app or the user's trust)
 
-1. **New localStorage key ⇒ register it in `DataIO.APP_STORAGE_KEYS`** or backups lose it. If it belongs to one project, also add it to `Projects.PROJECT_SCOPED_KEYS` and always access it as `projectKey(KEY)`.
+1. **New localStorage key ⇒ one entry in `src/utils/storeRegistry.js`** (scope, owner, record lists). Backups (`DataIO.APP_STORAGE_KEYS`), per-project keys (`Projects.PROJECT_SCOPED_KEYS`) and the coming server sync all derive from it. A project-scoped key is always accessed as `projectKey(KEY)`.
+8. **Permissions:** gate any action a role may be refused with `useCan()` (`src/app/useCan.js`) / `can(role, action)` (`src/utils/permissions.js`) — never compare role names in screens.
 2. **UI text goes in BOTH `src/i18n/dictionaries/ar/` and `…/en/`** — never hardcode.
 3. **Components never call localStorage directly** — persistence only via `src/utils` owners.
 4. **Cleanup = move to `_archive/`** with a note; never delete files.
@@ -61,6 +62,11 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 - i18n: flat `'domain.key'` dictionaries, fallback ar→key, direction from `LANGUAGES`, persisted in `pm-language`.
 
 ## Current state & next steps
+
+**Roadmap in progress** (2026-10-26): `plans/roadmap-plan.md` — a full
+multi-user app (Supabase accounts + offline-first sync + audit history),
+auto-planning, photos, PWA, certificates, diary, built by parallel sessions on
+branch `roadmap/integration`. Read it before starting any roadmap work.
 
 **Multi-project** (2026-10-25): projects level, new project from template /
 blank / copy, per-project storage, backup format v3 (all projects). See

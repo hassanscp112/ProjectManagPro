@@ -236,5 +236,5 @@ ProjectProvider also listens to the `storage` event for the same four keys.
 | A new screen | Build it from `src/ui/` components; add a route in `src/app/router.jsx` (and an area or `AREA_TABS` entry in `app/navigation.js`); wrap it in `<Page area=…>`; labels in both dictionaries |
 | A new order type | Extend `ORDER_TYPES`/`ORDER_TYPE_LIST` in `OrderEngine.js` + dictionary labels in `orders.*` (see [04-utils-reference.md](04-utils-reference.md)) |
 | A new computed metric | Add to `GanttEngine.calculate()` return; consume in Home / the monthly report |
-| A new stored entity | New util module with its own `STORAGE_KEY` + load/save; register the key in `DataIO.APP_STORAGE_KEYS` (so backup covers it!) |
+| A new stored entity | New util module with its own `STORAGE_KEY` + load/save; add one entry to `utils/storeRegistry.js` (backup, per-project keys and sync follow) |
 | A new UI string | Both `dictionaries/ar/` and `dictionaries/en/` — never hardcode text ([06-i18n-guide.md](06-i18n-guide.md)) |

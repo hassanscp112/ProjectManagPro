@@ -5,10 +5,15 @@ There is **no server and no database**. Everything is stored in the browser:
 - **localStorage** — all structured data (18 keys, listed first)
 - **IndexedDB** (`ProjectManagerDB`) — uploaded file blobs only
 
-> If you add a new localStorage key, you MUST register it in
-> `DataIO.APP_STORAGE_KEYS` or backups will silently miss it. If it belongs
-> to one project, also add it to `Projects.PROJECT_SCOPED_KEYS` and read /
-> write it through `projectKey(KEY)`.
+> If you add a new localStorage key, you MUST add it to
+> `utils/storeRegistry.js` (key, scope `project` / `global` / `device`, owner,
+> record lists). `DataIO.APP_STORAGE_KEYS` and `Projects.PROJECT_SCOPED_KEYS`
+> are derived from it, so backups and per-project copies follow. A
+> project-scoped key is read / written through `projectKey(KEY)`.
+>
+> Registered ahead for the roadmap (`plans/roadmap-plan.md`), not used yet:
+> `pm-certificates`, `pm-site-diary`, `pm-delays` (project) and the device-only
+> `pm-server`, `pm-session`. Files may carry `orderId` (an order's photo).
 
 ---
 

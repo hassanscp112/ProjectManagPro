@@ -7,7 +7,8 @@ tests in `__tests__/` (run: `npm test` from `ProjectManagerApp/`).
 Dependency order (leaf → top):
 
 ```
-Projects                                                               (standalone; every project-scoped owner imports it)
+storeRegistry, permissions                                             (standalone: the store list and the role matrix)
+Projects                                                               (imports storeRegistry; every project-scoped owner imports it)
 CalculatorEngine, CriticalPath, Identity, RateLibrary                  (standalone)
 FileDB, DataIO                                                         (import Projects)
 ActivityLog, PlanningStore, Registries, Snapshots                      (import i18n / Projects)
@@ -196,7 +197,8 @@ No storage, no imports. Excel-style evaluation for calculator rows:
 ## FileDB.js — IndexedDB for uploads
 
 DB `ProjectManagerDB` v1, store `files`.
-`initDB()` → `saveFile(folderId, fileObj)` / `getFiles(folderId)` / `deleteFile(fileId)`;
+`initDB()` → `saveFile(folderId, fileObj, extra?)` (`extra.orderId` links an order's photo) / `getFiles(folderId)` / `deleteFile(fileId)`;
+`getFilesByIds(ids)` / `deleteFiles(ids)` (an order's evidence);
 `getAllFiles()` / `replaceAllFiles(records)` (one transaction) for the backup;
 `deleteProjectFiles(projectId)`. Records carry `projectId`; `getFiles` returns the open project's only.
 
@@ -215,6 +217,28 @@ Shown in Settings → Backup & restore with a Protect button.
 **Storage:** `pm-identity` = `{name, role}`.
 `loadIdentity()` / `saveIdentity({name, role})` / `hasIdentity()`.
 (The store opens the IdentityDialog automatically when `hasIdentity()` is false.)
+`currentActor()` → `{ id, name, role }` — `role` is a permission role
+(`permissions.js`); before accounts exist it is `{ id: null, name, role: 'admin' }`.
+
+---
+
+## storeRegistry.js — every store the app owns
+
+`STORES`: `{ key, scope: 'project'|'global'|'device', owner, lists?: [{ path, idField }], sync }`.
+Derived: `ALL_STORE_KEYS` (= `DataIO.APP_STORAGE_KEYS`), `PROJECT_STORE_KEYS`
+(= `Projects.PROJECT_SCOPED_KEYS`), `DEVICE_STORE_KEYS` (a full restore keeps
+them), `SYNCED_STORES`; `storeFor(key)`. `lists` name the record arrays inside
+a stored value (`''` = the value is the array) for item-level sync and history.
+
+---
+
+## permissions.js — who may do what
+
+`ROLES` (`admin, pm, office, site, accountant, viewer`; labels
+`account.role.<code>`), `ACTIONS` (action → roles), `can(role, action)`,
+`actionsFor(role)`, `canApproveRecord(actor, record)` (approve right and not
+the recorder, once accounts exist). In components: `useCan()` /
+`useActor()` from `src/app/useCan.js`.
 
 ---
 

@@ -57,6 +57,25 @@ describe('file entries', () => {
     assert.equal(back.type, 'application/pdf');
     assert.equal(back.size, 3);
     assert.deepEqual(new Uint8Array(await back.blob.arrayBuffer()), new Uint8Array([1, 2, 3]));
+    assert.equal(back.orderId, undefined);
+  });
+
+  it('keep the order a photo belongs to', async () => {
+    const record = {
+      id: 'f2',
+      folderId: 'order_photos',
+      projectId: 'p-2',
+      orderId: 'ord-9',
+      name: 'photo.jpg',
+      size: 1,
+      type: 'image/jpeg',
+      blob: new Blob([new Uint8Array([7])], { type: 'image/jpeg' }),
+      createdAt: '2026-10-26T08:00:00.000Z',
+    };
+    const entry = await encodeFileRecord(record);
+    assert.equal(entry.orderId, 'ord-9');
+    const [back] = decodeFileEntries([entry]);
+    assert.equal(back.orderId, 'ord-9');
   });
 
   it('reject damaged entries with the badFiles code', () => {

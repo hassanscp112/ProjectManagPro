@@ -1,6 +1,7 @@
 // ar dictionary — module: settings (rebuilt Settings; reuses snapshots.* and registries.* labels).
 // Keys use the '<module>.<name>' convention; both language files must stay in sync.
 export default {
+  'settings.tabGeneral': 'عام',
   'settings.you': 'أنت',
   'settings.role': 'الصفة',
   'settings.appearance': 'المظهر',
