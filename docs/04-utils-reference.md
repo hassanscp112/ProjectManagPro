@@ -9,7 +9,7 @@ Dependency order (leaf → top):
 ```
 storeRegistry, permissions                                             (standalone: the store list and the role matrix)
 Projects                                                               (imports storeRegistry; every project-scoped owner imports it)
-CalculatorEngine, CriticalPath, Identity, RateLibrary                  (standalone)
+CalculatorEngine, CriticalPath, Identity, ImageCompress, RateLibrary   (standalone)
 FileDB, DataIO                                                         (import Projects)
 ActivityLog, PlanningStore, Registries, Snapshots                      (import i18n / Projects)
 OrderEngine                                                            (imports i18n)
@@ -191,6 +191,19 @@ No storage, no imports. Excel-style evaluation for calculator rows:
 - `Theme.js`: `THEMES = ['light','dark','system']`, `loadTheme()` (default
   `'light'`), `saveTheme()`, `applyTheme()` (sets `<html data-theme>`, or
   removes it for `'system'`) — key `pm-theme`.
+
+---
+
+## ImageCompress.js — shrink photos before storing
+
+`fitWithin(w, h, maxSide)` (pure, tested) → `{ width, height }` with the
+longest side ≤ maxSide, ratio kept, never scaled up.
+`compressImage(file, { maxSide = 1600, quality = 0.8 })` →
+`createImageBitmap(file, { imageOrientation: 'from-image' })` → canvas
+(white background) → `toBlob('image/jpeg')` → a `File` named `<name>.jpg`.
+Always resolves: returns the original file when anything fails or the copy
+is not smaller. `jpegName(name)`; constants `PHOTO_MAX_SIDE`, `PHOTO_QUALITY`.
+Used by `ui/PhotoPicker`.
 
 ---
 

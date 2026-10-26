@@ -176,8 +176,18 @@ Screens that let editing receive raw `tasks` from App; read-only views receive
   approvedBy,
   recordedAt: 'ISO', recordedBy,
   details,
+  evidence: [fileId, …],       // photo ids in IndexedDB (folder 'order_photos'), [] when none
 }
 ```
+
+**Photo evidence.** Photos picked on the Record form are compressed
+(`utils/ImageCompress`: JPEG, longest side 1600 px, quality 0.8) and stored
+*before* the order: `saveFile('order_photos', blob, { orderId })` per photo,
+then the order is saved with `evidence: ids` (at most 6). If IndexedDB fails
+the order is saved with `evidence: []` and a warning toast. Deleting an order
+deletes its photos (`deleteFiles(order.evidence)`); deleting a photo in
+Files → *Order photos* removes its id from the order. "Repeat last order"
+never copies photos.
 
 ---
 
@@ -281,9 +291,11 @@ subtitle, tone, refTaskId, payload}`.
 ## 11. IndexedDB — `ProjectManagerDB` (files)
 
 - DB `ProjectManagerDB` v1, object store **`files`** (keyPath `id`, index `folderId`).
-- Record: `{ id, folderId, projectId, name, size, type, blob, createdAt }`
-  (`getFiles` returns only the open project's files; no `projectId` = the first project).
-- Folder tree itself is virtual — root → per-task folders derived from the task list.
+- Record: `{ id, folderId, projectId, name, size, type, blob, createdAt, orderId? }`
+  (`getFiles` returns only the open project's files; no `projectId` = the first project;
+  `orderId` = the order a photo belongs to).
+- Folder tree itself is virtual — root → *Items* (one folder per top-level
+  section, `task_<id>`) and *Order photos* (`order_photos`, every order's photos).
 - Managed only through `utils/FileDB.js` (`initDB/saveFile/getFiles/deleteFile`,
   plus `getAllFiles/replaceAllFiles` for the backup).
 - Included in the backup file since version 2 (§12).
