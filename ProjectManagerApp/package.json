@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "node --test \"src/**/__tests__/*.test.js\"",
+    "test:db": "node supabase/tests/pglite/run.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "@radix-ui/react-tabs": "^1.2.1",
     "@radix-ui/react-toast": "^1.3.1",
     "@radix-ui/react-tooltip": "^1.4.1",
+    "@supabase/supabase-js": "^2.118.0",
     "cmdk": "^1.1.1",
     "jspreadsheet-ce": "^5.0.4",
     "lucide-react": "^1.61.0",
@@ -27,6 +29,7 @@
     "react-router": "^7.18.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.12",
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -35,6 +38,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "supabase": "^2.122.0",
     "vite": "^8.0.12"
   }
 }
