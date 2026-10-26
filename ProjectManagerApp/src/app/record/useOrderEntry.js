@@ -5,6 +5,7 @@ import { buildOrderFromDraft, latestOrder, missingRequiredFields, repeatOrderDra
 import { useProject } from '../../state/projectContext.js';
 import { useToast } from '../../ui/index.js';
 import { deleteFiles, saveFile } from '../../utils/FileDB.js';
+import { currentActor } from '../../utils/Identity.js';
 import { ORDER_TYPES, addOrder, createOrderDraft, createOrderId, loadOrdersData } from '../../utils/OrderEngine.js';
 
 /**
@@ -112,6 +113,7 @@ export function useOrderEntry(initialDraft = null) {
       const order = buildOrderFromDraft(draft, spec, {
         tasks,
         userName: identity?.name || '',
+        recordedById: currentActor().id,
         id,
         now: new Date().toISOString(),
         evidence,

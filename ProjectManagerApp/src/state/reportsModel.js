@@ -58,7 +58,8 @@ export const orderValue = (order, taskById) => {
 
 /**
  * One day's orders: quantity orders grouped by item (orders without an
- * item share one group), expenses, and the totals.
+ * item share one group), expenses, the totals, and `photoIds` — the
+ * photos (FileDB ids, `order.evidence`) of all of them, in report order.
  */
 export const dayReport = (orders = [], tasks = [], day) => {
   const taskById = new Map(asArray(tasks).map((t) => [t.id, t]));
@@ -102,7 +103,12 @@ export const dayReport = (orders = [], tasks = [], day) => {
   groups.forEach((g) => {
     value += g.value;
   });
-  return { groups, expenses, count, value, expenseTotal, pending, isEmpty: count === 0 };
+  const photoIds = [
+    ...new Set(
+      [...groups.flatMap((g) => g.orders), ...expenses].flatMap((o) => asArray(o.evidence).filter((id) => typeof id === 'string' && id))
+    ),
+  ];
+  return { groups, expenses, count, value, expenseTotal, pending, photoIds, isEmpty: count === 0 };
 };
 
 /** Site notes in a range, by engineer: newest day first. */

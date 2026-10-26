@@ -168,10 +168,31 @@ Three sub-pages (tabs; Pending shows a count, as does the sidebar item):
   `app/useOrderPhotos.js` (ids → `getFilesByIds` → object URLs, revoked on
   change / unmount).
 - **Pending `#/record/pending`** — formal orders still `recorded`.
+- **Warnings, not blocks** (`useDraftWarnings.js` over `orderForm.draftWarnings`)
+  — a complete draft that looks wrong asks first: quantity over what is left on
+  the item's contract (orders awaiting approval count), a likely duplicate (same
+  type, item, date, quantity and who), a date in the future or before the project
+  start, an expense over 10× its type's median. Desktop: a **"Save anyway?"**
+  dialog lists them (*Go back* / *Save anyway*). Phone: the first Save shows them
+  above the Save bar and the button becomes *Save anyway*; changing the draft so
+  the warnings change asks again. Required-field errors stay errors.
+- **Who approves** (`OrderRuleBadges.jsx` `ApproveButton`, `useApproval.jsx`) —
+  Approve shows only when `orderForm.approvalBlock` allows it: never one's own
+  formal order (accounts; compared by `recordedById`, else name) and only roles
+  with `orders.approve` (`useCan`). Otherwise the row says why ("Pending · You
+  recorded it", "Your role cannot approve"; on phones the reason is the badge),
+  and an approve that slips through is refused with a toast. Without accounts the
+  one local user approves as before. New orders carry `recordedById`.
+- **Certificate lock** — an order in an **issued** payment certificate shows
+  "In certificate No. N" (main contract: "In main-contract certificate No. N";
+  phones "Cert. N"; "+1" when two certificates hold it) linking to
+  `#/finance/certificates/:id`, in the row's subtitle and in the log's status
+  column. Delete (and approving again) opens "This order is in an issued
+  certificate" with a link to each certificate instead of deleting.
 
-Rules (unchanged): quick orders are approved on save by the current user;
-formal orders start `recorded`; approving uses the current user's name or asks
-for one (`useApproval.jsx`). Logic: `src/state/orderForm.js`.
+Rules: quick orders are approved on save by the current user; formal orders
+start `recorded`; approving uses the current user's name or asks for one
+(`useApproval.jsx`). Logic: `src/state/orderForm.js`.
 The old Orders screen is archived (`_archive/ui-rebuild/legacy-components/orders/`).
 
 ## Lookahead — `src/app/schedule/LookaheadPage.jsx` (rebuilt in Phase 4)
@@ -233,8 +254,9 @@ value, expenses, pending), **Site diary** (weather, max temperature, working
 hours; manpower by trade and equipment by type with totals; recorded by),
 **Work done** (quantity orders grouped by item with who did it, valued at the
 contract unit price), **Recorded expenses**, **Visitors** and **Issues** (from
-the diary), a marked slot for the day's photos (roadmap WS8), and **Site
-notes**. A period prints the days with orders, notes or a diary (diary-only
+the diary), **Photos of the day** (`DayPhotos.jsx`: every photo of the day's
+orders, `dayReport().photoIds`, in report order; thumbnails open the viewer; on
+paper 18 mm thumbnails kept together), and **Site notes**. A period prints the days with orders, notes or a diary (diary-only
 days only when no engineer is picked); the day view says when a day has no
 diary. The side column (day view, screen only) holds the **diary card** — the
 day at a glance and *Fill in / Edit the diary* (`record.work`; other roles see

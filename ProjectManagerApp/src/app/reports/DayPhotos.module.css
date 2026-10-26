@@ -1,0 +1,26 @@
+/* Day photos in the daily report (DayPhotos.jsx) */
+.photos {
+  margin-bottom: calc(-1 * var(--ui-space-3)); /* the strip brings its own bottom space */
+}
+
+/* Paper: small square thumbnails, several to a row, kept together. */
+@media print {
+  .photos {
+    margin-bottom: 0;
+  }
+  .photos ul {
+    gap: 2mm !important;
+    break-inside: avoid;
+  }
+  .photos li {
+    break-inside: avoid;
+  }
+  .photos button {
+    width: 18mm !important;
+    height: 18mm !important;
+    border-color: #999 !important;
+    border-radius: 1mm !important;
+    background: #fff !important;
+    cursor: default;
+  }
+}

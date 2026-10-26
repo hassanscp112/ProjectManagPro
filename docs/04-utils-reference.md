@@ -64,6 +64,22 @@ Functions:
 
 Tests: `orderEngine.test.js`.
 
+`state/orderForm.js` (pure, the Record screens' rules): `missingRequiredFields`,
+`buildOrderFromDraft(draft, spec, { tasks, userName, recordedById, id, now, evidence })`
+(stamps `recordedById`, null without accounts), filters / KPIs, and:
+- **`draftWarnings(draft, { orders, tasks, projectStart, today })`** → `[{ code, … }]`,
+  never a block (the screens ask "Save anyway?"): `'duplicate'` `{ orderId }` (same type,
+  item, work date, quantity or amount, who, location / sample / depth), `'overLeft'`
+  `{ qty, left, pending, unit }` (contract − executed − value orders awaiting approval;
+  `tasks` = the engine's computed tasks), `'amountOutlier'` `{ amount, median }` (over
+  `OUTLIER_FACTOR` = 10 × the median of the type's earlier amounts, from
+  `OUTLIER_MIN_SAMPLES` = 3 of them), `'futureDate'` `{ today }`, `'beforeStart'` `{ start }`.
+- **`approvalBlock(order, actor, { certified })`** → `null` | `'certified'` | `'role'`
+  (no `orders.approve`) | `'own'` (`canApproveRecord`: the recorder).
+- **`orderLock(order, certificatesByOrder())`** → the issued certificates holding it, or null.
+
+Tests: `state/__tests__/orderForm.test.js`.
+
 ---
 
 ## GanttEngine.js — the calculator
@@ -234,6 +250,8 @@ write calls `notifyStoreChange`. The line math lives in
   `saveSettings(patch)`, `setRate(contractorId, taskId, rate)` (`''` clears)
 - **`certifiedOrderIds(doc?)`** → `Set` of order ids in issued certificates (for the
   order lock); `certificatesByOrder(doc?)` → `Map` orderId → `[{ id, number, kind, contractorId }]`
+  (the Record screens read it through `app/record/useOrderCertificates.js`, one map
+  for all rows, rebuilt when `pm-certificates` changes)
 
 `state/certificateModel.js` (pure): `eligibleOrders(orders, cert)`,
 `rateFor(kind, contractorId, taskId, task, rates)` (null = missing),
