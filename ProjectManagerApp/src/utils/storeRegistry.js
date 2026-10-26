@@ -10,8 +10,10 @@
 //   owner  the src/utils module that reads / writes it (the only one allowed)
 //   lists  record lists inside the stored value, for item-level sync and
 //          history: [{ path, idField }] — path '' = the stored value is the
-//          array itself; a dotted path points inside an object. A store with
-//          no lists is synced as one document.
+//          array itself; a dotted path points inside an object.
+//          [{ path, keyed: true }] = an object of records by key (diary days
+//          by date, plans by month / week / day): each key syncs as its own
+//          item '<path>/<key>'. A store with no lists is synced as one document.
 //   sync   false = never leaves this device (restore points, preferences)
 //
 // DataIO.APP_STORAGE_KEYS (backups) and Projects.PROJECT_SCOPED_KEYS are
@@ -22,7 +24,16 @@ export const STORES = [
   { key: 'pm-projects', scope: 'global', owner: 'Projects', lists: [{ path: 'projects', idField: 'id' }], sync: true },
   { key: 'pm-last-project', scope: 'device', owner: 'Projects', sync: false },
   { key: 'project-manager-gantt-tasks', scope: 'project', owner: 'ProjectProvider', lists: [{ path: '', idField: 'id' }], sync: true },
-  { key: 'project-manager-project-meta', scope: 'project', owner: 'ProjectProvider', lists: [{ path: 'variations', idField: 'id' }], sync: true },
+  {
+    key: 'project-manager-project-meta',
+    scope: 'project',
+    owner: 'ProjectProvider',
+    lists: [
+      { path: 'variations', idField: 'id' },
+      { path: 'planning', keyed: true }, // calendar, markups, crews … (auto-planning) sync apart from the lifecycle
+    ],
+    sync: true,
+  },
   {
     key: 'project-manager-finance-data',
     scope: 'project',
@@ -42,7 +53,13 @@ export const STORES = [
     sync: true,
   },
   { key: 'pm-identity', scope: 'global', owner: 'Identity', sync: false },
-  { key: 'pm-plans', scope: 'project', owner: 'PlanningStore', sync: true },
+  {
+    key: 'pm-plans',
+    scope: 'project',
+    owner: 'PlanningStore',
+    lists: ['months', 'weeks', 'days'].map((path) => ({ path, keyed: true })),
+    sync: true,
+  },
   { key: 'pm-rate-library', scope: 'global', owner: 'RateLibrary', lists: [{ path: 'items', idField: 'id' }], sync: true },
   { key: 'pm-templates', scope: 'global', owner: 'TemplateEngine', lists: [{ path: 'templates', idField: 'id' }], sync: true },
   { key: 'pm-activity', scope: 'project', owner: 'ActivityLog', lists: [{ path: '', idField: 'id' }], sync: true },
@@ -55,7 +72,7 @@ export const STORES = [
   // { settings, rates: { [contractorId]: { [taskId]: rate } }, certificates: [] }
   { key: 'pm-certificates', scope: 'project', owner: 'Certificates', lists: [{ path: 'certificates', idField: 'id' }], sync: true },
   // { days: { 'YYYY-MM-DD': { weather, manpower, equipment, visitors, issues, … } } }
-  { key: 'pm-site-diary', scope: 'project', owner: 'SiteDiary', sync: true },
+  { key: 'pm-site-diary', scope: 'project', owner: 'SiteDiary', lists: [{ path: 'days', keyed: true }], sync: true },
   // { events: [{ id, title, cause, start, end, taskIds, noticeDate, … }] }
   { key: 'pm-delays', scope: 'project', owner: 'Delays', lists: [{ path: 'events', idField: 'id' }], sync: true },
   // { items: [{ id, name, nameEn, unit, trade, productivity, crew, … }] } — the

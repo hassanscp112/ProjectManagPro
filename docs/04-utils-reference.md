@@ -306,7 +306,9 @@ Shown in Settings → Backup & restore with a Protect button.
 Derived: `ALL_STORE_KEYS` (= `DataIO.APP_STORAGE_KEYS`), `PROJECT_STORE_KEYS`
 (= `Projects.PROJECT_SCOPED_KEYS`), `DEVICE_STORE_KEYS` (a full restore keeps
 them), `SYNCED_STORES`; `storeFor(key)`. `lists` name the record arrays inside
-a stored value (`''` = the value is the array) for item-level sync and history.
+a stored value (`''` = the value is the array) for item-level sync and history;
+`{ path, keyed: true }` = an object of records by key (`pm-site-diary` days,
+`pm-plans` months / weeks / days, `meta.planning`), each key one sync item.
 
 ---
 
