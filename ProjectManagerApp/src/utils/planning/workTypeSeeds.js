@@ -40,19 +40,19 @@ const ROWS = [
   ['handover', 'التنظيف والتسليم', 'Cleaning & handover', 'مقطوعية', 'general', 1, 'rb-handover', ['تنظيف', 'تسليم', 'handover', 'cleaning'], { fixedDays: 7 }],
   // ── earthworks ──
   ['site-prep', 'تجهيز وتسوية الموقع', 'Site clearance & levelling', 'م2', 'earthworks', 800, 'r-site-prep', ['تسوية', 'تجهيز موقع', 'clearance', 'levelling'], { equipment: { loader: 1 } }],
-  ['excavation', 'حفريات الأسس', 'Foundation excavation', 'م3', 'earthworks', 250, 'r-excav-found', ['حفر', 'حفريات', 'excavation'], { equipment: { excavator: 1 } }],
+  ['excavation', 'حفريات الأسس', 'Foundation excavation', 'م3', 'earthworks', 250, 'r-excav-found', ['حفر', 'حفريات', 'excavation', 'حفريات أسس'], { equipment: { excavator: 1 } }],
   ['base-course', 'طبقة أساس (سب بيس)', 'Sub-base layer', 'م3', 'earthworks', 120, 'r-base-course', ['سب بيس', 'طبقة أساس', 'sub-base', 'subbase'], { equipment: { loader: 1, roller: 1 } }],
   ['backfill', 'دفن وحدل', 'Backfill & compaction', 'م3', 'earthworks', 150, 'r-backfill', ['دفن', 'حدل', 'ردم', 'backfill', 'compaction'], { equipment: { loader: 1, roller: 1 } }],
   // ── concrete (structure crew: formwork + rebar + pour) ──
   ['blinding', 'خرسانة نظافة', 'Blinding concrete', 'م3', 'concrete', 25, 'r-conc-plain', ['نظافة', 'خرسانة عادية', 'blinding', 'lean concrete']],
   ['footings', 'قواعد خرسانية مسلحة', 'RC footings', 'م3', 'concrete', 8, 'rb-rc-footings', ['قواعد', 'أسس', 'footing', 'foundation']],
   ['raft', 'حصيرة خرسانية مسلحة', 'RC raft foundation', 'م3', 'concrete', 30, 'rb-rc-raft', ['حصيرة', 'لبشة', 'raft', 'mat foundation']],
-  ['tie-beams', 'جسور ربط مسلحة', 'RC tie beams', 'م3', 'concrete', 6, 'rb-rc-tiebeams', ['جسور ربط', 'ميدات', 'tie beam', 'grade beam']],
+  ['tie-beams', 'جسور ربط مسلحة', 'RC tie beams', 'م3', 'concrete', 6, 'rb-rc-tiebeams', ['جسور ربط', 'ميدات', 'رقاب', 'tie beam', 'grade beam']],
   ['basement-walls', 'جدران سرداب خرسانية مسلحة', 'RC basement walls', 'م3', 'concrete', 5, 'rb-rc-walls', ['جدران سرداب', 'جدار ساند', 'retaining wall', 'basement wall']],
   ['rc-columns', 'أعمدة خرسانية مسلحة', 'RC columns', 'م3', 'concrete', 3, 'rb-rc-columns', ['أعمدة', 'اعمدة', 'columns']],
   ['rc-slab', 'سقف وجسور خرسانية مسلحة', 'RC slab & beams', 'م3', 'concrete', 10, 'rb-rc-slab', ['سقف', 'بلاطة', 'جسور', 'slab', 'beams']],
   ['hordi-blocks', 'بلوك هوردي للسقوف', 'Hollow slab blocks (hordi)', 'م2', 'concrete', 120, 'rb-hordi-blocks', ['هوردي', 'hordi', 'hollow block']],
-  ['stairs', 'درج خرساني مسلح', 'RC stairs', 'م3', 'concrete', 1.5, 'rb-rc-stairs', ['درج', 'سلم', 'stairs', 'staircase']],
+  ['stairs', 'درج خرساني مسلح', 'RC stairs', 'م3', 'concrete', 1.5, 'rb-rc-stairs', ['درج', 'سلم', 'سلالم', 'stairs', 'staircase']],
   ['ground-slab', 'أرضية خرسانية على التربة', 'Slab on grade', 'م3', 'concrete', 15, 'rb-ground-slab', ['أرضية خرسانية', 'تبليط أرضي', 'slab on grade', 'ground slab']],
   ['dome', 'قبة خرسانية مسلحة', 'RC dome', 'م3', 'concrete', 1.5, 'rb-dome', ['قبة', 'dome']],
   ['minaret', 'منارة خرسانية مسلحة', 'RC minaret', 'م3', 'concrete', 1.2, 'rb-minaret', ['منارة', 'مئذنة', 'minaret']],
@@ -69,8 +69,8 @@ const ROWS = [
   ['parapet', 'ستارة سطح بلوك', 'Roof parapet walls', 'م2', 'masonry', 25, 'r-block15', ['ستارة', 'دروة', 'parapet']],
   ['fence', 'سياج خارجي', 'Boundary wall', 'م.ط', 'masonry', 8, 'rb-fence', ['سياج', 'سور', 'fence', 'boundary wall']],
   // ── plaster ──
-  ['plaster-internal', 'لبخ وبياض داخلي', 'Internal plaster', 'م2', 'plaster', 40, 'r-plaster-in', ['لبخ داخلي', 'بياض', 'جص', 'internal plaster']],
-  ['plaster-external', 'لبخ خارجي', 'External plaster', 'م2', 'plaster', 25, 'r-plaster-out', ['لبخ خارجي', 'external plaster', 'render']],
+  ['plaster-internal', 'لبخ وبياض داخلي', 'Internal plaster', 'م2', 'plaster', 40, 'r-plaster-in', ['لبخ داخلي', 'لبخ', 'بياض', 'جص', 'internal plaster']],
+  ['plaster-external', 'لبخ خارجي', 'External plaster', 'م2', 'plaster', 25, 'r-plaster-out', ['لبخ خارجي', 'لبخ', 'لبخ واجهات', 'سمنت', 'external plaster', 'render']],
   ['screed', 'فرشة تسوية', 'Screed', 'م2', 'plaster', 80, 'rb-screed', ['فرشة', 'تسوية', 'سكريد', 'screed']],
   // ── tiling ──
   ['tiles', 'تبليط أرضيات سيراميك', 'Ceramic floor tiles', 'م2', 'tiling', 20, 'r-tiles', ['سيراميك', 'بلاط', 'ceramic', 'floor tiles']],
@@ -82,7 +82,7 @@ const ROWS = [
   ['vinyl', 'أرضيات فينيل طبية', 'Medical vinyl flooring', 'م2', 'tiling', 40, 'rb-vinyl', ['فينيل', 'vinyl']],
   ['carpet', 'سجاد المصلى', 'Prayer hall carpet', 'م2', 'tiling', 150, 'rb-carpet', ['سجاد', 'موكيت', 'carpet']],
   // ── painting ──
-  ['paint', 'صبغ داخلي بلاستيك', 'Internal emulsion paint', 'م2', 'painting', 80, 'r-paint-plastic', ['صبغ', 'صبغة', 'دهان', 'paint', 'emulsion']],
+  ['paint', 'صبغ داخلي بلاستيك', 'Internal emulsion paint', 'م2', 'painting', 80, 'r-paint-plastic', ['صبغ', 'صبغة', 'أصباغ', 'دهان', 'بلاستيك', 'paint', 'emulsion']],
   ['paint-external', 'صبغ واجهات خارجية', 'External paint', 'م2', 'painting', 60, 'rb-paint-ext', ['صبغ خارجي', 'external paint']],
   // ── carpentry ──
   ['doors', 'أبواب خشبية', 'Wooden doors', 'عدد', 'carpentry', 6, 'r-door-wood', ['باب خشب', 'أبواب', 'door']],
@@ -99,16 +99,16 @@ const ROWS = [
   ['electrical', 'أعمال كهربائية', 'Electrical works', 'نقطة', 'electrical', 40, 'r-elec-point', ['كهرباء', 'electrical'], { legacy: true }],
   // ── plumbing ──
   ['plumb-rough', 'تمديدات مياه وصرف (نقطة)', 'Plumbing rough-in', 'نقطة', 'plumbing', 8, 'rb-plumb-rough', ['تمديدات صحية', 'مياه', 'صرف', 'plumbing']],
-  ['sanitary', 'تجهيزات صحية', 'Sanitary fixtures', 'قطعة', 'plumbing', 6, 'r-sanitary', ['مغسلة', 'مرحاض', 'تجهيزات صحية', 'sanitary', 'fixtures']],
+  ['sanitary', 'تجهيزات صحية', 'Sanitary fixtures', 'قطعة', 'plumbing', 6, 'r-sanitary', ['مغسلة', 'مغاسل', 'مرحاض', 'مرافق صحية', 'مرافق', 'كرسي', 'حمام', 'sanitary', 'fixtures']],
   ['water-tanks', 'خزانات ماء علوية مع التأسيس', 'Roof water tanks', 'عدد', 'plumbing', 2, 'rb-water-tank', ['خزان ماء', 'water tank']],
   ['plumbing', 'أعمال صحية', 'Plumbing works', 'قطعة', 'plumbing', 2, 'r-sanitary', ['صحية'], { legacy: true }],
   // ── HVAC ──
   ['split-ac', 'مكيفات سبلت (توريد ونصب)', 'Split AC units', 'عدد', 'hvac', 4, 'rb-split', ['مكيف', 'سبلت', 'split', 'air conditioner']],
   ['ducting', 'تكييف مركزي ومجاري هواء', 'Central HVAC & ducting', 'م2', 'hvac', 60, 'rb-hvac', ['تكييف مركزي', 'مجاري هواء', 'duct', 'hvac']],
   // ── insulation ──
-  ['waterproofing', 'عزل مائي للسطح', 'Roof waterproofing', 'م2', 'insulation', 120, 'r-waterproof', ['عزل مائي', 'waterproof', 'membrane']],
+  ['waterproofing', 'عزل مائي للسطح', 'Roof waterproofing', 'م2', 'insulation', 120, 'r-waterproof', ['عزل مائي', 'عزل سطح', 'لفائف', 'ممبرين', 'رطوبة السطح', 'waterproof', 'membrane']],
   ['thermal', 'عزل حراري', 'Thermal insulation', 'م2', 'insulation', 150, 'r-thermal', ['عزل حراري', 'بوليسترين', 'thermal insulation']],
-  ['dpc', 'عزل رطوبة بيتوميني للأسس', 'Foundation damp-proofing', 'م2', 'insulation', 150, 'rb-dpc', ['بيتومين', 'قير', 'عزل رطوبة', 'damp proof', 'bitumen']],
+  ['dpc', 'عزل رطوبة بيتوميني للأسس', 'Foundation damp-proofing', 'م2', 'insulation', 150, 'rb-dpc', ['قير', 'عزل رطوبة الأسس', 'أسس', 'أساسات', 'damp proof', 'bitumen']],
   // ── ceilings ──
   ['gypsum', 'سقوف ثانوية جبسن بورد', 'Gypsum board ceilings', 'م2', 'ceilings', 30, 'r-gypsum', ['جبس', 'سقف ثانوي', 'gypsum', 'false ceiling']],
   // ── steel ──
@@ -133,6 +133,23 @@ const ROWS = [
   ['medgas', 'منظومة غازات طبية', 'Medical gas outlets', 'عدد', 'systems', 4, 'rb-medgas', ['غازات طبية', 'medical gas']],
 ];
 
+// Interchangeable work types: a BOQ line of one may take the place of
+// another of the same family in a template (ceramic tiles where the
+// template has porcelain…).
+const FAMILY = {
+  tiles: 'floor-finish',
+  porcelain: 'floor-finish',
+  marble: 'floor-finish',
+  terrazzo: 'floor-finish',
+  vinyl: 'floor-finish',
+  'block-external': 'external-wall',
+  'brick-external': 'external-wall',
+  doors: 'doors',
+  'doors-steel': 'doors',
+  facade: 'cladding',
+  stone: 'cladding',
+};
+
 /** The seeded work types (fresh objects each call). */
 export const seedWorkTypes = () =>
   ROWS.map(([id, name, nameEn, unit, trade, productivity, rateId, keywords, extra = {}]) => ({
@@ -147,6 +164,7 @@ export const seedWorkTypes = () =>
     keywords: [...keywords],
     aliases: [],
     fixedDays: extra.fixedDays || null,
+    family: FAMILY[id] || null,
     legacy: Boolean(extra.legacy),
     checked: false,
     source: 'seed',

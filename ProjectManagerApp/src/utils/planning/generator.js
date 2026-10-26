@@ -158,11 +158,17 @@ export const expandTemplate = (template, values = {}, { levelOverrides = [] } = 
 
 /* ─────────────── links ─────────────── */
 
+// Targets on the selected level(s). A level can hold several variants of
+// one element (BOQ lines of the same work type): all of them are returned.
 const pickLevels = (rule, source, targets) => {
-  const byLevel = new Map(targets.map((t) => [t.levelIndex, t]));
-  const indexes = targets.map((t) => t.levelIndex).sort((a, b) => a - b);
+  const byLevel = new Map();
+  targets.forEach((t) => {
+    if (!byLevel.has(t.levelIndex)) byLevel.set(t.levelIndex, []);
+    byLevel.get(t.levelIndex).push(t);
+  });
+  const indexes = [...byLevel.keys()].sort((a, b) => a - b);
   const sel = rule.floor ?? (source.levelIndex === null ? 'last' : 'same');
-  const at = (i) => (byLevel.has(i) ? [byLevel.get(i)] : []);
+  const at = (i) => byLevel.get(i) || [];
   if (sel === 'all') return targets;
   if (sel === 'first') return at(indexes[0]);
   if (sel === 'last') return at(indexes[indexes.length - 1]);
@@ -201,6 +207,7 @@ const ruleApplies = (rule, item, levelCount) => {
  */
 export const resolveLinks = (items, template, levelCount) => {
   const known = new Set((template?.elements || []).map((e) => e && e.key));
+  items.forEach((it) => known.add(it.elementKey)); // BOQ-only items
   const byElement = new Map();
   items.forEach((it) => {
     if (!byElement.has(it.elementKey)) byElement.set(it.elementKey, []);
@@ -231,12 +238,14 @@ export const resolveLinks = (items, template, levelCount) => {
         const targets = byElement.get(to) || [];
         if (!targets.length) return;
         const perLevel = targets[0].levelIndex !== null;
-        (perLevel ? pickLevels(rule, item, targets) : targets.slice(0, 1)).forEach((target) => add(target, rule));
+        (perLevel ? pickLevels(rule, item, targets) : targets).forEach((target) => add(target, rule));
       });
     });
     if (!links.length && item.rules.length && item.levelIndex !== null && item.elementKey !== anchorKey) {
       const anchor = (byElement.get(anchorKey) || []).find((t) => t.levelIndex === item.levelIndex);
-      if (anchor) add(anchor, { type: 'FS', lag: 0 });
+      // Never wait for an anchor that itself waits for this element (a loop).
+      const loops = anchor && anchor.rules.some((r) => (Array.isArray(r.to) ? r.to : [r.to]).includes(item.elementKey));
+      if (anchor && !loops) add(anchor, { type: 'FS', lag: 0 });
     }
     return { ...item, links };
   });

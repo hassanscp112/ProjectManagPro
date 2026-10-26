@@ -12,15 +12,21 @@
 // ─────────────────────────────────────────────────────────────
 
 import { DEFAULT_MARKUPS } from '../utils/planning/autoPlan.js';
+import { readBoq } from '../utils/planning/BoqImport.js';
+import { confidenceOf, matchBoq } from '../utils/planning/Matcher.js';
 import { presetCalendar } from '../utils/planning/WorkCalendar.js';
 import { isPlanTemplate } from '../utils/TemplateEngine.js';
 import { validateProjectDraft } from './portfolioModel.js';
 
 export const WIZARD_STEPS = ['details', 'start', 'building', 'levels', 'quantities', 'prices', 'schedule', 'links', 'review'];
+/** From a contract BOQ: the template gives the logic, the BOQ the quantities and prices. */
+export const BOQ_STEPS = ['details', 'start', 'building', 'levels', 'boq', 'match', 'quantities', 'prices', 'schedule', 'links', 'review'];
 
 /** Steps for the current choice: the full wizard for building templates. */
 export const stepsFor = (state, template) => {
-  if (state.kind === 'template' && template && isPlanTemplate(template)) return WIZARD_STEPS;
+  const building = template && isPlanTemplate(template);
+  if (state.kind === 'boq') return building ? BOQ_STEPS : ['details', 'start'];
+  if (state.kind === 'template' && building) return WIZARD_STEPS;
   if (state.kind === 'template') return ['details', 'start', 'building', 'review'];
   return ['details', 'start', 'review'];
 };
@@ -42,6 +48,9 @@ export const createPlanner = ({ startDate, kind = 'template', templateId = '', v
   calendar: presetCalendar('fridayHolidays', startDate),
   productivity: {},
   crews: {},
+  boqText: '',
+  boqColumns: null, // null = guessed from the paste
+  assignments: {}, // BOQ row → work type id chosen by hand ('' = none)
   touched: false,
 });
 
@@ -99,6 +108,13 @@ export const plannerReducer = (state, action) => {
       return { ...s, crews: blank(action.value) ? withoutKey(state.crews, action.trade) : { ...state.crews, [action.trade]: action.value } };
     case 'link':
       return { ...s, disabledLinks: toggle(state.disabledLinks, `${action.from}>${action.to}`) };
+    case 'boqText':
+      // A new paste starts over: columns guessed again, choices and corrections dropped.
+      return { ...s, boqText: action.text, boqColumns: null, assignments: {}, qtyOverrides: {}, costOverrides: {}, dropped: [], disabledLinks: [] };
+    case 'boqColumns':
+      return { ...s, boqColumns: action.columns, assignments: {} };
+    case 'assign':
+      return { ...s, assignments: action.workTypeId === 'auto' ? withoutKey(state.assignments, String(action.row)) : { ...state.assignments, [String(action.row)]: action.workTypeId } };
     default:
       return state;
   }
@@ -106,8 +122,51 @@ export const plannerReducer = (state, action) => {
 
 const numbers = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => !blank(v) && Number.isFinite(Number(v))).map(([k, v]) => [k, Number(v)]));
 
+/**
+ * The pasted BOQ read and matched: { rows, header, columns, lines, matches
+ * (Map row → { best, candidates }), assignments (Map row → workTypeId|null:
+ * the person's choice, else the best match) }. null without a paste.
+ */
+export const boqContext = (state, workTypes) => {
+  if (state.kind !== 'boq' || !String(state.boqText || '').trim()) return null;
+  const read = readBoq(state.boqText, state.boqColumns);
+  const matches = matchBoq(read.lines, workTypes);
+  const assignments = new Map();
+  read.lines.forEach((line) => {
+    if (line.kind !== 'item') return;
+    const manual = state.assignments[String(line.row)];
+    const auto = matches.get(line.row)?.best?.workTypeId || null;
+    assignments.set(line.row, manual !== undefined ? manual || null : auto);
+  });
+  return { ...read, matches, assignments };
+};
+
+/**
+ * One row per BOQ item for the matching step, lowest confidence first:
+ * [{ line, best, candidates, chosen, manual, confidence: 'high'|'medium'|'low'|'manual' }].
+ */
+export const matchRows = (state, ctx) => {
+  if (!ctx) return [];
+  const rank = { low: 0, medium: 1, high: 2, manual: 3 };
+  return ctx.lines
+    .filter((l) => l.kind === 'item')
+    .map((line) => {
+      const m = ctx.matches.get(line.row) || { best: null, candidates: [] };
+      const manual = state.assignments[String(line.row)] !== undefined;
+      return {
+        line,
+        best: m.best,
+        candidates: m.candidates,
+        chosen: ctx.assignments.get(line.row),
+        manual,
+        confidence: manual ? 'manual' : confidenceOf(m.best?.score ?? 0),
+      };
+    })
+    .sort((a, b) => rank[a.confidence] - rank[b.confidence] || a.line.row - b.line.row);
+};
+
 /** The options for planProject from the wizard state. */
-export const planOptions = (state, { workTypes, rates, lang }) => ({
+export const planOptions = (state, { workTypes, rates, lang, boq = null }) => ({
   startDate: state.details.startDate,
   lang,
   workTypes,
@@ -121,17 +180,23 @@ export const planOptions = (state, { workTypes, rates, lang }) => ({
   dropped: new Set(state.dropped),
   disabledLinks: new Set(state.disabledLinks),
   calendar: state.calendar,
+  boq: boq ? { lines: boq.lines, assignments: boq.assignments } : null,
 });
 
 /**
  * Why a step can't be left yet: {} or { name, startDate } (details),
  * { start: 'template' | 'copy' } (start).
  */
-export const stepErrors = (state, step, template = null, source = null) => {
+export const stepErrors = (state, step, template = null, source = null, boq = null) => {
   if (step === 'details') return validateProjectDraft(state.details);
   if (step === 'start') {
     if (state.kind === 'template' && !template) return { start: 'template' };
+    if (state.kind === 'boq' && !(template && isPlanTemplate(template))) return { start: 'template' };
     if (state.kind === 'copy' && !source) return { start: 'copy' };
+  }
+  if (step === 'boq') {
+    if (!boq || !boq.lines.some((l) => l.kind === 'item')) return { boq: 'empty' };
+    if (boq.columns.description < 0 || boq.columns.qty < 0) return { boq: 'columns' };
   }
   return {};
 };
@@ -174,6 +239,7 @@ export const groupItems = (plan, sectionLabel, levelLabel) => {
   const groups = [];
   const byKey = new Map();
   plan.items.forEach((item) => {
+    if (item.leftOut) return;
     const key = item.levelIndex === null ? `s:${item.section}` : `l:${item.levelIndex}`;
     if (!byKey.has(key)) {
       const group = { key, label: item.levelIndex === null ? sectionLabel(item.section) : levelLabel(plan.levels[item.levelIndex]), items: [] };
@@ -199,7 +265,7 @@ export const workTypesUsed = (plan, dropped = []) => {
   const skip = new Set(dropped);
   const map = new Map();
   plan.items.forEach((it) => {
-    if (skip.has(it.key)) return;
+    if (skip.has(it.key) || it.leftOut) return;
     const row = map.get(it.workTypeId) || { workTypeId: it.workTypeId, unit: it.unit, trade: it.trade, qty: 0, count: 0, productivity: it.productivity, crews: [Infinity, 0], days: 0 };
     row.qty += it.qty;
     row.count += 1;
@@ -238,6 +304,13 @@ export const reviewWarnings = (plan, engine) => {
   const long = leaves.filter((t) => Number(t.duration) > LONG_TASK_DAYS);
   if (long.length) out.push({ code: 'longTasks', count: long.length, names: long.slice(0, 5).map((t) => t.name), params: { days: LONG_TASK_DAYS } });
   plan.issues.forEach((issue) => out.push({ code: issue.code, params: issue }));
+  const boq = plan.stats.boq;
+  if (boq) {
+    if (boq.unassigned) out.push({ code: 'boqUnassigned', count: boq.unassigned });
+    if (boq.unplaced) out.push({ code: 'boqUnplaced', count: boq.unplaced });
+    if (boq.unitMismatch.length) out.push({ code: 'boqUnits', count: boq.unitMismatch.length });
+    if (boq.leftOut.length) out.push({ code: 'boqLeftOut', count: boq.leftOut.length });
+  }
   if (engine && engine.warnings.length) out.push({ code: 'engine', count: engine.warnings.length, names: engine.warnings.slice(0, 5).map((w) => `${w.wbs} ${w.name}`) });
   if (engine && engine.calendarIssues && engine.calendarIssues.length) out.push({ code: 'calendar', count: engine.calendarIssues.length });
   return out;

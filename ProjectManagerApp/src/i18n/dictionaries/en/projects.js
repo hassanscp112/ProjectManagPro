@@ -44,4 +44,6 @@ export default {
   'projects.copiedLog': 'Project created as a copy of «{name}» — {count} items',
   'projects.newFromTemplate': 'New project from this template',
   'projects.templatesHint': 'Standard structures (school, apartment building, mall…) that turn into a complete task tree with quantities, prices, durations and links — the starting point of a new project.',
+  // Start from a BOQ
+  'projects.start_boq': 'From a BOQ',
 };

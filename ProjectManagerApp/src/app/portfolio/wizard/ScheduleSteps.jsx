@@ -227,7 +227,7 @@ export function StepLinks({ plan, template, state, dispatch, workTypes }) {
   const byKey = new Map(plan.items.map((it) => [it.key, it]));
   const dropped = new Set(state.dropped);
   const off = new Set(state.disabledLinks);
-  const linkCount = plan.items.reduce((n, it) => n + (dropped.has(it.key) ? 0 : it.links.filter((l) => !dropped.has(l.to)).length), 0);
+  const linkCount = plan.items.reduce((n, it) => n + (dropped.has(it.key) || it.leftOut ? 0 : it.links.filter((l) => !dropped.has(l.to)).length), 0);
 
   return (
     <Card title={t('planning.wiz.step.links')} subtitle={t('planning.wiz.linksHint')} titleAs="h2" padding="md">

@@ -179,6 +179,9 @@
 .dropped td:last-child {
   text-decoration: none;
 }
+.dimCell {
+  color: var(--ui-text-2);
+}
 .warnRow td {
   background: var(--ui-warning-soft);
 }
