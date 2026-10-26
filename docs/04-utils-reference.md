@@ -9,7 +9,8 @@ Dependency order (leaf → top):
 ```
 storeRegistry, permissions                                             (standalone: the store list and the role matrix)
 Projects                                                               (imports storeRegistry; every project-scoped owner imports it)
-CalculatorEngine, CriticalPath, Identity, ImageCompress, RateLibrary   (standalone)
+CalculatorEngine, CriticalPath, ImageCompress, RateLibrary             (standalone)
+Identity                                                               (imports Projects + src/sync/session)
 FileDB, DataIO                                                         (import Projects)
 ActivityLog, PlanningStore, Registries, Snapshots                      (import i18n / Projects)
 SiteDiary, Delays                                                      (import Identity / Projects)
@@ -30,8 +31,9 @@ Certificates                                                           (imports 
 - `currentProject()` (cached per page load) / `openProject(id)` / `closeProject()` / `lastProjectId()` / `projectStartDate(project?)`
 - `loadProjects()` / `saveProjects(list)` / `getProject(id)` / `createProject(details)` / `updateProject(id, changes)` / `deleteProject(id)` (removes its keys)
 - `ensureProjects()` — startup migration: plain project data → the first project
+- Shared projects (src/sync): a record may carry `serverId` (its id on the server; a project pulled from the server uses it as its local id too) and `revoked` (this account lost access: kept here, no longer synced). `projectByServerId(id)`, `linkProject(id, serverId)`, `fromServerProject(row)` (server row → local fields), `mergeServerProjects(serverProjects, { hidden, changedOnServer })` → `{ added, updated, revoked }` — adds the server's projects, updates linked details, marks lost access, never re-adds `hidden` ones
 
-Storage functions take an optional storage argument (tests). Tests: `projects.test.js`.
+Storage functions take an optional storage argument (tests). Tests: `projects.test.js`, `src/sync/__tests__/account.test.js`.
 
 ---
 
@@ -307,11 +309,50 @@ Shown in Settings → Backup & restore with a Protect button.
 
 ## Identity.js — current user
 
-**Storage:** `pm-identity` = `{name, role}`.
-`loadIdentity()` / `saveIdentity({name, role})` / `hasIdentity()`.
-(The store opens the IdentityDialog automatically when `hasIdentity()` is false.)
-`currentActor()` → `{ id, name, role }` — `role` is a permission role
-(`permissions.js`); before accounts exist it is `{ id: null, name, role: 'admin' }`.
+**Storage:** `pm-identity` = `{name, role}` (the local name + job title).
+- `loadIdentity()` — the name and job title to show and stamp: the signed-in
+  account's name (with the local job title), else the local identity;
+  `loadLocalIdentity()` ignores the account
+- `saveIdentity({name, role})` (local; returns `loadIdentity()`), `hasIdentity()`
+  (signed in, or a local name). The store opens the account dialog
+  (`app/IdentityDialog.jsx`) when it is false.
+- `currentActor()` → `{ id, name, role }` — `role` is a permission role
+  (`permissions.js`): not signed in → `{ id: null, name, role: 'admin' }`;
+  signed in → the account, with its role in the open shared project
+  (`viewer` if access was withdrawn), `admin` in a project that exists only
+  on this device, the organization role at the projects level. `useActor()`
+  re-reads it on `pm-session` / `pm-identity` changes.
+
+
+---
+
+## src/sync — server sync, accounts and history
+
+Offline-first sync with Supabase (server: `supabase/`, guide:
+[08-server-setup.md](08-server-setup.md); flow: [02-architecture §8](02-architecture.md)).
+Import from `src/sync/index.js`. Pure modules are tested in
+`src/sync/__tests__/` (`npm test`); the same code runs against the real
+migrations in PGlite with `npm run test:db`.
+
+| Module | What it does |
+|---|---|
+| `itemDiff.js` (pure) | `explodeStore(entry, value)` → items (`'<path>/<id>'`, `'<id>'` for a root list, `'<path>/<key>'` for a `keyed` list, `'$doc'` for the rest); `diffItems(base, items, { staleCheck })` → `{ changes, stale, localOnly }`; `materialize(entry, items)`; `applyItems(entry, value, updates, posOf)`; `assignPositions`; `hashOf` / `stableStringify`; `DOC_ITEM`, `ABSENT` |
+| `conflict.js` (pure) | `pickWinner(current, incoming)` → `{ winner, reason }`: approved beats recorded, else higher rev, tie keeps the server's |
+| `rules.js` (pure) | `COLLECTION_RULES` (mirror of the SQL `app_private.collection_rules`), `writeAction`, `canWriteVersion(role, …)`, `checkChange(actor, { collection, key, before, after, recordedBy, importing })` → `{ ok, reason }` (`role`, `notApprover`, `ownRecord`, `approveUnrecorded`); `scopeOf`, `entryFor`, `FILES_COLLECTION` |
+| `engine.js` | `createEngine({ db, transport, storage, notify, emit, now, deviceId })` → `diffStore` / `diffScope` (queue changes, undo refused ones), `push(actorId, scopes)`, `pullScope`, `applyServerRows`, `queueChanges`, `applyLocalVersion` (restore), `clearStaleMarks`, `dropScope`; helpers `selectBatch`, `sortResults`, `toPushPayload`; `LIVE_STORES`, `PLAN_STORES` |
+| `localDb.js` | the sync database (IndexedDB `pm-sync`: `kv`, `shadow`, `outbox`); `createMemoryDb()` for tests |
+| `files.js` | `pushFiles` / `pullFiles` — FileDB ⇄ Storage `files/<server project>/<file id>`; `fileMeta`, `storagePath` |
+| `transport.js` | `createSupabaseTransport(client)` — every server call; `SyncError` (`offline`, `auth`, `code`), `toSyncError` |
+| `client.js` | `getConnection(db)` (supabase-js loaded on first use; token kept in `pm-sync`), `probeServer({ url, anonKey })` |
+| `serverConfig.js` | `pm-server`: `loadServerConfig()` (device value, else `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`), `saveServerConfig`, `resetServerConfig`, `validateServerConfig` (codes `url` / `key` / `https`), `normalizeServerUrl`, `isServerConfigured` |
+| `session.js` | `pm-session`: `loadSession`, `saveSession`, `clearAccount`, `chooseLocalMode`, `isSignedIn`, `needsLogin`, `projectRole` |
+| `runtime.js` | the browser loop: `startSync` / `stopSync`, `requestSync`, `syncNow`, `onSyncStatus` / `getSyncStatus`, `onSyncEvent` (`denied`, `overruled`, `ignored`, `applied`, `signedOut`), `refreshAccess`, `applyAccess`, `buildScopes`, `scopeFor`, `withSyncLock`, `pendingChanges`, `retryFailed`, `discardFailed`, `resetPullCursors` |
+| `account.js` | `signIn`, `signUp`, `signOut`, `createOrganization`, `refreshAccount`, `renameMe`, `listMembers`, `listOrgMembers`, `listInvites`, `inviteMember`, `setMemberRole`, `removeMember`, `setOrgRole`, `removeOrgMember`, `cancelInvite` — all return `{ ok }` or `{ ok: false, code }` (`account.err.<code>`) |
+| `upload.js` | `uploadDeviceData({ onStep })` (safety backup → server projects → import → full sync), `canUpload`, `localOnlyProjects` |
+| `history.js` | `getHistory(collection, itemId, { project })`, `getProjectTimeline({ project, actor, collection, from, to, beforeId, limit, shared })` → `{ ok, rows, next }`, `restoreVersion(changeId)` (a new change, never a rewrite), `itemKeysFor`. Rows: `{ id, collection, itemId, op, before, after, rev, outcome, note, actor: { id, name }, deviceId, clientAt, serverAt, restoredFrom, pending }`; this device's queued changes come first with `pending: true` |
+
+React hooks for screens: `app/account/useAccount.js` (`useSession`,
+`useServerConfig`, `useSyncStatus`, `usePlanEpoch`).
 
 ---
 

@@ -12,11 +12,13 @@ There is **no server and no database**. Everything is stored in the browser:
 > project-scoped key is read / written through `projectKey(KEY)`.
 >
 > Registered ahead for the roadmap (`plans/roadmap-plan.md`), not used yet:
-> the device-only `pm-server`, `pm-session`. Files may carry `orderId` (an
-> order's photo). In use: `pm-certificates` (project, owner `Certificates`,
-> §13), `pm-site-diary` and `pm-delays` (project, §10a). Also registered
-> ahead for auto-planning (`plans/auto-planning-plan.md`): the global
-> `pm-work-types` (`{ items: [...] }`, owner `utils/planning/WorkTypes.js`).
+> Files may carry `orderId` (an order's photo). In use: `pm-certificates`
+> (project, owner `Certificates`, §13), `pm-site-diary` and `pm-delays`
+> (project, §10a). Also registered ahead for auto-planning
+> (`plans/auto-planning-plan.md`): the global `pm-work-types`
+> (`{ items: [...] }`, owner `utils/planning/WorkTypes.js`). The device-only
+> `pm-server` / `pm-session` and the server copy of the shared data are
+> described in §14.
 
 ---
 
@@ -25,7 +27,10 @@ There is **no server and no database**. Everything is stored in the browser:
 `pm-projects` lists the projects:
 
 ```js
-{ projects: [ { id, name, contract, location, startDate: 'YYYY-MM-DD', createdAt, legacy? } ] }
+{ projects: [ { id, name, contract, location, startDate: 'YYYY-MM-DD', createdAt, legacy?,
+                serverId?, revoked? } ] }
+// serverId: shared on the server under this id (a project pulled from the server uses it as id too)
+// revoked:  this account lost access on the server — kept here, no longer synced (§14)
 ```
 
 - **Project-scoped keys** (`Projects.PROJECT_SCOPED_KEYS`, marked *P* below):
@@ -72,6 +77,8 @@ There is **no server and no database**. Everything is stored in the browser:
 | 19 | `pm-site-diary` | P | SiteDiary | site diary, one entry per day (§10a) |
 | 20 | `pm-delays` | P | Delays | delay register events (§10a) |
 | 21 | `pm-certificates` | P | Certificates | payment certificates, agreed rates, default terms (§13) |
+| 22 | `pm-server` | device | sync/serverConfig | `{ url, anonKey }` — the server this device uses (§14) |
+| 23 | `pm-session` | device | sync/session | who is signed in, organization, role per project (§14) |
 
 ---
 
@@ -329,8 +336,9 @@ subtitle, tone, refTaskId, payload}`.
 
 Trades and equipment types are free text (suggestions come from the roster's
 worker trades, earlier diary days and a built-in list). The manpower prefill
-reads `pm-plans` day assignments and never writes them. The diary store is
-synced as one document (no `lists`: days are keyed by date, not an array).
+reads `pm-plans` day assignments and never writes them. The diary syncs day
+by day (registry list `days`, `keyed: true`): two people editing different
+days never collide (§14).
 
 ---
 
@@ -434,3 +442,69 @@ Owner: `utils/Certificates.js` (the only reader / writer, always through
   `null`), left out of the totals, and the draft can't be issued.
 - "Previous" columns come from the series' last issued certificate (frozen).
   `certifiedOrderIds()` = every order id in an issued certificate (for locking).
+
+---
+
+## 14. Server sync (`src/sync`, `supabase/`)
+
+The local stores above stay the read model on every device; the server
+keeps the shared copy, item by item, plus the full history.
+Setup: [08-server-setup.md](08-server-setup.md).
+
+### On the device
+
+```js
+// pm-server (device) — which server; without it the build's VITE_SUPABASE_URL / _ANON_KEY
+{ url: 'https://pm-laptop.tailxxxx.ts.net', anonKey: '<public anon key>' }
+
+// pm-session (device) — readable synchronously by currentActor(); no secrets
+{ mode: 'account' | 'local' | null,      // local = "use without an account"
+  server,                                 // the url the account is on
+  user: { id, email, name } | null,
+  needsSignIn,                            // sign-in expired: works offline, syncs after signing in
+  signedInAt, hasOrg,
+  org: { id, name, role } | null,         // the organization role
+  projectRoles: { [serverProjectId]: role },
+  deviceId }
+```
+
+IndexedDB **`pm-sync`** (never in a backup): `kv` (device id, the sign-in
+token `auth:*`, pull cursors `cursor:<scope>`, flags), `shadow` (per scope
+and store: the base of each item — what the server had — `{ h, rev, pos,
+data, deleted, by, pending?, sup?, lo? }`), `outbox` (queued changes:
+`{ seq, scopeKey, orgId, projectId, collection, key, op, data, before,
+deleted, pos, baseRev, rev, actorId, deviceId, clientAt, restoredFrom?,
+attempts, failed? }`).
+
+### How a store becomes items
+
+Each store in `SYNCED_STORES` (storeRegistry) except `pm-projects` is split
+by its `lists`: a record of list `path` is item `'<path>/<id>'` (`'<id>'`
+when the stored value is the list), everything else is item `'$doc'` (lists
+left as `[]`). A list marked `keyed: true` in the registry is an object of
+records by key (diary days by date …): item `'<path>/<key>'`, `{}` left in
+`'$doc'`. A store without lists is one `'$doc'`. Uploaded files are
+items of collection `files` (`{ id, folderId, name, size, type, createdAt,
+orderId? }`) with the bytes in Storage `files/<server project id>/<file id>`.
+Scopes: the organization (global stores: `pm-registries`, `pm-rate-library`,
+`pm-templates`) and each shared project (project stores). The project list
+itself syncs through the server's `projects` table.
+
+### On the server (Postgres, schema in `supabase/migrations/`)
+
+| Table | Holds |
+|---|---|
+| `orgs`, `org_members(org_id, user_id, role)` | the company and the organization role |
+| `profiles(id, email, name)` | one per account (made on sign-up) |
+| `projects(id, org_id, name, contract, location, start_date, local_id, archived)` | shared projects |
+| `project_members(project_id, user_id, role)` | role per project (an org admin is admin everywhere) |
+| `invites(org_id, project_id?, email, role)` | e-mails waiting to sign up |
+| `items(org_id, project_id?, collection, item_id, data, pos, rev, deleted, recorded_by, updated_by, updated_at, txid, seq)` | one row per record; `project_id` null = organization store; deleting keeps the data |
+| `changes(id, org_id, project_id?, collection, item_id, op, before, after, rev, outcome, note, actor, actor_name, device_id, client_at, server_at, restored_from)` | append-only history: every applied write (`outcome 'applied'`, by trigger) and every version that lost a conflict or was refused (`'rejected'`); `op` = insert / update / delete / restore / import |
+
+Row-level security: members read; writes need the action of
+`app_private.collection_rules` (mirror of `src/sync/rules.js`, from the
+`permissions.js` matrix) for the version before and after; approving a
+formal order needs an approver who is not `recorded_by`; `changes` only
+grows. Conflicts (`push_changes`): approved beats recorded, else the
+higher `rev`, a tie keeps the server's version.
