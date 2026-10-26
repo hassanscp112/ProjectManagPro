@@ -1,8 +1,12 @@
-import { formatNumber } from '../../i18n/index.js';
+import { useState } from 'react';
+import { formatCurrency, formatNumber } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
 import { taskQuantityStatus } from '../../state/orderForm.js';
 import { useProject } from '../../state/projectContext.js';
-import { DateChips, Field, Input, NumberInput, PhotoPicker, Select, TaskPicker, Textarea, WhoPicker } from '../../ui/index.js';
+import { loadFinanceConfig } from '../../utils/Finance.js';
+import { expenseBreakdown, hasComputedAmount } from '../../utils/OrderEngine.js';
+import { DateChips, Field, Input, NumberInput, PhotoPicker, Select, TaskPicker, Textarea, WhoPicker, useField } from '../../ui/index.js';
+import own from './OrderForm.module.css';
 import s from './Record.module.css';
 
 // Who-field modes from the order spec → the WhoPicker kinds they offer.
@@ -11,17 +15,63 @@ const WHO_KINDS = {
   recipient: ['contractor', 'team', 'workers', 'none'],
 };
 
+/** The computed amount of an expense order and the lines it adds up from (read-only). */
+function ComputedAmount({ type, draft }) {
+  const { t, lang } = useI18n();
+  const field = useField();
+  const b = expenseBreakdown(type, draft);
+  const money = (n) => formatCurrency(n, lang);
+  const lines =
+    type === 'payroll'
+      ? [
+          t('orders.lineSalary', { amount: money(b.salary) }),
+          b.deducted ? t('orders.lineAdvanceDeducted', { amount: money(b.advance) }) : Number(draft.advance) > 0 && t('orders.lineAdvanceKept'),
+        ]
+      : b.parts
+          .filter((p) => p.qty > 0 || p.rate > 0)
+          .map((p) =>
+            t('orders.partLine', {
+              label: t(p.labelKey),
+              qty: [formatNumber(p.qty), p.unitKey ? t(p.unitKey) : p.unit].filter(Boolean).join(' '),
+              rate: money(p.rate),
+              total: money(p.total),
+            })
+          );
+  return (
+    <div className={own.computed}>
+      <output id={field?.id} aria-describedby={field?.describedBy} aria-live="polite" className={own.amount}>
+        {money(b.amount)}
+      </output>
+      {lines.filter(Boolean).map((line) => (
+        <span key={line} className={own.line}>
+          {line}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /**
  * The fields of one order type, driven by its spec in OrderEngine, then
  * photos (every type; kept beside the draft by useOrderEntry).
  * Required fields are plain; optional ones say "(optional)". Errors show
  * per field after a save attempt (showErrors). size="lg": phone inputs.
+ * Expense details pick their values from the finance lists (choice), take
+ * numbers (measure) and recompute the amount on every change (computed).
  */
 export default function OrderForm({ entry, size = 'md' }) {
   const { t } = useI18n();
   const { tasks, orders, registries, engineResult } = useProject();
+  const [lists] = useState(loadFinanceConfig);
   const { draft, spec, missing, showErrors, patch, setTask } = entry;
   if (!draft || !spec) return null;
+
+  /** Patch expense details; a computed amount follows them. */
+  const patchDetail = (changes) => {
+    if (!hasComputedAmount(draft.type)) return patch(changes);
+    const amount = expenseBreakdown(draft.type, { ...draft, ...changes }).amount;
+    return patch({ ...changes, amount: amount > 0 ? amount : '' });
+  };
 
   const missingKeys = new Set(missing.map((f) => f.key));
   const errorFor = (f) => (showErrors && missingKeys.has(f.key) ? t('record.required') : undefined);
@@ -106,6 +156,43 @@ export default function OrderForm({ entry, size = 'md' }) {
         return (
           <Field key={f.key} {...common}>
             <Input value={draft[f.key] || ''} placeholder={f.placeholder || ''} onChange={(e) => patch({ [f.key]: e.target.value })} />
+          </Field>
+        );
+      case 'choice': {
+        const options = lists[f.list] || [];
+        const value = draft[f.key] || '';
+        return (
+          <Field key={f.key} {...common}>
+            <Select value={value} onChange={(e) => patchDetail({ [f.key]: e.target.value })}>
+              <option value="">{t('orders.chooseOption')}</option>
+              {/* a value no longer in the list (removed later, or migrated) stays selectable */}
+              {value && !options.includes(value) && <option value={value}>{value}</option>}
+              {options.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        );
+      }
+      case 'measure':
+        return (
+          <Field key={f.key} {...common}>
+            <NumberInput
+              size={size}
+              min="0"
+              placeholder="0"
+              unit={f.money ? t('orders.currencySuffix') : f.unit}
+              value={draft[f.key] ?? ''}
+              onChange={(e) => patchDetail({ [f.key]: e.target.value })}
+            />
+          </Field>
+        );
+      case 'computed':
+        return (
+          <Field key={f.key} {...common} error={common.error && t('orders.computedNotPositive')} className={s.wide}>
+            <ComputedAmount type={draft.type} draft={draft} />
           </Field>
         );
       case 'note':

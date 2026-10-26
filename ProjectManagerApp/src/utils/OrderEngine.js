@@ -35,15 +35,99 @@ export const WHO_KINDS = ['contractor', 'team', 'workers', 'none'];
 /** Localized display text for the ACTIVE language (non-React util context). */
 const T = (key, vars) => translate(loadLanguage(), key, vars);
 
+/** Payroll status value that deducts the advance — stored data, not UI text (never translated). */
+export const DEDUCTED_STATUS = 'مستقطع';
+
+/* ─────────────────────────────────────────────────────────────
+   Expense details — the structured part of expense orders
+   (machinery hours × rate, material qty × unit price, payroll
+   salary − advance). Values come from the finance lists
+   ('project-manager-finance-config', utils/Finance.js); the amount
+   is computed from them and kept in `amount` like every expense.
+   The draft keys and the stored `details` keys are the same.
+   ───────────────────────────────────────────────────────────── */
+
+/** Field kinds that only expense details use (validated by expenseFieldMissing). */
+export const EXPENSE_FIELD_KINDS = ['choice', 'measure', 'computed'];
+
+const num = (v) => {
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : 0;
+};
+const money = (n) => Math.round(n * 100) / 100;
+// One "qty × rate = total" line; the unit is a dictionary key (unitKey) or typed text (unit).
+const part = (labelKey, qty, rate, unitKey, unit = '') => ({ labelKey, qty, rate, unitKey, unit, total: money(qty * rate) });
+
+/** Per type: values ({ machineHours, … } as typed or stored) → { amount, parts }. */
+const EXPENSE_AMOUNTS = {
+  machinery: (v) => {
+    const parts = [
+      part('orders.partMachine', num(v.machineHours), num(v.machineRate), 'orders.uHours'),
+      part('orders.partDriver', num(v.driverHours), num(v.driverRate), 'orders.uHours'),
+      part('orders.partFuel', num(v.fuelLiters), num(v.fuelPrice), 'orders.uLiters'),
+    ];
+    return { amount: money(parts.reduce((s, p) => s + p.total, 0)), parts };
+  },
+  material: (v) => {
+    const p = part('orders.partMaterial', num(v.materialQty), num(v.unitPrice), null, String(v.materialUnit || '').trim());
+    return { amount: p.total, parts: [p] };
+  },
+  // Net = salary − advance, only when the advance is marked deducted.
+  payroll: (v) => {
+    const salary = num(v.salary);
+    const advance = v.payStatus === DEDUCTED_STATUS ? num(v.advance) : 0;
+    return { amount: money(salary - advance), salary, advance, deducted: v.payStatus === DEDUCTED_STATUS, parts: [] };
+  },
+};
+
+/** True when the type's amount is computed from its details. */
+export const hasComputedAmount = (type) => Boolean(EXPENSE_AMOUNTS[type]);
+
+/**
+ * The computed amount of an expense type and how it adds up, or null when
+ * the amount is typed (fuel, other expense) or the type is unknown.
+ * `values`: a draft or an order's `details` (same keys).
+ */
+export const expenseBreakdown = (type, values) => (EXPENSE_AMOUNTS[type] ? EXPENSE_AMOUNTS[type](values || {}) : null);
+
+/** The structured details of a draft for its spec: trimmed text, numbers as numbers, empties left out. */
+export const expenseDetails = (draft, spec) => {
+  const out = {};
+  (spec?.fields || []).forEach((f) => {
+    if (!f.detail) return;
+    const raw = draft?.[f.key];
+    if (f.kind === 'measure') {
+      const n = raw === '' || raw === null || raw === undefined ? NaN : Number(raw);
+      if (Number.isFinite(n)) out[f.key] = n;
+    } else {
+      const v = typeof raw === 'string' ? raw.trim() : '';
+      if (v) out[f.key] = v;
+    }
+  });
+  return out;
+};
+
+/** Is a required expense-detail field (choice / measure / computed) still empty? */
+export const expenseFieldMissing = (field, draft) => {
+  if (field.kind === 'choice') return !String(draft?.[field.key] || '').trim();
+  if (field.kind === 'measure') return !(Number(draft?.[field.key]) > 0);
+  if (field.kind === 'computed') return !(Number(draft?.amount) > 0);
+  return false;
+};
+
 /**
  * Registry of order types — the single source the entry form renders from.
  * Field kinds: 'date' | 'who' | 'task' | 'element' | 'number' | 'unit' |
- *              'amount' | 'text' | 'note'
+ *              'amount' | 'text' | 'note' |
+ *              'choice'   (expense detail: a value from the finance list `list`)
+ *              'measure'  (expense detail: a number; `money` or `unitKey`)
+ *              'computed' (the amount, computed from the details — read-only)
  * who field modes: 'contractor' (single select) | 'recipient' (kind switches).
+ * `detail: true` fields are stored in `order.details` under their key.
  *
- * Display metadata (labelKey / field labelKey / placeholderKey) carries
- * dictionary keys; ORDER_TYPES below wraps the raw specs so `label` and
- * `placeholder` are localized lazily at access time.
+ * Display metadata (labelKey / field labelKey / placeholderKey / unitKey)
+ * carries dictionary keys; ORDER_TYPES below wraps the raw specs so `label`,
+ * `placeholder` and `unit` are localized lazily at access time.
  */
 const RAW_ORDER_TYPES = {
   quick_work: {
@@ -115,7 +199,12 @@ const RAW_ORDER_TYPES = {
     whoDefault: 'contractor',
     fields: [
       { key: 'date', kind: 'date', labelKey: 'common.date', required: true },
-      { key: 'amount', kind: 'amount', labelKey: 'orders.fAmount', required: true },
+      { key: 'material', kind: 'choice', list: 'materials', labelKey: 'orders.fMaterial', required: true, detail: true },
+      { key: 'materialQty', kind: 'measure', labelKey: 'orders.fMaterialQty', required: true, detail: true },
+      { key: 'materialUnit', kind: 'text', labelKey: 'orders.fMaterialUnit', placeholderKey: 'orders.phUnit', detail: true },
+      { key: 'unitPrice', kind: 'measure', money: true, labelKey: 'orders.fUnitPrice', required: true, detail: true },
+      { key: 'amount', kind: 'computed', labelKey: 'orders.fAmountComputed', required: true },
+      { key: 'receipt', kind: 'text', labelKey: 'orders.fReceipt', placeholderKey: 'orders.phReceipt', detail: true },
       { key: 'who', kind: 'who', mode: 'recipient', labelKey: 'orders.fRecipient' },
       { key: 'taskId', kind: 'task', labelKey: 'orders.fTaskOptional' },
       { key: 'note', kind: 'note', labelKey: 'orders.fDescription', placeholderKey: 'orders.phMaterial' },
@@ -130,7 +219,11 @@ const RAW_ORDER_TYPES = {
     whoDefault: 'workers',
     fields: [
       { key: 'date', kind: 'date', labelKey: 'common.date', required: true },
-      { key: 'amount', kind: 'amount', labelKey: 'orders.fAmount', required: true },
+      { key: 'employee', kind: 'choice', list: 'employees', labelKey: 'orders.fEmployee', required: true, detail: true },
+      { key: 'salary', kind: 'measure', money: true, labelKey: 'orders.fSalary', required: true, detail: true },
+      { key: 'advance', kind: 'measure', money: true, labelKey: 'orders.fAdvance', detail: true },
+      { key: 'payStatus', kind: 'choice', list: 'statuses', labelKey: 'orders.fPayStatus', detail: true },
+      { key: 'amount', kind: 'computed', labelKey: 'orders.fAmountNet', required: true },
       { key: 'who', kind: 'who', mode: 'recipient', labelKey: 'orders.fRecipient' },
       { key: 'taskId', kind: 'task', labelKey: 'orders.fTaskOptional' },
       { key: 'note', kind: 'note', labelKey: 'orders.fDescription', placeholderKey: 'orders.phPayroll' },
@@ -145,7 +238,16 @@ const RAW_ORDER_TYPES = {
     whoDefault: 'contractor',
     fields: [
       { key: 'date', kind: 'date', labelKey: 'common.date', required: true },
-      { key: 'amount', kind: 'amount', labelKey: 'orders.fAmount', required: true },
+      { key: 'machineType', kind: 'choice', list: 'machines', labelKey: 'orders.fMachineType', required: true, detail: true },
+      { key: 'machineSize', kind: 'choice', list: 'machineSizes', labelKey: 'orders.fMachineSize', detail: true },
+      { key: 'driver', kind: 'choice', list: 'employees', labelKey: 'orders.fDriver', required: true, detail: true },
+      { key: 'machineHours', kind: 'measure', unitKey: 'orders.uHours', labelKey: 'orders.fMachineHours', required: true, detail: true },
+      { key: 'machineRate', kind: 'measure', money: true, labelKey: 'orders.fMachineRate', required: true, detail: true },
+      { key: 'driverHours', kind: 'measure', unitKey: 'orders.uHours', labelKey: 'orders.fDriverHours', detail: true },
+      { key: 'driverRate', kind: 'measure', money: true, labelKey: 'orders.fDriverRate', detail: true },
+      { key: 'fuelLiters', kind: 'measure', unitKey: 'orders.uLiters', labelKey: 'orders.fFuelLiters', detail: true },
+      { key: 'fuelPrice', kind: 'measure', money: true, labelKey: 'orders.fFuelPrice', detail: true },
+      { key: 'amount', kind: 'computed', labelKey: 'orders.fAmountComputed', required: true },
       { key: 'who', kind: 'who', mode: 'recipient', labelKey: 'orders.fRecipient' },
       { key: 'taskId', kind: 'task', labelKey: 'orders.fTaskOptional' },
       { key: 'note', kind: 'note', labelKey: 'orders.fDescription', placeholderKey: 'orders.phMachinery' },
@@ -175,6 +277,7 @@ const RAW_ORDER_TYPES = {
     whoDefault: 'none',
     fields: [
       { key: 'date', kind: 'date', labelKey: 'common.date', required: true },
+      { key: 'expenseType', kind: 'choice', list: 'expenseTypes', labelKey: 'orders.fExpenseType', required: true, detail: true },
       { key: 'amount', kind: 'amount', labelKey: 'orders.fAmount', required: true },
       { key: 'who', kind: 'who', mode: 'recipient', labelKey: 'orders.fRecipient' },
       { key: 'taskId', kind: 'task', labelKey: 'orders.fTaskOptional' },
@@ -183,9 +286,9 @@ const RAW_ORDER_TYPES = {
   },
 };
 
-/** Wrap one raw field so `label` / `placeholder` translate lazily. */
+/** Wrap one raw field so `label` / `placeholder` / `unit` translate lazily. */
 const localizeField = (raw) => {
-  const { labelKey, placeholderKey, ...rest } = raw;
+  const { labelKey, placeholderKey, unitKey, ...rest } = raw;
   const field = {
     ...rest,
     get label() {
@@ -199,6 +302,14 @@ const localizeField = (raw) => {
       enumerable: true,
       get() {
         return T(placeholderKey);
+      },
+    });
+  }
+  if (unitKey) {
+    Object.defineProperty(field, 'unit', {
+      enumerable: true,
+      get() {
+        return T(unitKey);
       },
     });
   }
@@ -309,6 +420,20 @@ export const addOrder = (order) => {
     orders,
     lastWhoByType: order ? { ...data.lastWhoByType, [order.type]: order.who } : data.lastWhoByType,
   });
+  return orders;
+};
+
+/**
+ * Append several orders in one write (older records brought in, e.g. the
+ * finance migration): they go after the existing ones and leave the
+ * last-used `who` alone. Returns the updated orders array.
+ */
+export const addOrders = (list) => {
+  const data = loadOrdersData();
+  const added = (Array.isArray(list) ? list : []).filter(Boolean);
+  if (added.length === 0) return data.orders;
+  const orders = [...data.orders, ...added];
+  saveOrdersData({ ...data, orders });
   return orders;
 };
 
@@ -432,16 +557,19 @@ const normalizeWhoForDraft = (who, defaultKind) => {
  * last-used `who` for that type (the "last used contractor" smart default).
  * `options.tasks` is accepted for API symmetry; the draft starts un-tasked.
  *
+ * Expense types also get their detail keys (machineHours, employee, …) as ''.
+ *
  * @param {string} type - one of ORDER_TYPES keys.
  * @param {{ tasks?: Array, lastWho?: Object<string, whoObject> }} [options]
  * @returns {{ type, date, who, taskId, elementId, quantity, unit, amount,
- *             location, sampleRef, result, depth, note } | null}
+ *             location, sampleRef, result, depth, note, …details } | null}
  */
 export const createOrderDraft = (type, options = {}) => {
   const typeSpec = ORDER_TYPES[type];
   if (!typeSpec) return null;
   const lastWhoByType = options.lastWho && typeof options.lastWho === 'object' ? options.lastWho : {};
   return {
+    ...Object.fromEntries(typeSpec.fields.filter((f) => f.detail).map((f) => [f.key, ''])),
     type,
     date: todayStr(),
     who: normalizeWhoForDraft(lastWhoByType[type], typeSpec.whoDefault),
