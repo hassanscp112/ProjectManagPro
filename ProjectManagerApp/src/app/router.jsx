@@ -20,6 +20,11 @@ import RecordPendingPage from './record/RecordPendingPage.jsx';
 // so the old page stays until the new one is ready.
 const page = (load) => ({ lazy: () => load().then((m) => ({ Component: m.default })) });
 
+// Opening a lazy screen directly (refresh, shared link) shows nothing for the
+// moment its code loads, instead of React Router's "No HydrateFallback" warning
+// (an empty fragment: React Router needs a truthy element).
+const noFallback = <></>;
+
 const screenRoutes = [
   { index: true, element: <HomePage /> },
   { path: 'record', element: <RecordNewPage /> },
@@ -69,6 +74,7 @@ const screenRoutes = [
 // full-window.
 const appRoutes = {
   element: <ProjectGate />,
+  hydrateFallbackElement: noFallback,
   errorElement: <RouteErrorPage />,
   children: [{ errorElement: <RouteErrorPage inline />, children: screenRoutes }],
 };
@@ -76,6 +82,7 @@ const appRoutes = {
 // The level above every project.
 const portfolioRoutes = {
   element: <PortfolioLayout />,
+  hydrateFallbackElement: noFallback,
   errorElement: <RouteErrorPage />,
   children: [
     {
@@ -111,7 +118,7 @@ export const router = createHashRouter([
   { path: '/', ...appRoutes },
   portfolioRoutes,
   // Sign-in stands alone: no project, no shell.
-  { path: 'login', errorElement: <RouteErrorPage />, ...page(() => import('./account/LoginPage.jsx')) },
+  { path: 'login', errorElement: <RouteErrorPage />, hydrateFallbackElement: noFallback, ...page(() => import('./account/LoginPage.jsx')) },
   ...devRoutes,
   { path: '*', element: <Navigate to="/" replace /> },
 ]);
