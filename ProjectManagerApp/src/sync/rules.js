@@ -9,7 +9,9 @@
 //
 // A rule: [collection, part, whenField, whenValue, action]
 //   part      the list inside the store ('' = the store is the list,
-//             '$doc' = everything outside the lists)
+//             '$doc' = everything outside the lists). Rules for keyed lists
+//             (diary days, plan months / weeks / days, meta.planning) are
+//             ready for when the registry declares those lists keyed.
 //   when…     the rule applies when data[whenField] === whenValue; the
 //             rule without a condition applies otherwise
 //   action    a permissions.js action, or alternatives joined by '|'
@@ -33,6 +35,7 @@ export const COLLECTION_RULES = [
   ['project-manager-project-meta', DOC_ITEM, '', '', 'plan.signOff'],
   ['project-manager-project-meta', 'variations', '', '', 'vo.draft'],
   ['project-manager-project-meta', 'variations', 'status', 'approved', 'vo.approve'],
+  ['project-manager-project-meta', 'planning', '', '', 'plan.edit'],
   ['project-manager-finance-data', DOC_ITEM, '', '', 'finance.edit'],
   ['project-manager-finance-data', 'machinery', '', '', 'finance.edit'],
   ['project-manager-finance-data', 'materials', '', '', 'finance.edit'],
@@ -49,6 +52,9 @@ export const COLLECTION_RULES = [
   ['pm-registries', 'teams', '', '', 'people.edit'],
   ['pm-registries', 'workers', '', '', 'people.edit'],
   ['pm-plans', DOC_ITEM, '', '', 'record.work'],
+  ['pm-plans', 'months', '', '', 'record.work'],
+  ['pm-plans', 'weeks', '', '', 'record.work'],
+  ['pm-plans', 'days', '', '', 'record.work'],
   ['pm-rate-library', DOC_ITEM, '', '', 'plan.edit'],
   ['pm-rate-library', 'items', '', '', 'plan.edit'],
   ['pm-templates', DOC_ITEM, '', '', 'plan.edit'],
@@ -58,6 +64,7 @@ export const COLLECTION_RULES = [
   ['pm-certificates', 'certificates', '', '', 'certificates.prepare'],
   ['pm-certificates', 'certificates', 'status', 'issued', 'certificates.issue'],
   ['pm-site-diary', DOC_ITEM, '', '', 'record.work'],
+  ['pm-site-diary', 'days', '', '', 'record.work'],
   ['pm-delays', DOC_ITEM, '', '', 'record.work'],
   ['pm-delays', 'events', '', '', 'record.work'],
   [FILES_COLLECTION, '', '', '', 'files.edit'],

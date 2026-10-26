@@ -132,6 +132,38 @@ describe('itemDiff — diff', () => {
   });
 });
 
+describe('itemDiff — keyed lists (records by key, e.g. diary days)', () => {
+  const DIARY = { key: 'pm-site-diary', scope: 'project', lists: [{ path: 'days', keyed: true }] };
+  const value = { days: { '2026-10-25': { weather: 'sunny' }, '2026-10-26': { weather: 'dust' } }, settings: { shift: 8 } };
+
+  it('makes one item per key and leaves an empty object in the document', () => {
+    const items = explodeStore(DIARY, value);
+    assert.deepEqual([...items.keys()].sort(), ['$doc', 'days/2026-10-25', 'days/2026-10-26']);
+    assert.deepEqual(items.get(DOC_ITEM).data, { days: {}, settings: { shift: 8 } });
+  });
+
+  it('two days changed on two devices are two separate changes', () => {
+    const base = baseFrom(DIARY, value);
+    const edited = { ...value, days: { ...value.days, '2026-10-26': { weather: 'rain' }, '2026-10-27': { weather: 'clear' } } };
+    const { changes } = diffItems(base, explodeStore(DIARY, edited));
+    assert.deepEqual(changes.map((c) => [c.key, c.op]).sort(), [
+      ['days/2026-10-26', 'update'],
+      ['days/2026-10-27', 'insert'],
+    ]);
+  });
+
+  it('round-trips and applies by key', () => {
+    const items = new Map([...explodeStore(DIARY, value)].map(([k, it]) => [k, { data: it.data }]));
+    assert.deepEqual(materialize(DIARY, items), value);
+    const next = applyItems(DIARY, value, [
+      { key: 'days/2026-10-25', deleted: true },
+      { key: 'days/2026-10-28', data: { weather: 'wind' } },
+      { key: DOC_ITEM, data: { days: {}, settings: { shift: 10 } } },
+    ]);
+    assert.deepEqual(next, { days: { '2026-10-26': { weather: 'dust' }, '2026-10-28': { weather: 'wind' } }, settings: { shift: 10 } });
+  });
+});
+
 describe('itemDiff — materialize and apply', () => {
   it('round-trips a store through its items', () => {
     const value = { orders: [{ id: 'o2' }, { id: 'o1' }], lastWhoByType: { a: 1 } };

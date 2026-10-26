@@ -364,7 +364,9 @@ attempts, failed? }`).
 Each store in `SYNCED_STORES` (storeRegistry) except `pm-projects` is split
 by its `lists`: a record of list `path` is item `'<path>/<id>'` (`'<id>'`
 when the stored value is the list), everything else is item `'$doc'` (lists
-left as `[]`). A store without lists is one `'$doc'`. Uploaded files are
+left as `[]`). A list marked `keyed: true` in the registry is an object of
+records by key (diary days by date …): item `'<path>/<key>'`, `{}` left in
+`'$doc'`. A store without lists is one `'$doc'`. Uploaded files are
 items of collection `files` (`{ id, folderId, name, size, type, createdAt,
 orderId? }`) with the bytes in Storage `files/<server project id>/<file id>`.
 Scopes: the organization (global stores: `pm-registries`, `pm-rate-library`,

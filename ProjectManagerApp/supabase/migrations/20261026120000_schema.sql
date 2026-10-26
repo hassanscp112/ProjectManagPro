@@ -88,7 +88,8 @@ insert into app_private.role_actions (action, role) values
 
 -- Which action a write to a collection needs. `part` is the list inside the
 -- store ('' = the store is the list itself, '$doc' = everything outside the
--- lists). A row with when_field set applies when data->>when_field equals
+-- lists; parts of keyed lists — days by date … — are ready for when the
+-- store registry declares them). A row with when_field set applies when data->>when_field equals
 -- when_value; otherwise the row without a condition applies. `action` may
 -- list alternatives separated by '|' (any one is enough).
 create table app_private.collection_rules (
@@ -107,6 +108,7 @@ insert into app_private.collection_rules (collection, scope, part, when_field, w
   ('project-manager-project-meta', 'project', '$doc', '', '', 'plan.signOff'),
   ('project-manager-project-meta', 'project', 'variations', '', '', 'vo.draft'),
   ('project-manager-project-meta', 'project', 'variations', 'status', 'approved', 'vo.approve'),
+  ('project-manager-project-meta', 'project', 'planning', '', '', 'plan.edit'),
   ('project-manager-finance-data', 'project', '$doc', '', '', 'finance.edit'),
   ('project-manager-finance-data', 'project', 'machinery', '', '', 'finance.edit'),
   ('project-manager-finance-data', 'project', 'materials', '', '', 'finance.edit'),
@@ -123,6 +125,9 @@ insert into app_private.collection_rules (collection, scope, part, when_field, w
   ('pm-registries', 'org', 'teams', '', '', 'people.edit'),
   ('pm-registries', 'org', 'workers', '', '', 'people.edit'),
   ('pm-plans', 'project', '$doc', '', '', 'record.work'),
+  ('pm-plans', 'project', 'months', '', '', 'record.work'),
+  ('pm-plans', 'project', 'weeks', '', '', 'record.work'),
+  ('pm-plans', 'project', 'days', '', '', 'record.work'),
   ('pm-rate-library', 'org', '$doc', '', '', 'plan.edit'),
   ('pm-rate-library', 'org', 'items', '', '', 'plan.edit'),
   ('pm-templates', 'org', '$doc', '', '', 'plan.edit'),
@@ -132,6 +137,7 @@ insert into app_private.collection_rules (collection, scope, part, when_field, w
   ('pm-certificates', 'project', 'certificates', '', '', 'certificates.prepare'),
   ('pm-certificates', 'project', 'certificates', 'status', 'issued', 'certificates.issue'),
   ('pm-site-diary', 'project', '$doc', '', '', 'record.work'),
+  ('pm-site-diary', 'project', 'days', '', '', 'record.work'),
   ('pm-delays', 'project', '$doc', '', '', 'record.work'),
   ('pm-delays', 'project', 'events', '', '', 'record.work'),
   ('files', 'project', '', '', '', 'files.edit');

@@ -8,7 +8,9 @@
 //   - everything outside the lists → item '$doc' (the lists inside it are
 //     left as empty arrays, so the shape survives a round trip).
 // A store without lists is one '$doc' item. A list whose records lack
-// unique ids stays inside '$doc'.
+// unique ids stays inside '$doc'. A list marked `keyed: true` in the
+// registry is an object of records by key (days by date …): each key is an
+// item '<path>/<key>' and '$doc' keeps an empty object there.
 //
 // List order travels as `pos`: a new record gets a number between its
 // neighbours' positions; existing records keep theirs (reordering an
@@ -102,6 +104,8 @@ export const partOfKey = (entry, key) => {
 
 /* ── value → items ────────────────────────────────────────────────────────── */
 
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
 const splittable = (arr, idField) => {
   const seen = new Set();
   for (const record of arr) {
@@ -139,9 +143,17 @@ export const explodeStore = (entry, value) => {
   }
   let rest = value;
   lists.forEach((list) => {
-    const arr = getPath(value, list.path);
-    if (!Array.isArray(arr) || !splittable(arr, list.idField)) return;
-    addList(list, arr);
+    const node = getPath(value, list.path);
+    if (list.keyed) {
+      if (!isPlainObject(node)) return;
+      Object.entries(node).forEach(([key, record]) => {
+        items.set(itemKey(list.path, key), { data: record, path: list.path, index: null });
+      });
+      rest = setPath(rest, list.path, {});
+      return;
+    }
+    if (!Array.isArray(node) || !splittable(node, list.idField)) return;
+    addList(list, node);
     rest = setPath(rest, list.path, []);
   });
   items.set(DOC_ITEM, { data: rest, path: null, index: 0 });
@@ -183,7 +195,7 @@ export const assignPositions = (orderedKeys, posOf) => {
 const keysByList = (current) => {
   const lists = new Map();
   current.forEach((item, key) => {
-    if (item.path === null || item.path === undefined) return;
+    if (item.path === null || item.path === undefined || item.index === null) return; // doc / keyed: no order
     if (!lists.has(item.path)) lists.set(item.path, []);
     lists.get(item.path).push([item.index, key]);
   });
@@ -273,6 +285,12 @@ export const materialize = (entry, items) => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return value;
   lists.forEach((list) => {
     const records = live.filter((it) => it.key !== DOC_ITEM && parseItemKey(entry, it.key)?.path === list.path).sort(byPos);
+    if (list.keyed) {
+      if (records.length > 0 || isPlainObject(getPath(value, list.path))) {
+        value = setPath(value, list.path, Object.fromEntries(records.map((it) => [parseItemKey(entry, it.key).id, clone(it.data)])));
+      }
+      return;
+    }
     if (records.length > 0 || Array.isArray(getPath(value, list.path))) {
       value = setPath(value, list.path, records.map((it) => clone(it.data)));
     }
@@ -331,13 +349,23 @@ export const applyItems = (entry, value, updates, posOf = () => undefined) => {
     let doc = clone(docUpdate.data) || {};
     lists.forEach((list) => {
       const kept = getPath(obj, list.path);
-      if (Array.isArray(kept)) doc = setPath(doc, list.path, kept);
+      if (list.keyed ? isPlainObject(kept) : Array.isArray(kept)) doc = setPath(doc, list.path, kept);
     });
     obj = doc;
   }
   lists.forEach((list) => {
     const recordUpdates = updates.filter((u) => u.key !== DOC_ITEM && parseItemKey(entry, u.key)?.path === list.path);
     if (recordUpdates.length === 0) return;
+    if (list.keyed) {
+      const map = { ...(isPlainObject(getPath(obj, list.path)) ? getPath(obj, list.path) : {}) };
+      recordUpdates.forEach((u) => {
+        const key = parseItemKey(entry, u.key).id;
+        if (u.deleted) delete map[key];
+        else map[key] = clone(u.data);
+      });
+      obj = setPath(obj, list.path, map);
+      return;
+    }
     obj = setPath(obj, list.path, placeIn(getPath(obj, list.path), list, recordUpdates));
   });
   return obj;

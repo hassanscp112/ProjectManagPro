@@ -243,7 +243,7 @@ migrations in PGlite with `npm run test:db`.
 
 | Module | What it does |
 |---|---|
-| `itemDiff.js` (pure) | `explodeStore(entry, value)` → items (`'<path>/<id>'`, `'<id>'` for a root list, `'$doc'` for the rest); `diffItems(base, items, { staleCheck })` → `{ changes, stale, localOnly }`; `materialize(entry, items)`; `applyItems(entry, value, updates, posOf)`; `assignPositions`; `hashOf` / `stableStringify`; `DOC_ITEM`, `ABSENT` |
+| `itemDiff.js` (pure) | `explodeStore(entry, value)` → items (`'<path>/<id>'`, `'<id>'` for a root list, `'<path>/<key>'` for a `keyed` list, `'$doc'` for the rest); `diffItems(base, items, { staleCheck })` → `{ changes, stale, localOnly }`; `materialize(entry, items)`; `applyItems(entry, value, updates, posOf)`; `assignPositions`; `hashOf` / `stableStringify`; `DOC_ITEM`, `ABSENT` |
 | `conflict.js` (pure) | `pickWinner(current, incoming)` → `{ winner, reason }`: approved beats recorded, else higher rev, tie keeps the server's |
 | `rules.js` (pure) | `COLLECTION_RULES` (mirror of the SQL `app_private.collection_rules`), `writeAction`, `canWriteVersion(role, …)`, `checkChange(actor, { collection, key, before, after, recordedBy, importing })` → `{ ok, reason }` (`role`, `notApprover`, `ownRecord`, `approveUnrecorded`); `scopeOf`, `entryFor`, `FILES_COLLECTION` |
 | `engine.js` | `createEngine({ db, transport, storage, notify, emit, now, deviceId })` → `diffStore` / `diffScope` (queue changes, undo refused ones), `push(actorId, scopes)`, `pullScope`, `applyServerRows`, `queueChanges`, `applyLocalVersion` (restore), `clearStaleMarks`, `dropScope`; helpers `selectBatch`, `sortResults`, `toPushPayload`; `LIVE_STORES`, `PLAN_STORES` |

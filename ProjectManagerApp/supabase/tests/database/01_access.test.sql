@@ -79,7 +79,10 @@ select lives_ok($$ insert into public.items (org_id, project_id, collection, ite
 select throws_ok($$ insert into public.items (org_id, project_id, collection, item_id, data)
   values ((select v from ids where k = 'org'), null, 'pm-registries', 'workers/w1', '{"id":"w1"}') $$,
   '42501', 'new row violates row-level security policy for table "items"', 'a site engineer cannot edit the shared people lists');
-select is((select count(*)::int from public.items), 2, 'members read the project items');
+select lives_ok($$ insert into public.items (org_id, project_id, collection, item_id, data)
+  values ((select v from ids where k = 'org'), (select v from ids where k = 'project'), 'pm-site-diary', 'days/2026-10-26', '{"weather":"sunny"}') $$,
+  'one diary day is its own record');
+select is((select count(*)::int from public.items), 3, 'members read the project items');
 reset role;
 
 set local role authenticated;
@@ -90,6 +93,9 @@ select lives_ok($$ insert into public.items (org_id, project_id, collection, ite
 select throws_ok($$ insert into public.items (org_id, project_id, collection, item_id, data)
   values ((select v from ids where k = 'org'), (select v from ids where k = 'project'), 'project-manager-project-meta', '$doc', '{"status":"signed"}') $$,
   '42501', 'new row violates row-level security policy for table "items"', 'but cannot sign off');
+select lives_ok($$ insert into public.items (org_id, project_id, collection, item_id, data)
+  values ((select v from ids where k = 'org'), (select v from ids where k = 'project'), 'project-manager-project-meta', 'planning/calendar', '{"weekend":["fri"]}') $$,
+  'but edits the planning settings (working calendar …)');
 select throws_ok($$ insert into public.items (org_id, project_id, collection, item_id, data)
   values ((select v from ids where k = 'org'), (select v from ids where k = 'project'), 'pm-orders', 'orders/e1', '{"id":"e1","family":"expense","tier":"quick","status":"approved"}') $$,
   '42501', 'new row violates row-level security policy for table "items"', 'nor record expenses');
@@ -115,7 +121,7 @@ reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000006"}', true);
-select is((select count(*)::int from public.items), 5, 'a viewer reads everything');
+select is((select count(*)::int from public.items), 7, 'a viewer reads everything');
 select throws_ok($$ insert into public.items (org_id, project_id, collection, item_id, data)
   values ((select v from ids where k = 'org'), (select v from ids where k = 'project'), 'pm-activity', 'ev1', '{"id":"ev1"}') $$,
   '42501', 'new row violates row-level security policy for table "items"', 'and writes nothing');
