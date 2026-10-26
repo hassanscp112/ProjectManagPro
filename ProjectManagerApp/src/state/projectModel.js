@@ -9,6 +9,7 @@
 // (already translated).
 // ─────────────────────────────────────────────────────────────
 
+import { hasLinkTo, readLinks, removeLinksTo, writeLinks } from '../utils/planning/links.js';
 import { currentProject, keyFor } from '../utils/Projects.js';
 
 export const TASKS_STORAGE_KEY = 'project-manager-gantt-tasks';
@@ -177,12 +178,16 @@ const blankTask = ({ id, wbs, name, isGroup, start }) => ({
 /* ─────────────── Task edits ─────────────── */
 
 /** Clean a task coming from an editor: no dependency → no type, no lag. */
-export const normalizeTaskUpdate = (task) => ({
-  ...task,
-  dependsOn: task.dependsOn || null,
-  depType: task.dependsOn ? task.depType || 'FS' : '',
-  lag: task.dependsOn ? task.lag : 0,
-});
+export const normalizeTaskUpdate = (task) => {
+  // Several predecessors: slot 0 (dependsOn) and the list kept in step (utils/planning/links).
+  if (Array.isArray(task.predecessors)) return writeLinks(task, readLinks(task));
+  return {
+    ...task,
+    dependsOn: task.dependsOn || null,
+    depType: task.dependsOn ? task.depType || 'FS' : '',
+    lag: task.dependsOn ? task.lag : 0,
+  };
+};
 
 export const replaceTask = (tasks, updated) => tasks.map((t) => (t.id === updated.id ? updated : t));
 
@@ -212,7 +217,7 @@ export const deleteTaskCascade = (tasks, taskId) => {
   const ids = getTaskAndDescendantIds(tasks, taskId);
   return tasks
     .filter((task) => !ids.has(task.id))
-    .map((task) => (ids.has(task.dependsOn) ? { ...task, dependsOn: null, depType: '', lag: 0 } : task));
+    .map((task) => removeLinksTo(task, ids)); // every link to a deleted item (first, extra, leveling)
 };
 
 /** What a delete would remove: { task, count, dependencyCount } or null. */
@@ -222,7 +227,7 @@ export const describeDelete = (tasks, taskId) => {
   return {
     task: tasks.find((task) => task.id === taskId),
     count: ids.size,
-    dependencyCount: tasks.filter((task) => ids.has(task.dependsOn)).length,
+    dependencyCount: tasks.filter((task) => hasLinkTo(task, ids)).length,
   };
 };
 

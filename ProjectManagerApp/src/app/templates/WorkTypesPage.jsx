@@ -1,16 +1,17 @@
-import { Hammer } from 'lucide-react';
-import { useI18n } from '../../i18n/useI18n.js';
-import { Card, EmptyState } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
+import { useCan } from '../useCan.js';
+import WorkTypesPanel from './WorkTypesPanel.jsx';
 
-/** Placeholder until P (planning) builds the work-type library (plans/auto-planning-plan.md). */
+/**
+ * /work-types — the work-type library shared by every project: unit, trade,
+ * productivity per crew-day, crew, the rate that prices it, matching
+ * keywords (WorkTypesPanel). Editing needs plan.edit.
+ */
 export default function WorkTypesPage() {
-  const { t } = useI18n();
+  const canEdit = useCan()('plan.edit');
   return (
     <Page area="work-types">
-      <Card padding="md">
-        <EmptyState icon={Hammer} title={t('templates.navWorkTypes')} body={t('templates.workTypesPlaceholder')} />
-      </Card>
+      <WorkTypesPanel canEdit={canEdit} />
     </Page>
   );
 }

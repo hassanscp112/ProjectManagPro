@@ -261,4 +261,7 @@ export default {
   'planning.wiz.warn.boqUnplaced': '{n} BOQ lines are of work this building type does not use (in Other BOQ items, without links)',
   'planning.wiz.warn.boqUnits': '{n} BOQ lines have a different unit from their work type (check their productivity)',
   'planning.wiz.warn.boqLeftOut': '{n} kinds of template work are not in the BOQ and were left out',
+  'planning.wiz.boqOpenFile': 'Open an Excel file (.xlsx)',
+  'planning.wiz.boqSheet': 'Sheet',
+  'planning.wiz.boqFileError': 'This file could not be read as an Excel workbook (.xlsx).',
 };

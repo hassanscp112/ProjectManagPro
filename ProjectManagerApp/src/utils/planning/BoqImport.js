@@ -237,6 +237,43 @@ export const boqLines = (rows, cols, headerIndex = -1) => {
   return out;
 };
 
+const cellText = (v) => {
+  if (v === null || v === undefined) return '';
+  if (v instanceof Date) return Number.isNaN(v.getTime()) ? '' : v.toISOString().slice(0, 10);
+  return String(v);
+};
+
+/**
+ * A sheet's rows (cell values from an .xlsx reader) as the same tab-separated
+ * text a paste gives — so a file and a paste go through one reader. Cells
+ * with tabs, line breaks or quotes are quoted the way Excel does.
+ */
+export const tableToText = (rows) =>
+  (rows || [])
+    .map((row) =>
+      (row || [])
+        .map((v) => {
+          const text = cellText(v);
+          return /[\t\n"]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+        })
+        .join('\t')
+    )
+    .join('\n');
+
+/** The sheet most likely to be the BOQ: the one with the most item lines. */
+export const pickBoqSheet = (sheets) => {
+  let best = 0;
+  let bestCount = -1;
+  (sheets || []).forEach((sheet, i) => {
+    const count = readBoq(tableToText(sheet.data)).lines.filter((l) => l.kind === 'item').length;
+    if (count > bestCount) {
+      best = i;
+      bestCount = count;
+    }
+  });
+  return best;
+};
+
 /** Everything at once: text → { rows, header, columns, lines }. */
 export const readBoq = (text, columns = null) => {
   const rows = parseTable(text);

@@ -1,17 +1,44 @@
-import { useMemo, useState } from 'react';
+import { FileUp } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import { compactCurrency, formatNumber } from '../../../i18n/index.js';
 import { useI18n } from '../../../i18n/useI18n.js';
 import { matchRows } from '../../../state/plannerModel.js';
+import { pickBoqSheet, tableToText } from '../../../utils/planning/BoqImport.js';
 import { workTypeName } from '../../../utils/planning/WorkTypes.js';
-import { Card, ChipGroup, Select, StatusBadge, Table, Textarea, cx } from '../../../ui/index.js';
+import { Button, Card, ChipGroup, Field, Select, StatusBadge, Table, Textarea, cx, useToast } from '../../../ui/index.js';
 import s from './Wizard.module.css';
 
 const ROLES = ['no', 'description', 'unit', 'qty', 'rate', 'amount'];
 const PREVIEW_ROWS = 8;
 
-/** Paste the BOQ from Excel; check / correct which column holds what. */
+/**
+ * Paste the BOQ from Excel, or open the .xlsx file (the sheet with the most
+ * BOQ lines is chosen; another can be picked); check / correct which column
+ * holds what.
+ */
 export function StepBoq({ state, dispatch, boq }) {
   const { t, lang } = useI18n();
+  const toast = useToast();
+  const fileRef = useRef(null);
+  const [sheets, setSheets] = useState(null); // [{ sheet, data }] of the opened workbook
+  const [sheetIndex, setSheetIndex] = useState(0);
+  const chooseSheet = (list, i) => {
+    setSheetIndex(i);
+    dispatch({ type: 'boqText', text: tableToText(list[i].data) });
+  };
+  const openFile = async (file) => {
+    if (!file) return;
+    try {
+      // The reader is loaded only when a file is opened.
+      const { default: readXlsxFile } = await import('read-excel-file/browser');
+      const list = await readXlsxFile(file);
+      if (!list.length) throw new Error('empty');
+      setSheets(list);
+      chooseSheet(list, pickBoqSheet(list));
+    } catch {
+      toast({ title: t('planning.wiz.boqFileError'), tone: 'danger' });
+    }
+  };
   const width = boq ? boq.rows.reduce((m, r) => Math.max(m, r.length), 0) : 0;
   const roleOf = (i) => (boq ? ROLES.find((r) => boq.columns[r] === i) || '' : '');
   const setRole = (i, role) => {
@@ -29,6 +56,23 @@ export function StepBoq({ state, dispatch, boq }) {
 
   return (
     <Card title={t('planning.wiz.step.boq')} subtitle={t('planning.wiz.boqHint')} titleAs="h2" padding="md">
+      <div className={s.row}>
+        <input ref={fileRef} type="file" accept=".xlsx" hidden onChange={(e) => openFile(e.target.files[0]).finally(() => (e.target.value = ''))} />
+        <Button icon={FileUp} onClick={() => fileRef.current?.click()}>
+          {t('planning.wiz.boqOpenFile')}
+        </Button>
+        {sheets && sheets.length > 1 && (
+          <Field label={t('planning.wiz.boqSheet')} className={s.grow}>
+            <Select value={String(sheetIndex)} onChange={(e) => chooseSheet(sheets, Number(e.target.value))}>
+              {sheets.map((sh, i) => (
+                <option key={sh.sheet} value={String(i)}>
+                  {sh.sheet}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
+      </div>
       <Textarea
         rows={8}
         aria-label={t('planning.wiz.boqPaste')}

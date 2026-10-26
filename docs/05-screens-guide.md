@@ -54,7 +54,9 @@ back to `#/projects` (and the phone *More* page lists the three pages).
   **From a BOQ** (*Start from* → *From a BOQ*, building templates only): the
   template gives the levels and the order of work, the contract BOQ the
   quantities and prices. Extra steps after *Levels*:
-  - **Paste BOQ** — paste rows copied from Excel (header included); the
+  - **Paste BOQ** — paste rows copied from Excel (header included), or
+    *Open an Excel file (.xlsx)* (`read-excel-file`, loaded on demand; the
+    sheet with the most BOQ lines is chosen, another can be picked); the
     header row and each column's meaning (item no., description, unit,
     quantity, unit price, amount) are found automatically and can be changed
     per column; a preview of the first rows; items / sections / total.
@@ -83,14 +85,15 @@ back to `#/projects` (and the phone *More* page lists the three pages).
   project as template* picks one of the projects. Builder at
   `#/templates/new`. Seed template names and rate categories are stored in
   Arabic and shown in the UI language (`templateLabels.js`).
-- **Rates `#/rates`** — two tabs. **Rate library** (shared, direct cost):
-  search, add / edit in a dialog, delete (asks first). Prices are copied at
-  generation time. **Work types** (`?tab=work-types`): the work-type
-  library — search, filter by trade, per crew-day productivity, crew size,
-  the rate it is priced by, *Mark checked* for seeded values (the hint
-  counts what is left), add / edit (names ar + en, unit, trade,
-  productivity, crew, fixed days, rate, keywords) / delete.
-  Adding, editing and deleting need `plan.edit`.
+- **Rates `#/rates`** — the rate library (shared, direct cost): search,
+  add / edit in a dialog, delete (asks first). Prices are copied at
+  generation time. (`?tab=work-types` redirects to Work types.)
+- **Work types `#/work-types`** — the work-type library
+  (`templates/WorkTypesPanel.jsx`): search, filter by trade, per crew-day
+  productivity, crew size, the rate it is priced by, *Mark checked* for
+  seeded values (the hint counts what is left), add / edit (names ar + en,
+  unit, trade, productivity, crew, fixed days, rate, keywords) / delete.
+  Adding, editing, deleting and rates need `plan.edit`.
 
 Logic: `src/state/portfolioModel.js`; storage: `utils/Projects.js`.
 

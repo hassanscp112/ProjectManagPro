@@ -188,7 +188,9 @@ storage. Tests: `criticalPath.test.js`, `engineParity.test.js`.
   number only), `normalizeUnit` (م3 / m3 / م³ / متر مكعب → 'م3' …),
   `unitFamily`, `detectHeader`, `guessColumns` (names, then contents),
   `boqLines` (items + section headings, WBS from hierarchical numbers or
-  section + running number), `readBoq(text, columns?)`. Tests:
+  section + running number), `readBoq(text, columns?)`, `tableToText(rows)`
+  (an .xlsx sheet's cell values → the same tab-separated text a paste gives),
+  `pickBoqSheet(sheets)` (the sheet with the most item lines). Tests:
   `boqImport.test.js`.
 - **`Matcher.js`** — local matching of BOQ lines to work types:
   `normalizeText` (diacritics, tatweel, alef / ya / ta marbuta, digits),

@@ -85,10 +85,9 @@ export default function LookaheadPage() {
   const navigate = useNavigate();
   const { tasks, orders, registries } = useProject();
   const can = useCan();
-  // Month targets are plan editors'; week and day plans also site engineers'
-  // ('plan.lookahead' — until the integrator adds it, the same roles as record.work).
+  // Month targets are plan editors'; week and day plans also site engineers'.
   const canMonth = can('plan.edit');
-  const canDays = can('plan.lookahead') || can('record.work');
+  const canDays = can('plan.lookahead');
   const [plans, setPlans] = useState(loadPlans);
   const [view, setView] = useState('month');
   const today = todayStr();

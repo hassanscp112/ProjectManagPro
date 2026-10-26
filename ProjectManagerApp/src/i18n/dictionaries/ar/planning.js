@@ -260,4 +260,7 @@ export default {
   'planning.wiz.warn.boqUnplaced': '{n} فقرة من الجدول لأعمال لا يستعملها نوع المبنى هذا (في فقرات أخرى، بلا علاقات)',
   'planning.wiz.warn.boqUnits': '{n} فقرة من الجدول وحدتها تختلف عن وحدة نوع عملها (راجع إنتاجيتها)',
   'planning.wiz.warn.boqLeftOut': '{n} من أعمال القالب ليست في الجدول فاستُبعدت',
+  'planning.wiz.boqOpenFile': 'فتح ملف Excel ‏(.xlsx)',
+  'planning.wiz.boqSheet': 'الورقة',
+  'planning.wiz.boqFileError': 'تعذّرت قراءة هذا الملف كملف Excel ‏(.xlsx).',
 };

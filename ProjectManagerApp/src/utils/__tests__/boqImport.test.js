@@ -7,7 +7,7 @@ import { installNodeTestEnvironment } from './helpers.js';
 
 installNodeTestEnvironment();
 
-const { parseTable, parseNumber, normalizeUnit, detectHeader, guessColumns, boqLines, readBoq } = await import('../planning/BoqImport.js');
+const { parseTable, parseNumber, normalizeUnit, detectHeader, guessColumns, boqLines, readBoq, tableToText, pickBoqSheet } = await import('../planning/BoqImport.js');
 const { normalizeText, stem, contentWords, matchLine, matchBoq, confidenceOf, withAlias } = await import('../planning/Matcher.js');
 const { applyBoq } = await import('../planning/boqPlan.js');
 const { planProject } = await import('../planning/autoPlan.js');
@@ -77,6 +77,20 @@ describe('BoqImport', () => {
     assert.equal(detectHeader(rows), -1);
     const cols = guessColumns(rows, -1);
     assert.deepEqual([cols.no, cols.description, cols.unit, cols.qty, cols.rate], [0, 1, 2, 3, 4]);
+  });
+
+  it('an .xlsx sheet (cell values) reads like a paste; the BOQ sheet is picked', () => {
+    const data = [
+      ['ت', 'الوصف', 'الوحدة', 'الكمية', 'السعر'],
+      [1, 'خرسانة مسلحة للأعمدة', 'م3', 90, 460000],
+      [2, 'نص فيه	تاب و"اقتباس"', 'م2', 10.5, null],
+      [null, null, null, null, null],
+    ];
+    const text = tableToText(data);
+    assert.deepEqual(parseTable(text), [['ت', 'الوصف', 'الوحدة', 'الكمية', 'السعر'], ['1', 'خرسانة مسلحة للأعمدة', 'م3', '90', '460000'], ['2', 'نص فيه تاب و"اقتباس"', 'م2', '10.5', '']]);
+    assert.equal(readBoq(text).lines.filter((l) => l.kind === 'item').length, 2);
+    assert.equal(tableToText([[new Date(Date.UTC(2030, 0, 5)), true]]), '2030-01-05	true');
+    assert.equal(pickBoqSheet([{ sheet: 'cover', data: [['عنوان']] }, { sheet: 'BOQ', data }]), 1);
   });
 
   it('turns rows into section headings and items with WBS, price and amount', () => {
