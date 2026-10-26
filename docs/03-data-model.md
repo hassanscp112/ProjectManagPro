@@ -112,6 +112,9 @@ There is **no server and no database**. Everything is stored in the browser:
   levelLinks: [{ id, type: 'FS', lag: 0 }], // written by resource leveling (crew hand-overs);
                                  // they only delay the start and never override the logic
   pinned: true,                  // resource leveling never moves this item
+  trade: 'masonry', crews: 2,    // the crew trade (utils/planning/trades.js) and crews on it
+  resources: { labour: 8, crane: 1 }, // people / equipment it uses at once (all crews)
+  teamIds: ['teamId'],           // People teams doing it (given by resource leveling)
 
   // quantity take-off (group tasks, editable in the full task details page, Edit view):
   elementColumns: [{ id, name, unit, wasteFactor, linkedTaskId|null }],
@@ -131,7 +134,9 @@ orderCount}, baselineQty, scopeVariance, execVariance, weight,
 weightedProgress, plannedProgress, plannedCost, isCritical, totalFloat,
 warnings`, and (auto-planning) `links` (every logic link, lag parsed),
 `levelLinks` (normalized), `drivingLinkId` (the predecessor that sets the
-start), `spanDays` (calendar days the bar covers — `duration` is working days)
+start), `spanDays` (calendar days the bar covers — `duration` is working days).
+A `resourceOverload {resource, from, to}` warning marks items using more of a
+limited resource than the project has (`meta.planning.resources`).
 
 Rule of thumb: **raw = what the user set, computed = what the engine derived.**
 Screens that let editing receive raw `tasks` from App; read-only views receive
@@ -161,11 +166,22 @@ Screens that let editing receive raw `tasks` from App; read-only views receive
       periods: [{ from, to, factor: 0.75, name }],     // reduced pace (Ramadan)
       workdays: ['YYYY-MM-DD'],                        // worked although off
     },
+    calendarPreset: 'fridayHolidays' | 'friday' | 'fridaySaturday' | 'allDays' | 'custom',
+    markups: { overhead, contingency, profit },        // % (shown read-only)
+    crews: { [trade]: n },                             // crews PER ITEM chosen in the wizard
+    resources: {                                       // what the project HAS (all optional;
+      crews: { [trade]: n },                           //  absent = no limit)
+      labour: n,                                       // people on site at once
+      equipment: { crane: 1, loader: 2 },
+      teams: { [trade]: ['teamId'] },                  // People teams as that trade's crews
+    },
+    leveledAt: 'ISO datetime' | null,                  // last *Apply leveling*
   }
 }
 ```
 `planning` is not in `DEFAULT_META`. Durations and lags are working days on
-this calendar (`utils/planning/WorkCalendar.js`).
+this calendar (`utils/planning/WorkCalendar.js`). Resources:
+`utils/planning/resources.js`; leveling: `utils/planning/ResourceLeveler.js`.
 
 ### Variation Order record
 
@@ -369,9 +385,12 @@ Generated tasks also carry (optional): `workTypeId`, `trade`, `crews`,
 `productivity`, `durationSource` (`productivity`|`fixed`|`manual`),
 `unitCost` (direct cost; `unitPrice` = contract price with markups),
 `templateKey` (element key), `floor` (level index), `boqNo` (the contract
-BOQ item number, plans made from a BOQ). `meta.planning` of a
-generated project: `{ version, calendar, markups: { overhead, contingency,
-profit }, crews }`.
+BOQ item number, plans made from a BOQ), `resources` (the work type's
+crew × crews: people and equipment). `meta.planning` of a generated
+project: `{ version, calendar, markups: { overhead, contingency, profit },
+crews }`; the Resources page adds `resources`, `calendarPreset`,
+`leveledAt`. Leveling and *Apply* write the activity event
+`{ kind: 'planning', refType: 'project', refId: 'leveling' }`.
 
 ---
 

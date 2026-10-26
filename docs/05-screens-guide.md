@@ -121,8 +121,9 @@ Logic: `src/state/homeModel.js`.
 
 ## Schedule — `src/app/schedule/` (rebuilt in Phase 4)
 
-Three sub-pages (tabs): **Timeline `#/schedule`**, **Lookahead
-`#/schedule/lookahead`**, **Baseline `#/schedule/baseline`**.
+Four sub-pages (tabs): **Timeline `#/schedule`**, **Lookahead
+`#/schedule/lookahead`**, **Baseline `#/schedule/baseline`**, **Resources
+`#/schedule/resources`**.
 
 **Permissions** (`useCan`): *Edit*, add / delete and quick edit need
 `plan.edit`; sign-off, start execution, complete and re-baseline need
@@ -172,8 +173,33 @@ the item preselected — `navigate('/record', { state: { taskId } })`), *Files*,
 
 Quick edit lists the predecessors (`LinksEditor.jsx`): one row per link —
 the item it waits for, type, lag and whether the lag counts working or
-calendar days — plus *Add predecessor*; and a *Pin dates* toggle (resource
-leveling never moves a pinned item).
+calendar days — plus *Add predecessor*; a *Pin dates* toggle (resource
+leveling never moves a pinned item); the item's trade, crews and people.
+Facts show the trade (crews, people), the People team and *Waits for a crew
+from* (leveling hand-overs).
+
+**Resources** (`ResourcesPage.jsx`, `ResourceChart.jsx`, `CalendarEditor.jsx`;
+logic `src/state/resourcesModel.js`, `utils/planning/ResourceLeveler.js`):
+- KPIs: limits set, overloads now, finish, items waiting for a crew.
+- **Level the plan** — a live preview of the plan fitted to the limits:
+  finish now → leveled, working days added, items moved (largest first,
+  from → to, *waits for …*), crew changes, items too big for the site even
+  alone, overloads left in pinned / started work. *Apply leveling* and
+  *Clear leveling* are one undo step each (*Undo* beside them), stamp
+  `planning.leveledAt` and log an activity event. Pinned, started and done
+  items (and the work they wait for) never move; a signed baseline is kept.
+- **What the project has** — per trade used: items, most crews on one item,
+  crews available (empty = no limit) and People teams (a team belongs to one
+  trade; teams without a number count one crew each); people on site at
+  once; key equipment used by the items. Items planned before resources
+  existed can be filled from their work types.
+- **Use per week** — one resource at a time (the most overloaded first):
+  bars = most in use in the week (two weeks once the plan passes two
+  years), over the limit in the danger colour, the limit as a dashed line,
+  hover for figures, *Show as a table*.
+- **Working calendar** (the wizard's editor: preset, rest days, holidays,
+  reduced-pace periods) — changing it moves every date; **markups** read-only.
+Editing needs `plan.edit` (otherwise read-only).
 
 **Dialogs** (`LifecycleDialogs.jsx`): sign-off / re-baseline (name prefilled
 with the last signer, else the current user) and variation orders (item,

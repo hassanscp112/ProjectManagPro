@@ -5,9 +5,11 @@ import { compactCurrency, formatNumber } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
 import { childrenOf, fieldLock, ordersInScope, scheduleStatus } from '../../state/scheduleModel.js';
 import { useProject } from '../../state/projectContext.js';
+import { teamNamesOf, waitsForOf } from '../../state/resourcesModel.js';
 import { todayStr } from '../../utils/OrderEngine.js';
 import { readLinks } from '../../utils/planning/links.js';
-import { Button, Drawer, Field, Input, ListRow, NumberInput, ProgressBar, StatusBadge } from '../../ui/index.js';
+import { TRADES } from '../../utils/planning/trades.js';
+import { Button, Drawer, Field, Input, ListRow, NumberInput, ProgressBar, Select, StatusBadge } from '../../ui/index.js';
 import { ltr } from '../bidi.js';
 import OrderRow from '../record/OrderRow.jsx';
 import { formatDay } from '../record/orderMeta.js';
@@ -35,7 +37,7 @@ const pctText = (p) => `${Math.floor(Math.min(1, Math.max(0, p || 0)) * 1000) / 
 export default function TaskPanel({ taskId, onClose }) {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
-  const { tasks, orders, engineResult, projectMeta, updateTask, requestDeleteTask, addSubTask } = useProject();
+  const { tasks, orders, engineResult, projectMeta, registries, updateTask, requestDeleteTask, addSubTask } = useProject();
   const actions = useOrderActions();
   const canEdit = useCan()('plan.edit');
   const [editing, setEditing] = useState(false);
@@ -49,6 +51,8 @@ export default function TaskPanel({ taskId, onClose }) {
   const today = todayStr();
   const status = STATUS[scheduleStatus(task, today)];
   const links = readLinks(raw);
+  const waitsFor = waitsForOf(raw, tasks);
+  const teamNames = teamNamesOf(raw, registries?.teams || []);
   const linkLabel = (l) => {
     const p = tasks.find((x) => x.id === l.id);
     const lag = Number(l.lag) || 0;
@@ -86,6 +90,9 @@ export default function TaskPanel({ taskId, onClose }) {
           links.length > 1 ? 'schedule.predecessors' : 'schedule.predecessor',
           links.length ? links.map((l) => <span key={l.id} className={s.factLine}>{linkLabel(l)}</span>) : t('schedule.noPredecessor'),
         ],
+        ...(raw.trade ? [['schedule.res.tradeFact', `${t(`planning.trade.${raw.trade}`)} · ${t('schedule.res.crewsN', { n: formatNumber(Math.max(1, Math.round(Number(raw.crews) || 1))) })}${Number(raw.resources?.labour) > 0 ? ` · ${t('schedule.res.peopleN', { n: formatNumber(Number(raw.resources.labour)) })}` : ''}`]] : []),
+        ...(teamNames.length ? [['schedule.res.teamFact', teamNames.join('، ')]] : []),
+        ...(waitsFor.length ? [['schedule.res.waitsForFact', waitsFor.map((p) => <span key={p.id} className={s.factLine}>{`${p.wbs} ${p.name || ''}`}</span>)]] : []),
       ];
 
   return (
@@ -188,6 +195,26 @@ export default function TaskPanel({ taskId, onClose }) {
                       onChange={(patch) => updateTask({ ...raw, ...patch })}
                     />
                   </div>
+                  <Field label={t('schedule.res.tradeFact')}>
+                    <Select value={raw.trade || ''} onChange={(e) => set('trade', e.target.value || undefined)}>
+                      <option value="">{t('schedule.res.noTrade')}</option>
+                      {TRADES.map((tr) => (
+                        <option key={tr} value={tr}>
+                          {t(`planning.trade.${tr}`)}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  {raw.trade && (
+                    <>
+                      <Field label={t('schedule.res.crewsLabel')}>
+                        <NumberInput min="1" value={raw.crews ?? ''} placeholder="1" onChange={(e) => set('crews', e.target.value)} />
+                      </Field>
+                      <Field label={t('schedule.res.peopleLabel')}>
+                        <NumberInput min="0" value={raw.resources?.labour ?? ''} onChange={(e) => set('resources', { ...(raw.resources || {}), labour: e.target.value })} />
+                      </Field>
+                    </>
+                  )}
                   <Field label={t('common.contractQty')} hint={lock('quantity') ? (lock('quantity') === 'boq' ? t('gantt.lockedFromDetails') : t('gantt.lockedContractQty')) : undefined}>
                     <NumberInput value={raw.quantity ?? ''} disabled={Boolean(lock('quantity'))} unit={unit} onChange={(e) => set('quantity', e.target.value)} />
                   </Field>
