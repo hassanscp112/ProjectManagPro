@@ -72,14 +72,16 @@ export const cleanTemplateDraft = (draft) => {
 
 export const FOLDER_ROOT = 'root';
 export const FOLDER_TASKS = 'tasks_root';
+/** Photos attached to orders (saved by the Record screen, never uploaded here). */
+export const FOLDER_ORDER_PHOTOS = 'order_photos';
 /** Folder id of a top-level section (the only per-item folders). */
 export const sectionFolderId = (section) => `task_${section.id}`;
 
 const topSections = (tasks) => tasks.filter((t) => t.wbs && !t.wbs.includes('.'));
 
-/** Sub-folders of a folder: root → "Items"; Items → one per top-level section. */
+/** Sub-folders of a folder: root → "Items" and "Order photos"; Items → one per top-level section. */
 export const childFolders = (folderId, tasks = []) => {
-  if (folderId === FOLDER_ROOT) return [{ id: FOLDER_TASKS }];
+  if (folderId === FOLDER_ROOT) return [{ id: FOLDER_TASKS }, { id: FOLDER_ORDER_PHOTOS }];
   if (folderId === FOLDER_TASKS) return topSections(tasks).map((s) => ({ id: sectionFolderId(s), task: s }));
   return [];
 };

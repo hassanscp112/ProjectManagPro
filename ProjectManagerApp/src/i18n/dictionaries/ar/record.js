@@ -44,4 +44,11 @@ export default {
   'record.showAll': 'عرض الكل',
   'record.filters': 'تصفية',
   'record.approverLabel': 'اسم المعتمِد',
+
+  // Photos
+  'record.saving': 'جارٍ الحفظ…',
+  'record.photosPreparing': 'جارٍ تجهيز الصور…',
+  'record.photosNotSaved': 'حُفظ الأمر بدون صوره',
+  'record.photosNotSavedBody': 'تعذّر حفظ الصور على هذا الجهاز (المساحة ممتلئة أو التخزين محظور).',
+  'record.donePhotos': 'الصور المرفقة: {n}',
 };

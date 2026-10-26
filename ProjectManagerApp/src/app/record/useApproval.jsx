@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useI18n } from '../../i18n/useI18n.js';
 import { useProject } from '../../state/projectContext.js';
+import { deleteFiles } from '../../utils/FileDB.js';
 import { approveOrder, deleteOrder } from '../../utils/OrderEngine.js';
 import { Button, ConfirmDialog, Dialog, Field, Input, useToast } from '../../ui/index.js';
 import { formatDay, typeLabel } from './orderMeta.js';
@@ -8,7 +9,8 @@ import { formatDay, typeLabel } from './orderMeta.js';
 /**
  * Approve and delete for orders, with the same rules as before:
  * approving uses the current user's name, or asks for an approver name
- * when nobody is set; deleting always asks first. Render `dialogs`.
+ * when nobody is set; deleting always asks first and also deletes the
+ * order's photos. Render `dialogs`.
  */
 export function useOrderActions() {
   const { t } = useI18n();
@@ -69,17 +71,24 @@ export function useOrderActions() {
         title={t('orders.deleteConfirmTitle')}
         message={
           deleteTarget
-            ? t('orders.deleteConfirmText', {
-                type: typeLabel(deleteTarget.type),
-                date: formatDay(deleteTarget.date),
-                taskRef: deleteTarget.taskName ? ` (${deleteTarget.taskWbs} ${deleteTarget.taskName})` : '',
-              })
+            ? [
+                t('orders.deleteConfirmText', {
+                  type: typeLabel(deleteTarget.type),
+                  date: formatDay(deleteTarget.date),
+                  taskRef: deleteTarget.taskName ? ` (${deleteTarget.taskWbs} ${deleteTarget.taskName})` : '',
+                }),
+                deleteTarget.evidence?.length ? t('orders.deleteConfirmPhotos', { n: deleteTarget.evidence.length }) : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
             : ''
         }
         confirmLabel={t('orders.deleteOrder')}
         tone="danger"
         onConfirm={() => {
           deleteOrder(deleteTarget.id);
+          // Its photos go too; a failure only leaves files behind in "Order photos".
+          if (deleteTarget.evidence?.length) deleteFiles(deleteTarget.evidence).catch(() => {});
           toast({ title: t('record.deleted') });
         }}
       />

@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  FOLDER_ORDER_PHOTOS,
   FOLDER_ROOT,
   FOLDER_TASKS,
   addCalcRow,
@@ -64,7 +65,9 @@ test('template builder draft check', () => {
 
 test('file folders and sizes', () => {
   const tasks = [{ id: 'a', wbs: '1' }, { id: 'b', wbs: '1.1' }, { id: 'c', wbs: '2' }];
-  assert.deepEqual(childFolders(FOLDER_ROOT, tasks), [{ id: FOLDER_TASKS }]);
+  assert.deepEqual(childFolders(FOLDER_ROOT, tasks), [{ id: FOLDER_TASKS }, { id: FOLDER_ORDER_PHOTOS }]);
+  assert.equal(FOLDER_ORDER_PHOTOS, 'order_photos'); // the folder the Record screen saves photos into
+  assert.deepEqual(childFolders(FOLDER_ORDER_PHOTOS, tasks), []);
   assert.deepEqual(childFolders(FOLDER_TASKS, tasks).map((f) => f.id), ['task_a', 'task_c']);
   assert.deepEqual(childFolders('task_a', tasks), []);
   assert.deepEqual(folderPathFor(tasks[1], tasks).map((f) => f.id), ['root', 'tasks_root', 'task_a']);

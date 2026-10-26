@@ -121,4 +121,8 @@ export default {
   'taskDetails.elementsNeedType': 'أضف نوع كمية واحداً على الأقل قبل إدخال العناصر.',
   'taskDetails.elementNamePlaceholder': 'مثال: HR-1',
   'taskDetails.deleteElement': 'حذف العنصر',
+
+  // read: evidence photos
+  'taskDetails.evidencePhotos': 'الصور',
+  'taskDetails.evidenceLatestPhotos': 'أحدث الصور',
 };

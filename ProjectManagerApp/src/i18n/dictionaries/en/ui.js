@@ -77,4 +77,24 @@ export default {
   // Project identity (shown in the sidebar and page headers)
   'ui.userUnset': 'Who is using the app?',
   'ui.skipToContent': 'Skip to content',
+
+  // Photos (PhotoPicker, PhotoStrip)
+  'ui.photos': 'Photos',
+  'ui.photosCount': '{n} of {max}',
+  'ui.takePhoto': 'Take photo',
+  'ui.gallery': 'Gallery',
+  'ui.addPhotos': 'Add photos',
+  'ui.photoPreparing': 'Preparing photo…',
+  'ui.photoN': 'Photo {n}',
+  'ui.removePhoto': 'Remove photo {n}',
+  'ui.photosLimit': 'Up to {max} photos — the extra ones were not added',
+  'ui.photosFull': 'That is the most photos ({max})',
+  'ui.photosLoading': 'Loading photos',
+  'ui.openPhoto': 'Open photo {n} of {count}',
+  'ui.photoOf': 'Photo {n} of {count}',
+  'ui.photoCounter': '{n} / {count}',
+  'ui.prevPhoto': 'Previous photo',
+  'ui.nextPhoto': 'Next photo',
+  'ui.downloadPhoto': 'Download',
+  'ui.noPhotos': 'No photos',
 };

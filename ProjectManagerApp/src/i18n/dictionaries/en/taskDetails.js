@@ -121,4 +121,8 @@ export default {
   'taskDetails.elementsNeedType': 'Add at least one quantity type before entering elements.',
   'taskDetails.elementNamePlaceholder': 'e.g. HR-1',
   'taskDetails.deleteElement': 'Delete element',
+
+  // read: evidence photos
+  'taskDetails.evidencePhotos': 'Photos',
+  'taskDetails.evidenceLatestPhotos': 'Latest photos',
 };
