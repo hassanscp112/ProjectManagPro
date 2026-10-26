@@ -4,8 +4,9 @@ import { defineConfig, devices } from '@playwright/test'
 // End-to-end smoke tests (`npm run test:e2e`, specs in e2e/). They start
 // their own dev server on port 5190 with an empty browser profile, so the
 // real data on :5173 is never touched. First run: `npx playwright install
-// chromium`.
-const PORT = 5190
+// chromium`. Parallel worktrees each set their own E2E_PORT, so one session
+// never reuses (and tests) another session's dev server.
+const PORT = Number(process.env.E2E_PORT) || 5190
 
 export default defineConfig({
   testDir: './e2e',
