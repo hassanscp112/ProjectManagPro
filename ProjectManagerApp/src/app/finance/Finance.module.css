@@ -37,9 +37,12 @@
 /* ── Table + form ── */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) 380px;
   align-items: start;
   gap: var(--ui-space-4);
+}
+.layoutSingle {
+  grid-template-columns: minmax(0, 1fr);
 }
 @media (max-width: 1099px) {
   .layout {
@@ -53,8 +56,60 @@
   min-width: 0;
 }
 .formCard {
-  position: sticky;
-  top: 0;
+  min-width: 0;
+}
+.alert {
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-danger);
+}
+
+/* ── The old ledger: move notice / "moved on …" ── */
+.legacyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-4);
+  border: 1px solid var(--ui-warning);
+  border-radius: var(--ui-r-lg);
+  background: var(--ui-warning-soft);
+}
+.legacyCard h2 {
+  margin: 0;
+  font-size: var(--ui-fs-lg);
+}
+.legacyCard p {
+  margin: 0;
+  max-width: 80ch;
+  font-size: var(--ui-fs-sm);
+}
+.legacyNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2) var(--ui-space-4);
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.legacyNote p {
+  margin: 0;
+}
+.check {
+  flex-basis: 100%;
+}
+.check summary {
+  cursor: pointer;
+  color: var(--ui-accent-ink);
+}
+.check[open] summary {
+  margin-bottom: var(--ui-space-2);
+}
+.steps {
+  margin: var(--ui-space-3) 0 0;
+  padding-inline-start: var(--ui-space-5);
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
 }
 .filters {
   display: flex;

@@ -1,16 +1,23 @@
 // ═══════════════════════════════════════════════════════════
-// Finance — persistence for the site cost ledgers and their
-// editable dropdown lists. Plain JS, localStorage only.
+// Finance — the old site cost ledger (read-only) and the finance
+// dropdown lists. Plain JS, localStorage only.
 //
-// 'project-manager-finance-data':
-//   { machinery: [], materials: [], pettyCash: [], payroll: [] }
-//   (record shapes: see src/state/financeModel.js)
+// Expenses are entered as expense orders (OrderEngine, 'pm-orders');
+// the Finance screen's ledgers are views over them (state/financeModel.js).
+//
+// 'project-manager-finance-data' — the old ledger, kept and never deleted:
+//   { machinery: [], materials: [], pettyCash: [], payroll: [],
+//     migration?: { migratedAt, migratedBy, lastRunAt, count, sourceKeys } }
+//   Nothing writes the ledger records any more; `migration` is set once
+//   they have been moved into expense orders.
 // 'project-manager-finance-config':
 //   { machines, machineSizes, employees, materials, expenseTypes, statuses }
-//   — user data, kept as entered (Arabic defaults below).
+//   — the values expense orders pick from; user data, kept as entered
+//   (Arabic defaults below).
 // ═══════════════════════════════════════════════════════════
 
 import { projectKey } from './Projects.js';
+import { notifyStoreChange } from './storeEvents.js';
 
 export const FINANCE_DATA_KEY = 'project-manager-finance-data';
 export const FINANCE_CONFIG_KEY = 'project-manager-finance-config';
@@ -28,9 +35,12 @@ export const DEFAULT_FINANCE_CONFIG = {
 
 const emptyData = () => ({ machinery: [], materials: [], pettyCash: [], payroll: [] });
 
+const readStored = () => JSON.parse(localStorage.getItem(projectKey(FINANCE_DATA_KEY)) || 'null');
+
+/** The old ledger's records (read-only). */
 export const loadFinanceData = () => {
   try {
-    const saved = JSON.parse(localStorage.getItem(projectKey(FINANCE_DATA_KEY)) || 'null');
+    const saved = readStored();
     const data = emptyData();
     if (saved && typeof saved === 'object') {
       LEDGERS.forEach((l) => {
@@ -43,11 +53,35 @@ export const loadFinanceData = () => {
   }
 };
 
-export const saveFinanceData = (data) => {
+/** The migrated flag ({ migratedAt, migratedBy, … }), or null before the move. */
+export const loadFinanceMigration = () => {
   try {
-    localStorage.setItem(projectKey(FINANCE_DATA_KEY), JSON.stringify(data));
+    const saved = readStored();
+    return saved && typeof saved.migration === 'object' && saved.migration ? saved.migration : null;
   } catch {
-    // storage full / unavailable — keep working in memory
+    return null;
+  }
+};
+
+/**
+ * Set the migrated flag. Only `migration` changes: the ledger records stay
+ * exactly as stored. A stored value that cannot be read is left alone (the
+ * flag is not worth risking the old ledger). Returns true when written.
+ */
+export const saveFinanceMigration = (migration) => {
+  let saved;
+  try {
+    saved = readStored();
+  } catch {
+    return false;
+  }
+  if (saved !== null && (typeof saved !== 'object' || Array.isArray(saved))) return false;
+  try {
+    localStorage.setItem(projectKey(FINANCE_DATA_KEY), JSON.stringify({ ...(saved || {}), migration }));
+    notifyStoreChange(FINANCE_DATA_KEY);
+    return true;
+  } catch {
+    return false; // storage full / unavailable
   }
 };
 
