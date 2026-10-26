@@ -31,13 +31,20 @@ export const watchErrors = (page) => {
 export const click = (locator) => locator.evaluate((el) => el.click());
 
 /**
- * Create a project from the first template (the default start) and return
- * its first BOQ item ({ id, name, ... }), read from the stored task list.
+ * Create a project with the New project wizard's defaults (Next through
+ * every step, then create) and return its first BOQ item ({ id, name, ... }),
+ * read from the stored task list.
  */
 export const createProject = async (page, name) => {
   await page.goto('/#/projects/new');
   await page.locator('input[data-autofocus]').fill(name);
-  await click(page.getByRole('button', { name: /Create and start planning|إنشاء وبدء التخطيط/ }));
+  const create = page.getByRole('button', { name: /Create and start planning|إنشاء وبدء التخطيط/ });
+  const next = page.getByRole('button', { name: /^(Next|التالي)$/ });
+  for (let step = 0; step < 15 && (await create.count()) === 0; step += 1) {
+    await click(next);
+    await page.waitForTimeout(300); // the next step renders
+  }
+  await click(create);
   await page.waitForURL(/#\/schedule/);
   const task = await page.evaluate(() => {
     const key = Object.keys(localStorage).find((k) => k.endsWith(':project-manager-gantt-tasks'));

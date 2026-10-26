@@ -7,6 +7,7 @@ import { addCalcRow, columnTotals, removeCalcRow, renameCalcRow, setCalcCell, up
 import { loadCalcTemplates, saveCalcTemplates } from '../../utils/CalculatorTemplates.js';
 import { Button, Card, ConfirmDialog, EmptyState, IconButton, Input, ListRow, Table, cx } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
+import { useCan } from '../useCan.js';
 import BoqTemplateEditor from './BoqTemplateEditor.jsx';
 import s from './Library.module.css';
 
@@ -89,6 +90,7 @@ function BoqGrid({ template, onChange }) {
  */
 export default function BoqPage() {
   const { t } = useI18n();
+  const canEdit = useCan()('plan.edit');
   const [templates, setTemplates] = useState(loadCalcTemplates);
   const [params, setParams] = useSearchParams();
   const [editing, setEditing] = useState(null); // null | 'new' | template
@@ -124,7 +126,7 @@ export default function BoqPage() {
           title={t('calculator.title')}
           titleAs="h2"
           padding="sm"
-          actions={<IconButton icon={Plus} label={t('calculator.addTemplateTitle')} variant="secondary" onClick={() => setEditing('new')} />}
+          actions={canEdit ? <IconButton icon={Plus} label={t('calculator.addTemplateTitle')} variant="secondary" onClick={() => setEditing('new')} /> : null}
           className={s.listCard}
         >
           {templates.length === 0 ? (
@@ -155,15 +157,19 @@ export default function BoqPage() {
             padding="md"
             className={s.main}
             actions={
-              <>
-                <Button size="sm" icon={Pencil} onClick={() => setEditing(active)}>
-                  {t('library.editColumns')}
-                </Button>
-                <IconButton icon={Trash2} label={t('calculator.deleteTemplate')} variant="ghost" onClick={() => setToDelete(active)} />
-              </>
+              canEdit ? (
+                <>
+                  <Button size="sm" icon={Pencil} onClick={() => setEditing(active)}>
+                    {t('library.editColumns')}
+                  </Button>
+                  <IconButton icon={Trash2} label={t('calculator.deleteTemplate')} variant="ghost" onClick={() => setToDelete(active)} />
+                </>
+              ) : null
             }
           >
-            <BoqGrid template={active} onChange={update} />
+            <fieldset className={s.lockable} disabled={!canEdit}>
+              <BoqGrid template={active} onChange={update} />
+            </fieldset>
           </Card>
         ) : (
           <EmptyState
