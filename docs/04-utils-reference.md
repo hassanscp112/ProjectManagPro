@@ -15,6 +15,7 @@ ActivityLog, PlanningStore, Registries, Snapshots                      (import i
 OrderEngine                                                            (imports i18n)
 TemplateEngine                                                         (imports RateLibrary)
 GanttEngine                                                            (imports OrderEngine + CriticalPath)
+Certificates                                                           (imports i18n / Projects / ActivityLog / Identity / Registries)
 ```
 
 ---
@@ -126,6 +127,38 @@ Pure, no storage. Tests: `criticalPath.test.js`.
 - CRUD per entity: `addContractor/updateContractor/deleteContractor`, `addTeam/updateTeam/deleteTeam`, `addWorker/updateWorker/deleteWorker` (all take `(registries, …)` and return new data — immutable style)
 - `loadRegistries()` / `saveRegistries(data)`
 - `resolveWho(registries, who, lang)` — who → display label
+
+---
+
+## Certificates.js — payment certificates (ذرعات)
+
+**Storage:** `pm-certificates` (project-scoped, shape in `docs/03` §13); every
+write calls `notifyStoreChange`. The line math lives in
+`state/certificateModel.js` (below).
+- `loadCertificates()` → normalized `{ settings, rates, certificates }` / `saveCertificates(doc)`
+- Series (one numbering per kind + contractor): `seriesKey`, `seriesOf(certificates, kind, contractorId)`,
+  `nextNumber`, `openDraft`, `previousCertificates(certificates, cert)` (issued, lower number)
+- `certificateProblem(certificates, { kind, contractorId, periodEnd }, selfId?)` →
+  `null` | `'kind' | 'contractor' | 'date' | 'openDraft' | 'beforePrevious'`
+- `defaultTerms(doc, kind, contractorId)` — the series' last terms, else the settings
+  (a subcontractor starts with no advance / retention limit)
+- Changes (load → change → save; `null` / `false` when refused):
+  `createCertificate({ kind, contractorId, periodEnd }, actor?)`,
+  `updateDraft(id, { periodEnd, terms, deductions, note })`, `deleteDraft(id)`,
+  `issueCertificate(id, { periodStart, lines, totals, orderIds }, actor?)` — freezes,
+  stamps `issuedBy` from `currentActor()`, logs an activity event (`kind: 'certificate'`),
+  `saveSettings(patch)`, `setRate(contractorId, taskId, rate)` (`''` clears)
+- **`certifiedOrderIds(doc?)`** → `Set` of order ids in issued certificates (for the
+  order lock); `certificatesByOrder(doc?)` → `Map` orderId → `[{ id, number, kind, contractorId }]`
+
+`state/certificateModel.js` (pure): `eligibleOrders(orders, cert)`,
+`rateFor(kind, contractorId, taskId, task, rates)` (null = missing),
+`certificateTotals(lines, cert, previous)`,
+**`computeCertificate(cert, { certificates, rates, tasks, orders })`** →
+`{ frozen, periodStart, lines, totals, orderIds, problems, issuable }` (an issued
+certificate returns what it froze), `filterCertificates`, `rateRows` (the
+contractor × item rates editor), `compareWbs`. Tests:
+`utils/__tests__/certificates.test.js`, `state/__tests__/certificateModel.test.js`.
 
 ---
 
@@ -261,8 +294,8 @@ the recorder, once accounts exist). In components: `useCan()` /
   (no-op outside the browser, so node tests are unaffected)
 - `onStoreChange(handler)` → unsubscribe; handler gets the storage key
 
-Called by `saveOrdersData`, `saveRegistries`, `saveIdentity` and
-`saveAppEvents` after writing; `ProjectProvider` listens and re-reads that
+Called by `saveOrdersData`, `saveRegistries`, `saveIdentity`,
+`saveAppEvents` and `saveCertificates` after writing; `ProjectProvider` listens and re-reads that
 store immediately. A new persisted store that other screens read should do
 the same.
 

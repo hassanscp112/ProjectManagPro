@@ -1,0 +1,345 @@
+/* Payment certificates (list, rates editor, the printable certificate). */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-3);
+}
+.spacer {
+  flex: 1 1 auto;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+  min-width: 0;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ui-space-3);
+}
+.filters > .grow {
+  flex: 1 1 200px;
+  max-width: 280px;
+}
+.count {
+  flex: 1 1 auto;
+  padding-bottom: var(--ui-space-2);
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+  text-align: end;
+}
+.muted {
+  color: var(--ui-text-2);
+}
+.hint {
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.link {
+  color: var(--ui-accent-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.link:hover {
+  text-decoration: underline;
+}
+.strong {
+  font-weight: 700;
+}
+.danger {
+  color: var(--ui-danger);
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+}
+.rowTrailing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Notices above the sheet (screen only) */
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2) var(--ui-space-3);
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--ui-r-md);
+  font-size: var(--ui-fs-sm);
+}
+.noticeWarning {
+  background: var(--ui-warning-soft);
+  color: var(--ui-text);
+}
+.noticeInfo {
+  background: var(--ui-accent-soft);
+  color: var(--ui-text);
+}
+.noticeText {
+  flex: 1 1 260px;
+  margin: 0;
+}
+
+/* Sheet + side column (desktop), stacked on narrow screens */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: var(--ui-space-4);
+}
+@media (max-width: 1099px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+  min-width: 0;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+}
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ui-space-3);
+}
+.legend {
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+  font-weight: 700;
+}
+.deduction {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px auto;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+.facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--ui-space-1) var(--ui-space-3);
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+}
+.facts dt {
+  color: var(--ui-text-2);
+}
+.facts dd {
+  margin: 0;
+}
+
+/* Sheet details strip */
+.terms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--ui-space-2);
+  margin: 0;
+}
+.term {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-md);
+}
+.term dt {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.term dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Certificate tables (plain, print-friendly) */
+.tableWrap {
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ui-fs-sm);
+}
+.table th,
+.table td {
+  padding: var(--ui-space-2);
+  border-bottom: 1px solid var(--ui-divider);
+  text-align: start;
+  vertical-align: top;
+}
+.table th {
+  border-bottom: 1px solid var(--ui-input-border);
+  color: var(--ui-text-2);
+  font-size: var(--ui-fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.table tfoot td {
+  border-top: 2px solid var(--ui-border);
+  border-bottom: 0;
+  font-weight: 700;
+}
+.num {
+  text-align: end !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wbs {
+  color: var(--ui-text-2);
+  margin-inline-end: var(--ui-space-2);
+}
+.empty {
+  padding: var(--ui-space-4) !important;
+  text-align: center !important;
+  color: var(--ui-text-2);
+}
+.sub {
+  display: block;
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.missing {
+  background: var(--ui-warning-soft);
+}
+.groupHead th {
+  text-align: center;
+  border-bottom: 0;
+}
+.netRow td {
+  font-size: var(--ui-fs-md);
+  font-weight: 700;
+}
+.payable td {
+  border-top: 2px solid var(--ui-accent);
+  font-size: var(--ui-fs-lg);
+  font-weight: 700;
+  color: var(--ui-accent-ink);
+}
+.note {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Signatures */
+.signatures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ui-space-6);
+  padding-top: var(--ui-space-6);
+}
+.sign {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  font-size: var(--ui-fs-sm);
+}
+.signLine {
+  height: 40px;
+  border-bottom: 1px solid var(--ui-text);
+}
+.footnote {
+  margin: 0;
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+
+/* Rates editor */
+.rateInput {
+  width: 120px;
+  min-width: 90px;
+}
+.rateTable th:first-child,
+.rateTable td:first-child {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  min-width: 200px;
+  background: var(--ui-surface);
+}
+.rateTable thead th:first-child {
+  z-index: 2;
+  background: var(--ui-sunken);
+}
+.rateTable td.missing {
+  background: var(--ui-warning-soft);
+}
+
+@media (max-width: 767px) {
+  .toolbar {
+    align-items: stretch;
+  }
+  .filters > * {
+    flex: 1 1 140px;
+  }
+  .filters > .grow {
+    max-width: none;
+  }
+  .signatures {
+    grid-template-columns: 1fr;
+  }
+  .pair {
+    grid-template-columns: 1fr;
+  }
+  .deduction {
+    grid-template-columns: minmax(0, 1fr) 110px auto;
+  }
+  .rateTable th:first-child,
+  .rateTable td:first-child {
+    min-width: 150px;
+  }
+}
+
+/* Paper: black on white, accent rules only. */
+@media print {
+  .layout {
+    display: block;
+  }
+  .table {
+    font-size: 10px;
+  }
+  .table th,
+  .table td {
+    padding: 3px 4px;
+    color: #000;
+    border-color: #999;
+  }
+  .term {
+    border-color: #999;
+    break-inside: avoid;
+  }
+  .missing {
+    background: none;
+  }
+  .payable td {
+    color: #000;
+    border-top-color: #000;
+  }
+  .wbs,
+  .sub,
+  .footnote,
+  .term dt {
+    color: #333;
+  }
+  .signatures {
+    break-inside: avoid;
+  }
+}
