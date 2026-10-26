@@ -231,6 +231,18 @@ Three sub-pages (tabs; Pending shows a count, as does the sidebar item):
   and re-seeds the same type with smart defaults (today, last who); "Save" saves
   and closes. "Repeat last order" copies type, task, unit and who (never photos).
   Side panel: pending approvals (Approve) and today's orders.
+- **Expense details** (last verified 2026-10-26) — machinery (machine type,
+  size, driver, machine hours × rate, driver hours × rate, fuel liters ×
+  price), material (material, quantity, unit, unit price, receipt no.),
+  payroll (employee, salary, advance, advance status) and other expense
+  (expense type) pick their values from the Finance lists (selects with
+  "— Choose —"; a value no longer in the list stays selectable). Machinery,
+  material and payroll show **the amount computed** in a tinted box with the
+  lines it adds up from ("Machine: 6 h × 40,000 = 240,000"; payroll "Salary
+  … / Less advance … (deducted)"); it updates as you type and cannot be
+  typed. Payroll net = salary − advance only for the status `'مستقطع'`. A
+  computed amount of 0 or less blocks saving ("Fill in the fields above…").
+  Fuel and other expenses keep a typed amount.
 - **Photos** (every type, after the spec fields; `ui/PhotoPicker`) — phone:
   *Take photo* (rear camera, `capture="environment"`) and *Gallery* (several);
   desktop: *Add photos*. At most 6; each is compressed first (thumbnail shows
@@ -255,10 +267,31 @@ Three sub-pages (tabs; Pending shows a count, as does the sidebar item):
   `app/useOrderPhotos.js` (ids → `getFilesByIds` → object URLs, revoked on
   change / unmount).
 - **Pending `#/record/pending`** — formal orders still `recorded`.
+- **Warnings, not blocks** (`useDraftWarnings.js` over `orderForm.draftWarnings`)
+  — a complete draft that looks wrong asks first: quantity over what is left on
+  the item's contract (orders awaiting approval count), a likely duplicate (same
+  type, item, date, quantity and who), a date in the future or before the project
+  start, an expense over 10× its type's median. Desktop: a **"Save anyway?"**
+  dialog lists them (*Go back* / *Save anyway*). Phone: the first Save shows them
+  above the Save bar and the button becomes *Save anyway*; changing the draft so
+  the warnings change asks again. Required-field errors stay errors.
+- **Who approves** (`OrderRuleBadges.jsx` `ApproveButton`, `useApproval.jsx`) —
+  Approve shows only when `orderForm.approvalBlock` allows it: never one's own
+  formal order (accounts; compared by `recordedById`, else name) and only roles
+  with `orders.approve` (`useCan`). Otherwise the row says why ("Pending · You
+  recorded it", "Your role cannot approve"; on phones the reason is the badge),
+  and an approve that slips through is refused with a toast. Without accounts the
+  one local user approves as before. New orders carry `recordedById`.
+- **Certificate lock** — an order in an **issued** payment certificate shows
+  "In certificate No. N" (main contract: "In main-contract certificate No. N";
+  phones "Cert. N"; "+1" when two certificates hold it) linking to
+  `#/finance/certificates/:id`, in the row's subtitle and in the log's status
+  column. Delete (and approving again) opens "This order is in an issued
+  certificate" with a link to each certificate instead of deleting.
 
-Rules (unchanged): quick orders are approved on save by the current user;
-formal orders start `recorded`; approving uses the current user's name or asks
-for one (`useApproval.jsx`). Logic: `src/state/orderForm.js`.
+Rules: quick orders are approved on save by the current user; formal orders
+start `recorded`; approving uses the current user's name or asks for one
+(`useApproval.jsx`). Logic: `src/state/orderForm.js`.
 The old Orders screen is archived (`_archive/ui-rebuild/legacy-components/orders/`).
 
 ## Lookahead — `src/app/schedule/LookaheadPage.jsx` (rebuilt in Phase 4)
@@ -317,15 +350,18 @@ whatever the screen theme.
 **Daily `#/reports/daily`** — *Day* (date with previous / next / Today) or
 *Period* (from–to, notes filtered by engineer). Per day: figures (orders, work
 value, expenses, pending), **Site diary** (weather, max temperature, working
-hours; manpower by trade and equipment by type with totals; recorded by),
+hours; manpower by trade and equipment by type with totals; recorded by /
+last edited by),
 **Work done** (quantity orders grouped by item with who did it, valued at the
 contract unit price), **Recorded expenses**, **Visitors** and **Issues** (from
-the diary), a marked slot for the day's photos (roadmap WS8), and **Site
-notes**. A period prints the days with orders, notes or a diary (diary-only
+the diary), **Photos of the day** (`DayPhotos.jsx`: every photo of the day's
+orders, `dayReport().photoIds`, in report order; thumbnails open the viewer; on
+paper 18 mm thumbnails kept together), and **Site notes**. A period prints the days with orders, notes or a diary (diary-only
 days only when no engineer is picked); the day view says when a day has no
 diary. The side column (day view, screen only) holds the **diary card** — the
-day at a glance and *Fill in / Edit the diary* (`record.work`; other roles see
-a read-only line) — and the note form (engineer prefilled from the identity,
+day at a glance with its *Recorded by · Last edited by* stamps and a History
+link, and *Fill in / Edit the diary* (`record.work`; other roles see a
+read-only line) — and the note form (engineer prefilled from the identity,
 optional item, the note). The diary editor is a drawer (a bottom sheet on
 phones): weather chips (tap again to clear), temperature, hours, rows for
 manpower (trade + count), equipment (type + count) and visitors (name,
@@ -354,11 +390,12 @@ legacy sheet had it hardcoded in Arabic).
 a printable `ReportSheet` "as of today": figures (events, delay days with
 overlaps counted once, excusable days, claimed — drafts excluded — granted,
 awaiting decision, notice warnings), the events newest first (title with
-cause, recorded by and affected items; period; days — an open event runs to
+cause, *Recorded by · Last edited by* with a History link, and affected items; period; days — an open event runs to
 today; excusable; notice date with a badge: in time / late notice / no notice
 / due by; claimed / granted; status), totals and signature lines. Filters:
 status and cause (the totals follow them; a badge on the sheet names them). On
-phones the register is a list of cards; paper always gets the table. *New
+phones the register is a list of cards (stamps and History link under each);
+paper always gets the table. *New
 delay*, a row's edit button (or a click on the row / card) open the editor
 drawer (`record.work` only):
 title, cause chips, start / end (empty = ongoing), affected items (task picker
@@ -368,39 +405,125 @@ the 28 days have passed (FIDIC 20.1), status, days claimed, days granted (when
 granted), notes; Delete asks first. A new event records `recordedBy` from
 `currentActor()`. Storage: `utils/Delays.js`; rules: `state/diaryModel.js`.
 
-**Activity `#/reports/activity`** — three views kept in the URL (`?view=task`,
-`?view=heatmap`):
-1. **Feed** — orders, variation orders and app events, newest first; kind
-   chips, date range, recorded-by search, 100 at a time. Expense rows show the
-   category in words.
-2. **Item history** — pick an item → totals (contract vs executed, variance,
+**Activity `#/reports/activity`** — four views kept in the URL (`?view=person`,
+`?view=task`, `?view=heatmap`):
+1. **Feed** — *in a shared project (signed in)*: the server's timeline, i.e.
+   everyone's changes (`getProjectTimeline`), newest first, 100 at a time
+   with *Load older changes*; filters **type** (work orders, expenses,
+   variation orders, plan items, diary, delays, certificates, photos and
+   files, events, or the organization's people / templates / rates), **person**
+   (project members and everyone in the rows) and **dates** (local days, both
+   included). Each row: kind and record, what happened, who, when, *Waiting to
+   sync* / *Not kept* / *Refused* badges, the order's figure and a History
+   link. *Offline or the server can't be read*: a notice, this device's
+   waiting changes, then the local feed below. *No server, local mode or a
+   project only on this device*: the local feed — orders, variation orders
+   and app events, newest first; kind chips, date range, recorded-by search,
+   100 at a time. Expense rows show the category in words, app events their
+   kind in words (payment certificate, project status, project, template);
+   order and variation rows have a History link (stamps in its tooltip).
+2. **By person** — "what did X do": a person (starts on you) and a period
+   (today, last 7 days, last 30 days, dates). Shared project: their changes in
+   the project and the organization's lists, with totals (changes, active
+   days, waiting, not kept) and counts per type. Otherwise the names recorded
+   on this device, with totals per kind.
+3. **Item history** — pick an item → totals (contract vs executed, variance,
    values, entries / approved) and its entries oldest first.
-3. **Heatmap** — approved work value per day over 12 months, Saturday →
+4. **Heatmap** — approved work value per day over 12 months, Saturday →
    Friday weeks, plum ramp (5 steps), a ring on days with orders but no
    approved value; whole project or one contractor; 90-day recorded / empty
    days; click a day for its entries (variation orders only in whole-project
    scope). Opens scrolled to the latest weeks.
 
-Logic: `src/state/reportsModel.js` (diary and delays: `src/state/diaryModel.js`); month / weekday names and the issue stamp:
-`src/app/dates.js`.
+Logic: `src/state/reportsModel.js` (local feed: `filterFeed`, `feedActors`,
+`feedSummary`, `eventKindKey`) and `src/state/historyModel.js` (server
+timeline: `timelineQuery`, `filterTimeline`, `timelineActors`,
+`personSummary`, `periodDays`); the server views are `app/history/Timeline.jsx`
+(+ `timelineHooks.jsx`). Diary and delays: `src/state/diaryModel.js`; month /
+weekday names and the issue stamp: `src/app/dates.js`.
+
+## History — `src/app/history/HistoryPage.jsx`
+
+`#/history/:collection/:id` (collection = the store key, e.g. `pm-orders`; id =
+the record id or its item key, encoded — a diary day is
+`days%2F2026-10-26`). Opened from the **History** buttons
+(`ui/HistoryButton.jsx`: an icon link; with `record` its tooltip and
+accessible name carry the stamps) on order rows (`record/OrderRow.jsx`, so
+also Home, Record, the task panel and task details), Activity rows, the
+certificate toolbar, delay rows and cards, the diary card and people rows.
+- Header: kind of record, its name, and the stamps *Recorded by · Approved
+  by · Issued by · Last edited by* (`ui/HistoryStamps.jsx`; the last editor
+  comes from the server's newest change when it is later than the record's
+  own `updatedBy`).
+- **Signed in, shared project:** every version newest first
+  (`getHistory`; this device's waiting changes on top, marked *Waiting to
+  sync*): what happened (added / changed / deleted / restored / uploaded),
+  who, when, which device (*This device* or a short id), *Not kept* for a
+  version that lost a conflict or was refused (with the reason), *Restored an
+  earlier version*, and the **fields before → after** (`ui/HistoryDiff.jsx`:
+  labelled fields, nested values as *Who › Kind*, lists of records matched by
+  id as *Manpower › Helper › Count*, plain lists as *Added / Removed*, ids
+  shown as names — tasks, contractors, teams, workers, an order's *who* —
+  codes in words and dates as dates; six fields, then *Show N more*). The version in force is marked *Current
+  version*.
+- **Restore this version** (older versions, a deletion — brings the record
+  back — or a version that was not kept): shown when the role may write that
+  version over the current one (the same sync rule as any edit:
+  `historyModel.restoreGate` → `src/sync/rules.checkChange`; e.g. replacing an
+  approved formal order needs `orders.approve`), disabled with the reason
+  otherwise and while offline. It asks first, then `restoreVersion` writes it
+  as a **new** change by you; nothing in the history is removed.
+- **Offline / server unreadable:** a notice and only the changes waiting on
+  this device (with *Try again* when the server failed).
+- **No server, signed out or a project only on this device:** a clear empty
+  state, then *On this device*: the record's own stamps (or that it is no
+  longer here) and the app events logged about it.
 
 ## Finance — `src/app/finance/FinancePage.jsx` (rebuilt in Phase 6)
 
-`#/finance/:ledger` — four ledgers as tabs (machinery, materials, petty cash,
-payroll) plus **Lists**. A totals strip (all ledgers + each one) on top. Each
-ledger: a table with date-range and per-ledger filters (machine type / driver,
-material, expense type, employee), the period total, delete (asks first) and
-Print (only the table prints); the add-record form sits beside it on wide
-screens (≥ 1100 px) and opens in a drawer / bottom sheet otherwise. After a
-save the date and the slow-changing fields stay for fast repeated entry.
-- Machinery total = machine hours × rate + driver hours × rate + fuel liters
-  × price.
-- Payroll net = salary − advance **only when the status is `'مستقطع'`**
-  (stored Arabic data value, deliberately not translated — see quirks).
+(Last verified 2026-10-26.) **Expenses are entered once, as expense orders**
+(Record or here); the ledgers are views over them. `#/finance/:ledger` — four
+ledgers as tabs plus **Lists**:
+
+| Ledger | Shows expense orders of type | "Add" opens |
+|---|---|---|
+| machinery | `machinery` | machinery |
+| materials | `material` | material |
+| petty cash | `other_expense`, `fuel` | other expense |
+| payroll | `payroll` | payroll |
+
+A totals strip (all ledgers + each one; together = every expense order) on
+top. Each ledger: a table with date-range and per-ledger filters on the order
+details (machine type / driver, material, expense type, employee), the
+period total, delete (`finance.edit`; the order delete dialog, its photos go
+too) and Print (only the table prints). **Add** (`finance.edit`) is the
+Record screen's order form for that type (`OrderForm`, photos included),
+beside the table on wide screens (≥ 1100 px) and in a drawer / bottom sheet
+otherwise; it says "Saved as an expense order — it shows in the order log
+too". After a save the date and the slow-changing fields stay (machine type,
+size, driver, rates, fuel price; material, unit, unit price; expense type;
+advance status). Rows of moved orders also show the old machine name /
+badge and the old free-text quantity.
+- **The old ledger** (`project-manager-finance-data`) — until it is moved, a
+  yellow notice: "The old finance ledger is not in these tables yet … holds N
+  records (total)". **Review the move** (`finance.edit`; others read "Someone
+  who can edit finance can move them") opens the dry run: per ledger the old
+  records and total, already moved, to move and the amount; then **Download
+  backup and move N** downloads `project-backup-before-finance-migration-….json`
+  (if the backup fails nothing moves), adds one approved expense order per
+  record (original date and amount, `source: 'finance-migration'`) and sets
+  the migrated flag. After: "The old ledger was moved into expense orders on
+  {date} by {name} (N records). It is kept, read-only." with **Compare the old
+  ledger with its orders** (old records / total vs orders / total per ledger).
+  Records added to the old ledger later (an old app version, another device)
+  show "N records were added … since" and **Move N more**; nothing is ever
+  moved twice and a moved order deleted since is not brought back. The old
+  key is never deleted.
 - **Lists** — the dropdown values (machine types and sizes, employees,
-  materials, expense types, advance statuses): add / remove; they are user
-  data and stay as entered.
-Storage: `utils/Finance.js`; rules: `src/state/financeModel.js`.
+  materials, expense types, advance statuses) the expense order details pick
+  from: add / remove; they are user data and stay as entered.
+Storage: `utils/Finance.js` (old ledger + lists), orders `utils/OrderEngine.js`;
+rules: `src/state/financeModel.js`.
 
 ### Payment certificates (الذرعات) — `src/app/finance/Certificate*.jsx`
 
@@ -424,8 +547,9 @@ run per kind and contractor.
   contractor has orders but no rate is marked "needs a rate". Below: the
   default terms (retention %, retention limit, main-contract advance, advance
   recovery %, currency label). Fields save when left (Enter too).
-- **Certificate `#/finance/certificates/:id`** (`CertificatePage.jsx`) — a
-  printable `ReportSheet`: who it is for, number, terms, orders counted; **Work
+- **Certificate `#/finance/certificates/:id`** (`CertificatePage.jsx`) — the
+  toolbar shows *Recorded by · Issued by · Last edited by* and a History link
+  (screen only); a printable `ReportSheet`: who it is for, number, terms, orders counted; **Work
   done** per item — quantity and amount, each previous / this period / to date,
   × the rate ("No rate" lines are flagged and left out); **Summary** — gross,
   less retention, less advance recovery (with the advance left), less other
@@ -453,6 +577,7 @@ run per kind and contractor.
   manual; *Auto* resets it.
 - Deleting asks first; deleting a worker says how many teams use them and
   automatic teams resize. Rules: `src/state/peopleModel.js`.
+- Each row (and team card) has a **History** link (`#/history/pm-registries/<list>%2F<id>`).
 
 ## Settings — `src/app/settings/SettingsPage.jsx` (rebuilt in Phase 6)
 
@@ -464,7 +589,9 @@ run per kind and contractor.
   lifecycle actions are.
 - **Backup & restore** — full JSON backup / restore incl. uploaded files
   (`useBackupRestore.jsx`, shared with the Schedule's More menu). Restore
-  downloads a safety backup of the current data first. The "Browser storage"
+  downloads a safety backup of the current data first. Signed in to a server,
+  its confirm also says the restored data will be sent to the server as edits
+  by you, recorded in the history. The "Browser storage"
   row shows whether the browser may clear the data (Protect asks again).
   Under it, the storage meter (`utils/StoragePersistence.getStorageUsage`):
   *Space used on this device* (the browser's quota for the app, shown when

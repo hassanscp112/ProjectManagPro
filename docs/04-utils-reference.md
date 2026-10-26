@@ -1,7 +1,7 @@
 # 04 — Utils Reference (the engines)
 
 `ProjectManagerApp/src/utils/` — pure logic + localStorage persistence.
-(Planning sections last verified 2026-10-26.) **No React here.** All modules are plain ES modules; most are covered by
+(Planning and history sections last verified 2026-10-26.) **No React here.** All modules are plain ES modules; most are covered by
 tests in `__tests__/` (run: `npm test` from `ProjectManagerApp/`).
 
 Dependency order (leaf → top):
@@ -53,8 +53,21 @@ Constants:
 Functions:
 - `loadOrdersData()` / `saveOrdersData(data)` / `addOrder(order)` / `updateOrder(id, patch)` / `deleteOrder(id)`
 - `approveOrder(id, approverName)` → sets `status:'approved'` + `approvedBy`
-- `createOrderDraft(type, options)` — new draft with smart defaults (date, last who)
+- `createOrderDraft(type, options)` — new draft with smart defaults (date, last who); expense types also get their detail keys as `''`
+- `addOrders(list)` — append several orders in one write (the finance migration); leaves `lastWhoByType` alone
 - `normalizeWhoForSave(who)` — cleans the who object before persisting
+- **Expense details** (last verified 2026-10-26): field kinds `choice` (a
+  value from the finance list `list`), `measure` (a number; `money` or
+  `unitKey`) and `computed` (the amount, read-only); `detail: true` fields go
+  into `order.details`. `EXPENSE_FIELD_KINDS`, `DEDUCTED_STATUS` (`'مستقطع'`,
+  data), `hasComputedAmount(type)`, `expenseBreakdown(type, values)` →
+  `{ amount, parts: [{ labelKey, qty, rate, unitKey, unit, total }] }` (payroll:
+  `{ amount, salary, advance, deducted }`) or null for typed amounts —
+  machinery = hours × rate + driver hours × rate + liters × price, material =
+  qty × unit price, payroll = salary − advance only when deducted;
+  `expenseDetails(draft, spec)` (numbers as numbers, empties dropped) and
+  `expenseFieldMissing(field, draft)` — the two hooks `state/orderForm.js`
+  calls. Tests: `state/__tests__/expenseOrders.test.js`.
 - **Aggregation (used by GanttEngine):**
   - `sumValueOrdersByTask(orders)` → `Map<taskId, {total, formalQty, quickQty, orderCount}>` — approved value orders only
   - `sumExpenses(orders, range?)` → `{total, byCategory}`
@@ -64,6 +77,22 @@ Functions:
 - ID: `createOrderId()`
 
 Tests: `orderEngine.test.js`.
+
+`state/orderForm.js` (pure, the Record screens' rules): `missingRequiredFields`,
+`buildOrderFromDraft(draft, spec, { tasks, userName, recordedById, id, now, evidence })`
+(stamps `recordedById`, null without accounts), filters / KPIs, and:
+- **`draftWarnings(draft, { orders, tasks, projectStart, today })`** → `[{ code, … }]`,
+  never a block (the screens ask "Save anyway?"): `'duplicate'` `{ orderId }` (same type,
+  item, work date, quantity or amount, who, location / sample / depth), `'overLeft'`
+  `{ qty, left, pending, unit }` (contract − executed − value orders awaiting approval;
+  `tasks` = the engine's computed tasks), `'amountOutlier'` `{ amount, median }` (over
+  `OUTLIER_FACTOR` = 10 × the median of the type's earlier amounts, from
+  `OUTLIER_MIN_SAMPLES` = 3 of them), `'futureDate'` `{ today }`, `'beforeStart'` `{ start }`.
+- **`approvalBlock(order, actor, { certified })`** → `null` | `'certified'` | `'role'`
+  (no `orders.approve`) | `'own'` (`canApproveRecord`: the recorder).
+- **`orderLock(order, certificatesByOrder())`** → the issued certificates holding it, or null.
+
+Tests: `state/__tests__/orderForm.test.js`.
 
 ---
 
@@ -260,6 +289,7 @@ storage. Tests: `criticalPath.test.js`, `engineParity.test.js`.
 - `logAppEvent({actor, kind, summary, refType, refId, payload})` — call from anywhere
 - `loadAppEvents()` / `saveAppEvents(list)`
 - `buildUnifiedFeed({orders, variations, appEvents})` — merged, newest-first feed entries
+  (event kinds in words: `state/reportsModel.eventKindKey`)
 - `formatDiff(before, after)` — value-change formatting
 - `orderValueInIQD(order, tasks)` — money value of an order for heatmap weighting
 
@@ -294,6 +324,8 @@ write calls `notifyStoreChange`. The line math lives in
   `saveSettings(patch)`, `setRate(contractorId, taskId, rate)` (`''` clears)
 - **`certifiedOrderIds(doc?)`** → `Set` of order ids in issued certificates (for the
   order lock); `certificatesByOrder(doc?)` → `Map` orderId → `[{ id, number, kind, contractorId }]`
+  (the Record screens read it through `app/record/useOrderCertificates.js`, one map
+  for all rows, rebuilt when `pm-certificates` changes)
 
 `state/certificateModel.js` (pure): `eligibleOrders(orders, cert)`,
 `rateFor(kind, contractorId, taskId, task, rates)` (null = missing),
@@ -400,10 +432,18 @@ No storage, no imports. Excel-style evaluation for calculator rows:
 
 - `CalculatorTemplates.js`: `loadCalcTemplates()` (drops malformed grids),
   `saveCalcTemplates(list)` — key `pm-calculator-templates`.
-- `Finance.js`: `LEDGERS`, `DEFAULT_FINANCE_CONFIG`, `loadFinanceData()` /
-  `saveFinanceData()` (`project-manager-finance-data`), `loadFinanceConfig()`
-  (stored lists over the defaults) / `saveFinanceConfig()`
-  (`project-manager-finance-config`). Record shapes: `state/financeModel.js`.
+- `Finance.js` (last verified 2026-10-26): `LEDGERS`, `DEFAULT_FINANCE_CONFIG`,
+  `loadFinanceData()` — the **old ledger, read-only** (`project-manager-finance-data`;
+  nothing writes its records any more), `loadFinanceMigration()` /
+  `saveFinanceMigration(flag)` — the migrated flag beside it (writes only
+  `migration`, never touches the records, leaves an unreadable value alone,
+  announces the store), `loadFinanceConfig()` (stored lists over the defaults)
+  / `saveFinanceConfig()` (`project-manager-finance-config` — the lists expense
+  order details pick from). The ledgers' rules and the migration plan:
+  `state/financeModel.js` (`ledgerOrders`, `filterLedger`, `financeTotals`,
+  `draftAfterSave`, `planFinanceMigration`, `legacyRecordToOrder`,
+  `migrationFlag`, `migrationCheck`). Tests: `state/__tests__/financeModel.test.js`,
+  `utils/__tests__/financeStore.test.js`.
 - `Theme.js`: `THEMES = ['light','dark','system']`, `loadTheme()` (default
   `'light'`), `saveTheme()`, `applyTheme()` (sets `<html data-theme>`, or
   removes it for `'system'`) — key `pm-theme`.
@@ -502,6 +542,24 @@ migrations in PGlite with `npm run test:db`.
 
 React hooks for screens: `app/account/useAccount.js` (`useSession`,
 `useServerConfig`, `useSyncStatus`, `usePlanEpoch`).
+
+**History screens** read `history.js` only; their rules are pure in
+`state/historyModel.js` (tested in `state/__tests__/historyModel.test.js`):
+`diffFields(before, after, { hidden })` → `[{ path, segments, change:
+'added'|'removed'|'changed', before, after, list? }]` (nested values per leaf,
+record lists matched by `id` / `taskId` / `key`, plain lists with `list: {
+added, removed }`, the id and bookkeeping in `HIDDEN_FIELDS` left out);
+`valueText(value, words)` (yes / no, numbers, dates, records by name);
+`recordStamps(record, { last })` → `[{ kind: 'recorded'|'approved'|'issued'|'edited',
+name, at }]` (a newest row that is the first version is not an edit); `lastChange(rows)`; `restorePayload(row)` / `restoreGate({ row,
+rows, current, actor })` (the same `checkChange` the sync engine uses);
+`timelineQuery(filters)` → `getProjectTimeline` arguments (local days → ISO
+bounds), `filterTimeline` (order family, variation orders, pending rows'
+person and dates), `timelineActors`, `personSummary`, `periodDays`,
+`localDay`, `historyHref`, `splitItemId`, `recordName`, `COLLECTION_KEYS`.
+Hooks: `app/history/timelineHooks.jsx` (`useServerHistory`, `useMembers`,
+`useTimeline`, `usePeriod`), `app/history/useLastChange.js`,
+`app/history/useCurrentRecord.js`.
 
 ---
 

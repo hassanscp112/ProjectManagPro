@@ -1,10 +1,10 @@
-import { FilePen, History, X } from 'lucide-react';
+import { FilePen, History, Users, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { compactCurrency, formatNumber } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
 import { useProject } from '../../state/projectContext.js';
-import { dayStats, filterFeed, gapRadar, heatBucket, heatCalendar, taskStoryTotals } from '../../state/reportsModel.js';
+import { dayStats, eventKindKey, feedActors, feedSummary, filterFeed, gapRadar, heatBucket, heatCalendar, taskStoryTotals } from '../../state/reportsModel.js';
 import { buildUnifiedFeed, formatDiff } from '../../utils/ActivityLog.js';
 import { resolveWhoLabel, todayStr } from '../../utils/OrderEngine.js';
 import {
@@ -23,10 +23,14 @@ import {
   TaskPicker,
   cx,
 } from '../../ui/index.js';
+import { HistoryButton } from '../../ui/HistoryButton.jsx';
 import { ltr } from '../bidi.js';
 import { shortMonthLabel } from '../dates.js';
+import { ServerFeed, ServerPerson } from '../history/Timeline.jsx';
+import { usePeriod, useServerHistory } from '../history/timelineHooks.jsx';
 import { Page } from '../Page.jsx';
 import { TYPE_ICONS, formatDay, formatTime, orderFigure, orderSubject } from '../record/orderMeta.js';
+import { useActor } from '../useCan.js';
 import s from './Activity.module.css';
 
 const PAGE = 100;
@@ -55,8 +59,10 @@ function FeedRow({ entry }) {
   const Icon = o ? TYPE_ICONS[o.type] : v ? FilePen : History;
   const subject = o ? orderSubject(o) : v ? `${v.taskWbs || ''} ${v.taskName || ''}`.trim() : '';
   const who = o ? resolveWhoLabel(o.who, registries) : '';
-  // Orders: their note, else the expense category in words (not its code).
-  const note = o ? o.details?.note || (o.category ? (CATEGORY_KEYS[o.category] ? t(CATEGORY_KEYS[o.category]) : o.category) : '') : entry.subtitle;
+  // Orders: their note, else the expense category in words (not its code);
+  // variation orders: the reason; events: their kind in words.
+  const kindKey = entry.kind === 'event' ? eventKindKey(entry.payload.event?.kind) : '';
+  const note = o ? o.details?.note || (o.category ? (CATEGORY_KEYS[o.category] ? t(CATEGORY_KEYS[o.category]) : o.category) : '') : kindKey ? t(kindKey) : entry.subtitle;
   const when = `${formatDay(entry.date)}${entry.at && entry.at.length > 10 ? ` · ${formatTime(entry.at)}` : ''}`;
   return (
     <ListRow
@@ -75,9 +81,13 @@ function FeedRow({ entry }) {
             <StatusBadge tone={o.status === 'approved' ? 'success' : 'warning'}>
               {o.status === 'approved' ? t('common.approved') : t('common.recorded')}
             </StatusBadge>
+            <HistoryButton collection="pm-orders" itemId={o.id} name={subject || entry.title} record={o} />
           </>
         ) : v ? (
-          <span className={s.figure}>{ltr(formatDiff(v.oldValue, v.newValue))}</span>
+          <>
+            <span className={s.figure}>{ltr(formatDiff(v.oldValue, v.newValue))}</span>
+            <HistoryButton collection="project-manager-project-meta" itemId={`variations/${v.id}`} name={subject || entry.title} />
+          </>
         ) : null
       }
     />
@@ -135,6 +145,59 @@ function FeedView({ feed }) {
         <div className={s.more}>
           <Button onClick={() => setShown((n) => n + PAGE)}>{t('activity.loadMore', { n: formatNumber(filtered.length - shown) })}</Button>
         </div>
+      )}
+    </>
+  );
+}
+
+/**
+ * "What did X do" from this device's feed (no server, or offline): the
+ * names recorded here, one person's entries in a period and their totals.
+ */
+function LocalPersonView({ feed }) {
+  const { t } = useI18n();
+  const me = useActor();
+  const people = useMemo(() => feedActors(feed), [feed]);
+  const [person, setPerson] = useState(() => (people.includes(me.name) ? me.name : ''));
+  const { range, picker } = usePeriod();
+  const entries = useMemo(() => (person ? filterFeed(feed, { person, from: range.from, to: range.to }) : []), [feed, person, range.from, range.to]);
+  const summary = feedSummary(entries);
+  return (
+    <>
+      <p className={s.intro}>{t('activity.personLocalHint')}</p>
+      <div className={s.filterRow}>
+        <Field label={t('activity.personLabel')}>
+          <Select value={person} onChange={(e) => setPerson(e.target.value)}>
+            <option value="">—</option>
+            {people.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        {picker}
+      </div>
+      {!person ? (
+        <EmptyState icon={Users} title={t('activity.pickPerson')} />
+      ) : entries.length === 0 ? (
+        <EmptyState icon={Users} title={t('activity.personEmpty', { name: person })} />
+      ) : (
+        <>
+          <div className={s.stats}>
+            <StatCard compact label={t('activity.statChanges')} value={formatNumber(summary.total)} />
+            <StatCard compact label={t('activity.statDays')} value={formatNumber(summary.days)} />
+            <StatCard
+              compact
+              label={t('activity.statOrders')}
+              value={formatNumber(summary.orders)}
+              footer={summary.orders > 0 ? `${t('activity.chipValue')} ${formatNumber(summary.value)} · ${t('activity.chipExpense')} ${formatNumber(summary.expense)}` : undefined}
+            />
+            <StatCard compact label={t('activity.statVariations')} value={formatNumber(summary.variations)} />
+            <StatCard compact label={t('activity.statEvents')} value={formatNumber(summary.events)} />
+          </div>
+          <FeedList entries={entries} empty={t('activity.feedEmpty')} />
+        </>
       )}
     </>
   );
@@ -320,16 +383,21 @@ function HeatmapView() {
   );
 }
 
-const VIEWS = ['feed', 'task', 'heatmap'];
+const VIEWS = ['feed', 'person', 'task', 'heatmap'];
 
 /**
- * /reports/activity — the audit trail: every order, variation order and app
- * event (filterable), one item's whole story, and the activity heatmap.
+ * /reports/activity — the audit trail: everything recorded (filterable),
+ * what one person did, one item's whole story, and the activity heatmap.
+ * In a shared project (signed in) the feed and "by person" come from the
+ * server's history — everyone's changes, by type, person and date; with
+ * no server, offline or when the server can't be read, from this
+ * device's orders, variation orders and app events.
  * The view is kept in the URL (?view=heatmap).
  */
 export default function ActivityPage() {
   const { t, lang } = useI18n();
   const { orders, projectMeta, appEvents } = useProject();
+  const server = useServerHistory();
   const [params, setParams] = useSearchParams();
   const view = VIEWS.includes(params.get('view')) ? params.get('view') : 'feed';
   const feed = useMemo(
@@ -348,11 +416,13 @@ export default function ActivityPage() {
         onChange={(v) => setParams(v === 'feed' ? {} : { view: v }, { replace: true })}
         options={[
           { value: 'feed', label: t('activity.tabFeed') },
+          { value: 'person', label: t('activity.tabPerson') },
           { value: 'task', label: t('activity.tabTask') },
           { value: 'heatmap', label: t('activity.tabHeatmap') },
         ]}
       />
-      {view === 'feed' && <FeedView feed={feed} />}
+      {view === 'feed' && (server ? <ServerFeed fallback={<FeedView feed={feed} />} /> : <FeedView feed={feed} />)}
+      {view === 'person' && (server ? <ServerPerson fallback={<LocalPersonView feed={feed} />} /> : <LocalPersonView feed={feed} />)}
       {view === 'task' && <TaskView />}
       {view === 'heatmap' && <HeatmapView />}
     </Page>

@@ -360,3 +360,15 @@ single-device app exactly as above. With one (Supabase, address in
   the server's append-only `changes`; `src/sync/history.js` reads it
   (`getHistory`, `getProjectTimeline`) and `restoreVersion` writes an old
   version as a new change.
+- **History screens** (the only readers of that API):
+  `#/history/:collection/:id` (`app/history/HistoryPage.jsx`) shows one
+  record's versions with field diffs and *Restore this version*; the Activity
+  feed and *By person* (`app/history/Timeline.jsx`) read
+  `getProjectTimeline` when signed in and the project is shared, and fall
+  back to the local feed (orders, variation orders, `pm-activity`) with no
+  server, offline or when the server can't be read. Entry points:
+  `ui/HistoryButton.jsx` (icon link) and `ui/HistoryStamps.jsx`
+  ("recorded / approved / issued / last edited by", the last editor from
+  `app/history/useLastChange.js`). Rules (diff, stamps, restore gate,
+  timeline filters) are pure in `state/historyModel.js`; the restore gate is
+  `src/sync/rules.checkChange`, so the button and the server agree.

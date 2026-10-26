@@ -113,4 +113,6 @@ export default {
   'reports.goRecord': 'Record an order',
   'reports.noActivityRange': 'No orders or notes in this period.',
   'reports.summaryNote': 'Headline figures are as of today; the tables below cover the selected month.',
+  'reports.dayPhotos': 'Photos of the day',
+  'reports.dayPhotosCount': 'Photos: {n}',
 };

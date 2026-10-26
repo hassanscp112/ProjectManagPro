@@ -1,0 +1,20 @@
+/* The computed amount of an expense order (machinery, material, payroll). */
+.computed {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-accent-soft);
+}
+.amount {
+  font-size: var(--ui-fs-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-accent-ink);
+}
+.line {
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+  font-variant-numeric: tabular-nums;
+}

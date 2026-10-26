@@ -299,3 +299,83 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Order rules: warnings, who may approve, certificate lock ── */
+.warnList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  margin: 0;
+  padding-inline-start: var(--ui-space-5);
+  font-size: var(--ui-fs-sm);
+}
+.warnBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  margin-bottom: var(--ui-space-3);
+  padding: var(--ui-space-3);
+  border: 1px solid var(--ui-warning);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-warning-soft);
+  color: var(--ui-text);
+  max-height: 40dvh;
+  overflow-y: auto;
+}
+.warnHead {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  margin: 0;
+  font-weight: 600;
+  color: var(--ui-warning);
+}
+.blocked {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.blockReason {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+  white-space: nowrap;
+}
+.certLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--ui-space-2);
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-ink);
+  font-size: var(--ui-fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.certLink:hover {
+  text-decoration: underline;
+}
+.rowCert {
+  margin-inline-start: var(--ui-space-2);
+  vertical-align: middle;
+}
+.lockedIn {
+  margin: 0 0 var(--ui-space-2);
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.lockedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  margin: 0;
+  padding-inline-start: var(--ui-space-5);
+}
+.statusCell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+}

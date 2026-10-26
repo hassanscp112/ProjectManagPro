@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Check, RotateCcw } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Camera, Check, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useI18n } from '../../i18n/useI18n.js';
@@ -10,6 +10,7 @@ import { useShell } from '../shellContext.js';
 import OrderForm from './OrderForm.jsx';
 import OrderTypeCards from './OrderTypeCards.jsx';
 import { orderFigure, orderSubject, savedMessage, typeLabel } from './orderMeta.js';
+import { useDraftWarnings } from './useDraftWarnings.js';
 import { draftFromNavigation, useOrderEntry } from './useOrderEntry.js';
 import s from './Record.module.css';
 
@@ -32,6 +33,12 @@ export default function PhoneRecordFlow() {
   const entry = useOrderEntry(prefill);
   const [step, setStep] = useState(prefill ? 'form' : 'type');
   const [saved, setSaved] = useState(null);
+  // Warnings never block: the first Save shows them above the Save bar,
+  // which then reads "Save anyway"; changing the draft so they change asks again.
+  const warnings = useDraftWarnings(entry.draft);
+  const [warnedKey, setWarnedKey] = useState(null);
+  const showWarnings = warnedKey !== null && warnings.list.length > 0;
+  const warned = showWarnings && warnedKey === warnings.key;
 
   useEffect(() => {
     setImmersive(step !== 'type');
@@ -46,11 +53,13 @@ export default function PhoneRecordFlow() {
   const open = (draftOrType) => {
     if (typeof draftOrType === 'string') entry.start(draftOrType);
     else entry.startFrom(draftOrType);
+    setWarnedKey(null);
     setStep('form');
   };
 
   const backToTypes = () => {
     entry.clear();
+    setWarnedKey(null);
     setStep('type');
   };
 
@@ -118,9 +127,14 @@ export default function PhoneRecordFlow() {
         noValidate
         onSubmit={async (e) => {
           e.preventDefault();
+          if (entry.missing.length === 0 && warnings.list.length > 0 && !warned) {
+            setWarnedKey(warnings.key);
+            return;
+          }
           const order = await entry.save();
           if (!order) return;
           toast({ title: savedMessage(t, order) });
+          setWarnedKey(null);
           setSaved(order);
           setStep('done');
         }}
@@ -138,8 +152,21 @@ export default function PhoneRecordFlow() {
         </div>
         <OrderForm entry={entry} size="lg" />
         <div className={s.saveBar}>
+          {showWarnings && (
+            <div className={s.warnBox} role="alert">
+              <p className={s.warnHead}>
+                <AlertTriangle size={18} aria-hidden="true" />
+                {t('record.warnTitle')}
+              </p>
+              <ul className={s.warnList}>
+                {warnings.list.map((w) => (
+                  <li key={w.code}>{w.text}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <Button variant="primary" size="lg" block type="submit" disabled={saving || photosBusy} aria-busy={saving || undefined}>
-            {saving ? t('record.saving') : photosBusy ? t('record.photosPreparing') : t('record.save')}
+            {saving ? t('record.saving') : photosBusy ? t('record.photosPreparing') : warned ? t('record.saveAnyway') : t('record.save')}
           </Button>
         </div>
       </form>

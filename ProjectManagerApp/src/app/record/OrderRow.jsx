@@ -2,15 +2,18 @@ import { useI18n } from '../../i18n/useI18n.js';
 import { useProject } from '../../state/projectContext.js';
 import { resolveWhoLabel } from '../../utils/OrderEngine.js';
 import { Trash2 } from 'lucide-react';
-import { Button, IconButton, ListRow, StatusBadge, cx } from '../../ui/index.js';
+import { IconButton, ListRow, StatusBadge, cx } from '../../ui/index.js';
+import { HistoryButton } from '../../ui/HistoryButton.jsx';
 import { OrderPhotosButton } from './OrderPhotos.jsx';
 import { TYPE_ICONS, formatDay, formatTime, orderFigure, orderSubject, typeLabel } from './orderMeta.js';
+import { ApproveButton, CertificateBadge } from './OrderRuleBadges.jsx';
 import s from './Record.module.css';
 
 /**
- * One order as a list row: type icon, "type · subject", who and when,
- * then the figure, a camera button when it has photos, and either an
- * Approve button (pending formal orders) or its status.
+ * One order as a list row: type icon, "type · subject", who and when
+ * (plus "In certificate No. N" when an issued certificate holds it), then
+ * the figure, a camera button when it has photos, and either an Approve
+ * button (pending formal orders; or why this user may not) or its status.
  * onApprove omitted → status only; onDelete adds a delete button.
  */
 export default function OrderRow({ order, onApprove, onDelete, showDate = true, flush = true }) {
@@ -30,18 +33,22 @@ export default function OrderRow({ order, onApprove, onDelete, showDate = true, 
         </span>
       }
       title={subject ? `${typeLabel(order.type)} · ${subject}` : typeLabel(order.type)}
-      subtitle={[who !== '—' ? who : null, when].filter(Boolean).join(' · ')}
+      subtitle={
+        <>
+          {[who !== '—' ? who : null, when].filter(Boolean).join(' · ')}
+          <CertificateBadge order={order} className={s.rowCert} />
+        </>
+      }
       trailing={
         <>
           <span className={s.figure}>{orderFigure(order, lang)}</span>
           <OrderPhotosButton order={order} />
           {pending && onApprove ? (
-            <Button size="sm" variant="outline" onClick={() => onApprove(order)}>
-              {t('common.approve')}
-            </Button>
+            <ApproveButton order={order} onApprove={onApprove} />
           ) : pending ? (
             <StatusBadge tone="warning">{t('common.pending')}</StatusBadge>
           ) : null}
+          <HistoryButton collection="pm-orders" itemId={order.id} name={subject || typeLabel(order.type)} record={order} />
           {onDelete && <IconButton icon={Trash2} label={t('orders.deleteOrder')} size="sm" onClick={() => onDelete(order)} />}
         </>
       }

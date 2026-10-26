@@ -45,7 +45,8 @@ export const createProject = async (page, name) => {
     await page.waitForTimeout(300); // the next step renders
   }
   await click(create);
-  await page.waitForURL(/#\/schedule/);
+  // Generating the plan on a cold dev server (first test of a run, busy machine) can pass 30 s.
+  await page.waitForURL(/#\/schedule/, { timeout: 60_000 });
   const task = await page.evaluate(() => {
     const key = Object.keys(localStorage).find((k) => k.endsWith(':project-manager-gantt-tasks'));
     const tasks = JSON.parse(localStorage.getItem(key) || '[]');

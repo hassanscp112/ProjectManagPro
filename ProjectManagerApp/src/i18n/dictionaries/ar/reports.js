@@ -113,4 +113,6 @@ export default {
   'reports.goRecord': 'تسجيل أمر',
   'reports.noActivityRange': 'لا أوامر ولا ملاحظات في هذه الفترة.',
   'reports.summaryNote': 'الأرقام الرئيسية كما هي اليوم؛ الجداول أدناه تخص الشهر المختار.',
+  'reports.dayPhotos': 'صور اليوم',
+  'reports.dayPhotosCount': 'عدد الصور: {n}',
 };

@@ -1,6 +1,6 @@
 # 03 — Data Model: Where Every Byte Lives
 
-<!-- Planning sections (task links, meta.planning) last verified 2026-10-26. -->
+<!-- Planning sections (task links, meta.planning) and history (§9, §14) last verified 2026-10-26. -->
 There is **no server and no database**. Everything is stored in the browser:
 
 - **localStorage** — all structured data (20 keys, listed first)
@@ -59,7 +59,7 @@ There is **no server and no database**. Everything is stored in the browser:
 |---|-----|-------|--------------|---------------|
 | 1 | `project-manager-gantt-tasks` | P | ProjectProvider | Task tree (raw array) |
 | 2 | `project-manager-project-meta` | P | ProjectProvider | status / baseline / variations |
-| 3 | `project-manager-finance-data` | P | Finance | cost ledger entries |
+| 3 | `project-manager-finance-data` | P | Finance | old cost ledger (read-only since expenses are orders) + migrated flag |
 | 4 | `project-manager-finance-config` | P | Finance | editable dropdown lists |
 | 5 | `pm-calculator-templates` | P | CalculatorTemplates | BOQ calculator templates |
 | 6 | `project-manager-daily-reports` | P | DailyNotes | daily site notes |
@@ -230,10 +230,35 @@ this calendar (`utils/planning/WorkCalendar.js`). Resources:
   status: 'recorded' | 'approved',   // quick orders are born approved
   approvedBy,
   recordedAt: 'ISO', recordedBy,
+  recordedById,                // the recorder's account id (currentActor().id); null without accounts
   details,
   evidence: [fileId, …],       // photo ids in IndexedDB (folder 'order_photos'), [] when none
 }
 ```
+
+**Expense details** (last verified 2026-10-26). Expense orders are the one
+place expenses are entered; the Finance ledgers are views over them. Their
+structured fields sit in `details` (same keys as the form draft; numbers
+stored as numbers, empty fields left out); `amount` / `category` stay as
+before, so EVM, reports and certificates read them unchanged.
+
+| Type | `details` keys | `amount` |
+|---|---|---|
+| `machinery` | `machineType`, `machineSize`, `driver` (finance lists), `machineHours`, `machineRate`, `driverHours`, `driverRate`, `fuelLiters`, `fuelPrice` | computed: hours × rate + driver hours × rate + liters × price |
+| `material` | `material` (list), `materialQty`, `materialUnit`, `unitPrice`, `receipt` | computed: qty × unit price |
+| `payroll` | `employee` (list), `salary`, `advance`, `payStatus` (list) | computed: salary − advance **only when `payStatus === 'مستقطع'`** (a stored data value, quirk #4), else salary |
+| `other_expense` | `expenseType` (list) | typed |
+| `fuel` | — | typed |
+
+Orders moved from the old finance ledger also carry `source:
+'finance-migration'`, `sourceLedger` (machinery / materials / pettyCash /
+payroll), `sourceId` (the old record's id) and `migratedAt`; their id is
+`fin-<ledger>-<old id>` (the same on every device). They keep the old
+date, are `approved`, `recordedBy` = the old record's author or the
+migrating user, and `recordedAt` = the old id's timestamp. Old-only fields
+stay in `details`: machinery `machineName`, `badge`; materials
+`quantityText` (the old free-text quantity, e.g. "150 م3") and `note`
+(the old "details" text).
 
 **Photo evidence.** Photos picked on the Record form are compressed
 (`utils/ImageCompress`: JPEG, longest side 1600 px, quality 0.8) and stored
@@ -243,6 +268,19 @@ the order is saved with `evidence: []` and a warning toast. Deleting an order
 deletes its photos (`deleteFiles(order.evidence)`); deleting a photo in
 Files → *Order photos* removes its id from the order. "Repeat last order"
 never copies photos.
+
+**Order rules** (nothing extra is stored; `state/orderForm.js`):
+- *Warnings* before saving (over the contract, likely duplicate, future date,
+  before the project start, an expense far above its type's median) only ask
+  "Save anyway?"; the order is stored as usual.
+- *Approving*: nobody approves their own formal order once accounts exist —
+  compared by `recordedById`, else by `recordedBy` name (orders from before
+  accounts). Without accounts (`currentActor().id` null) the one local user
+  approves everything, as before. The server enforces the same rule with its
+  own `items.recorded_by`.
+- *Certificate lock*: an order whose id is in an **issued** certificate's
+  `orderIds` (§13, `certificatesByOrder()`) is not deleted or approved again;
+  the Record screens refuse with the certificate's number and a link.
 
 ---
 
@@ -369,6 +407,13 @@ orders + variations (from project-meta) + these app events —
 `{id, at, date, actor, kind: 'order'|'variation'|'event', family, title,
 subtitle, tone, refTaskId, payload}`.
 
+Event `kind` values written today: `'certificate'` (issued), `'lifecycle'`
+(sign-off, status), `'project'` (created / copied), `'template'` (generated
+from a template). The feed shows them in words (`reportsModel.eventKindKey` →
+`activity.kind.*`; any other kind shows as a plain event). This local feed is
+the Activity screen's source with no server, offline, or in a project only on
+this device; in a shared project it reads the server's `changes` instead (§14).
+
 ---
 
 ## 10. Calculator & reports & finance keys
@@ -377,8 +422,8 @@ subtitle, tone, refTaskId, payload}`.
 |-----|-------|
 | `pm-calculator-templates` | `[{ id, name, columns: [{ id, label, source: 'input'\|'design'\|'formula', formula }], rows: [{ …, values: { [colId]: number } }] }]` |
 | `project-manager-daily-reports` | site notes `[{ id, date, engineer, taskId, taskName, taskWbs, details, timestamp, quantity? }]` — the manual part of the daily report (the "work done" part is derived live from orders). `quantity` exists only on notes written before Phase 5 and is shown read-only; new notes don't record quantities |
-| `project-manager-finance-data` | ledger rows per tab (machinery / materials / petty cash / payroll). Payroll status `'مستقطع'` is a stored data value — see quirks doc |
-| `project-manager-finance-config` | editable dropdown option lists for the finance forms |
+| `project-manager-finance-data` | **the old ledger, read-only** (expenses are expense orders now): rows per tab `{ machinery, materials, pettyCash, payroll }` (old record shapes: machinery `{ id, date, machineName, machineType, machineSize, badge, machineHours, machineRate, machineTotal, operator, driverHours, driverRate, driverTotal, fuelLiters, fuelPrice, fuelTotal, totalPrice }`, materials `{ id, date, receipt, details, materialType, quantity (text), totalPrice }`, pettyCash `{ id, date, expenseType, notes, totalPrice }`, payroll `{ id, date, employee, salary, advancePayment, status, totalPrice }`) + `migration: { migratedAt, migratedBy, lastRunAt, count, sourceKeys: ['<ledger>:<id>'] }` once moved into expense orders. Nothing writes the rows any more and the key is never deleted. Payroll status `'مستقطع'` is a stored data value — see quirks doc |
+| `project-manager-finance-config` | the finance lists `{ machines, machineSizes, employees, materials, expenseTypes, statuses }` that expense order details pick from (edited on Finance → Lists) |
 
 ---
 
@@ -525,7 +570,8 @@ Owner: `utils/Certificates.js` (the only reader / writer, always through
   task's `unitPrice`. No rate → the line is flagged (`missingRate`, amounts
   `null`), left out of the totals, and the draft can't be issued.
 - "Previous" columns come from the series' last issued certificate (frozen).
-  `certifiedOrderIds()` = every order id in an issued certificate (for locking).
+  `certifiedOrderIds()` = every order id in an issued certificate (for locking:
+  those orders cannot be deleted or approved again — §4 *Order rules*).
 
 ---
 
@@ -585,6 +631,18 @@ itself syncs through the server's `projects` table.
 | `invites(org_id, project_id?, email, role)` | e-mails waiting to sign up |
 | `items(org_id, project_id?, collection, item_id, data, pos, rev, deleted, recorded_by, updated_by, updated_at, txid, seq)` | one row per record; `project_id` null = organization store; deleting keeps the data |
 | `changes(id, org_id, project_id?, collection, item_id, op, before, after, rev, outcome, note, actor, actor_name, device_id, client_at, server_at, restored_from)` | append-only history: every applied write (`outcome 'applied'`, by trigger) and every version that lost a conflict or was refused (`'rejected'`); `op` = insert / update / delete / restore / import |
+
+**Reading the history** (`src/sync/history.js`, screens in
+`app/history/`): a row is `{ id, collection, itemId, op, before, after, rev,
+outcome: 'applied' | 'rejected' | 'pending' | 'failed', note
+('conflict-lost:…' | 'conflict-won:…' | 'denied:…'), actor: { id, name },
+deviceId, clientAt, serverAt, restoredFrom, pending }` — `before` / `after`
+are whole item versions (a record, a keyed day, or `'$doc'`), which
+`state/historyModel.diffFields` turns into labelled field changes. A history
+link is `#/history/<collection>/<encoded item id>`: the record id, or the item
+key when a store has several lists (`contractors/<id>` in `pm-registries`,
+`days/<YYYY-MM-DD>` in `pm-site-diary`, `variations/<id>` in the meta). The
+history UI keeps nothing locally — no new key.
 
 Row-level security: members read; writes need the action of
 `app_private.collection_rules` (mirror of `src/sync/rules.js`, from the

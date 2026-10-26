@@ -28,6 +28,7 @@ import { issueStamp, weekdayLabel } from '../dates.js';
 import { Page } from '../Page.jsx';
 import { formatDay, typeLabel } from '../record/orderMeta.js';
 import { useCan } from '../useCan.js';
+import { DayPhotos } from './DayPhotos.jsx';
 import { DiaryCard, DiaryConditions, DiaryRemarks } from './DiaryParts.jsx';
 import { ReportSheet, SheetSection } from './ReportSheet.jsx';
 import d from './Diary.module.css';
@@ -165,8 +166,8 @@ function DayBlock({ day, heading, notes, diaryEntry, onDeleteNote }) {
 
       <DiaryRemarks entry={diaryEntry} />
 
-      {/* Day photos slot — the day's order photos (screen and print) go here,
-          between the diary and the site notes (roadmap WS8, dayReport.photoIds). */}
+      {/* Day photos: the day's order photos (screen and print), between the diary and the site notes. */}
+      <DayPhotos ids={r.photoIds} dayLabel={dayTitle(day, lang)} />
 
       <SheetSection title={t('reports.siteNotes')}>
         {notes.length === 0 ? (

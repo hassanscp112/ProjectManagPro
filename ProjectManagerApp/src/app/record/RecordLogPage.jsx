@@ -11,6 +11,7 @@ import { Page } from '../Page.jsx';
 import { OrderPhotosButton } from './OrderPhotos.jsx';
 import OrderRow from './OrderRow.jsx';
 import { formatDay, orderFigure, orderSubject, typeLabel } from './orderMeta.js';
+import { ApproveButton, CertificateBadge } from './OrderRuleBadges.jsx';
 import { useOrderActions } from './useApproval.jsx';
 import s from './Record.module.css';
 
@@ -131,20 +132,19 @@ export default function RecordLogPage() {
                     <td>{resolveWhoLabel(o.who, registries)}</td>
                     <td className="ui-num">{orderFigure(o, lang)}</td>
                     <td>
-                      {pending ? (
-                        <StatusBadge tone="warning">{t('common.recorded')}</StatusBadge>
-                      ) : (
-                        <StatusBadge tone="success">{t('common.approved')}</StatusBadge>
-                      )}
+                      <div className={s.statusCell}>
+                        {pending ? (
+                          <StatusBadge tone="warning">{t('common.recorded')}</StatusBadge>
+                        ) : (
+                          <StatusBadge tone="success">{t('common.approved')}</StatusBadge>
+                        )}
+                        <CertificateBadge order={o} />
+                      </div>
                     </td>
                     <td>
                       <div className={s.cellActions}>
                         <OrderPhotosButton order={o} />
-                        {pending && (
-                          <Button size="sm" variant="outline" icon={Check} onClick={() => actions.approve(o)}>
-                            {t('common.approve')}
-                          </Button>
-                        )}
+                        {pending && <ApproveButton order={o} onApprove={actions.approve} icon={Check} badge={false} />}
                         <IconButton icon={Trash2} label={t('orders.deleteOrder')} size="sm" onClick={() => actions.requestDelete(o)} />
                       </div>
                     </td>

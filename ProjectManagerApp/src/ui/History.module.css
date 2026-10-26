@@ -1,0 +1,183 @@
+/* History* components: entries, field diff, stamps */
+
+.tipLine {
+  display: block;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+/* Stamps: "Recorded by … · Last edited by …" + History button */
+.stamps {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-1) var(--ui-space-2);
+  color: var(--ui-text-2);
+  font-size: var(--ui-fs-xs);
+}
+
+.stamp + .stamp::before {
+  content: '·';
+  margin-inline-end: var(--ui-space-2);
+}
+
+/* List of versions */
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--ui-divider);
+}
+
+.entry {
+  display: flex;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-3) var(--ui-space-2);
+}
+
+.entryPending {
+  background: var(--ui-accent-soft);
+  border-radius: var(--ui-r-md);
+}
+
+.entryRejected .entryTitle {
+  color: var(--ui-text-2);
+}
+
+.entryIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-sunken);
+  color: var(--ui-text-2);
+}
+
+.op_insert,
+.op_import {
+  background: var(--ui-success-soft);
+  color: var(--ui-success);
+}
+
+.op_delete {
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger);
+}
+
+.op_restore {
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-ink);
+}
+
+.entryBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+  min-width: 0;
+}
+
+.entryHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+
+.entryTitle {
+  font-weight: 600;
+}
+
+.entryAction {
+  margin-inline-start: auto;
+}
+
+.entryMeta,
+.entryNote,
+.muted {
+  margin: 0;
+  color: var(--ui-text-2);
+  font-size: var(--ui-fs-sm);
+}
+
+.entryNote {
+  font-style: italic;
+}
+
+/* Field diff */
+.diff {
+  display: grid;
+  grid-template-columns: minmax(96px, max-content) 1fr;
+  gap: var(--ui-space-1) var(--ui-space-3);
+  margin: var(--ui-space-1) 0 0;
+  font-size: var(--ui-fs-sm);
+}
+
+.diffRow {
+  display: contents;
+}
+
+.diffField {
+  color: var(--ui-text-2);
+}
+
+.diffValue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-1) var(--ui-space-2);
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.ins,
+.del {
+  padding: 0 var(--ui-space-1);
+  border-radius: var(--ui-r-sm);
+  text-decoration: none;
+}
+
+.ins {
+  background: var(--ui-success-soft);
+  color: var(--ui-success);
+}
+
+.del {
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger);
+  text-decoration: line-through;
+}
+
+.arrow {
+  flex: none;
+  color: var(--ui-text-2);
+}
+
+.more {
+  align-self: flex-start;
+}
+
+@media (max-width: 520px) {
+  .diff {
+    grid-template-columns: 1fr;
+  }
+
+  .diffField {
+    margin-top: var(--ui-space-1);
+  }
+}
+
+@media print {
+  .entryPending {
+    background: none;
+  }
+}
