@@ -210,6 +210,21 @@ DB `ProjectManagerDB` v1, store `files`.
 `getPersistenceState()` → `'persisted' | 'best-effort' | 'unsupported'`.
 Shown in Settings → Backup & restore with a Protect button.
 
+**Storage use** (the meter under it):
+- `getStorageUsage()` → `summarizeStorage(...)` of the three readings below
+  (FileDB failures count as no photos).
+- `getStorageEstimate()` → `{ usage, quota }` bytes for the whole origin
+  (`navigator.storage.estimate`: IndexedDB files, the offline cache, …), or
+  null when the browser cannot tell.
+- `localStorageSize(storage?)` → characters of every key + value, all
+  projects (the unit browsers cap at `LOCAL_STORAGE_LIMIT`, 5 M).
+- `photoStats(records)` → `{ count, bytes }` of FileDB records in
+  `ORDER_PHOTOS_FOLDER` (`'order_photos'`).
+- `summarizeStorage({ estimate, localSize, photos })` (pure, tested) →
+  `{ device: { used, total, ratio } | null, data: { used, total, ratio },
+  photos, warn }`; `warn` when either ratio reaches `STORAGE_WARN_RATIO`
+  (0.8).
+
 ---
 
 ## Identity.js — current user
