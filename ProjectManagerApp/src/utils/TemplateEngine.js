@@ -421,7 +421,7 @@ const compareWbsNumeric = (a, b) => {
   return 0;
 };
 
-export const makeTemplateFromTasks = (tasks, name) => {
+export const makeTemplateFromTasks = (tasks, name, { pace = null } = {}) => {
   const sorted = (Array.isArray(tasks) ? tasks : [])
     .filter((t) => t && t.wbs)
     .sort((a, b) => compareWbsNumeric(a.wbs, b.wbs));
@@ -465,7 +465,8 @@ export const makeTemplateFromTasks = (tasks, name) => {
       lag: 0,
       unit: task.unit || '',
       fixedUnitPrice: Math.max(0, Number(task.unitPrice) || 0),
-      productivity: qty > 0 && duration > 0 ? Math.round((qty / duration) * 100) / 100 : 0,
+      // What the site really did (approved orders per working day) beats the plan.
+      productivity: pace?.get(task.id)?.perDay > 0 ? Math.round(pace.get(task.id).perDay * 100) / 100 : qty > 0 && duration > 0 ? Math.round((qty / duration) * 100) / 100 : 0,
     });
   });
 

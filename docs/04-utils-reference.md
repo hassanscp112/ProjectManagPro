@@ -21,6 +21,7 @@ OrderEngine                                                            (imports 
 TemplateEngine                                                         (imports RateLibrary)
 GanttEngine                                                            (imports OrderEngine + CriticalPath + planning/*)
 planning/ResourceLeveler                                               (imports GanttEngine: leveling runs the engine)
+Productivity                                                           (imports planning/WorkTypes: learned pace from approved orders)
 Certificates                                                           (imports i18n / Projects / ActivityLog / Identity / Registries)
 ```
 
@@ -376,6 +377,32 @@ counts once), `noticeCheck` (`ok` / `late` = more than 28 days / `open` /
 `filterDelays`, `delayErrors`. Tests: `state/__tests__/diaryModel.test.js`,
 `utils/__tests__/diaryStores.test.js`.
 
+## Productivity.js — learned productivity (no storage)
+
+What the site really does, from **approved quantity orders**; nothing
+changes until a person takes a suggestion.
+- `paceByTask(tasks, orders, { plans, workTypes, registries })` → Map
+  taskId → `{ qty, days (working days with approved orders), crewDays,
+  perDay, perCrewDay, from, to, crewsFromPlans }` — crews per day from that
+  day's Lookahead plan (people ÷ the work type's crew size: `peopleOf(who)`
+  counts, team size or picked workers), else the item's planned crews.
+- `paceByWorkType(paces, tasks)` — pooled per work type.
+- `learnedProductivity(projects, workTypes, registries)` — per work type
+  across projects (`[{ project, tasks, orders, plans }]`, read by
+  `state/portfolioModel.projectsActivity` / `learnedFromProjects`): median
+  per-crew pace of its items, days, samples, projects, change vs the library;
+  `suggest` when ≥ `LEARN_MIN_DAYS` (5) working days and more than
+  `LEARN_THRESHOLD` (15 %) off.
+- `acceptLearned(workType, learned, { at, by })` — new productivity, `learned`
+  stamp, a `history` entry with the old value.
+- `retimePatches(tasks, computedById, workTypeId, productivity)` — items of
+  that type not started (no executed quantity), not pinned, timed by
+  productivity → `{ productivity, duration }`.
+- `daysLeftAtPace(remaining, pace)`, `suggestedCrews(task, { pace,
+  workType })` → `{ crews, people, basis: 'observed'|'planned', perCrew }`
+  (planned daily quantity = qty ÷ duration).
+Tests: `productivity.test.js`.
+
 ## PlanningStore.js — lookahead plans
 
 **Storage:** `pm-plans`. Shape in [03-data-model §6](03-data-model.md).
@@ -398,7 +425,9 @@ Tests: `planningStore.test.js` (pure helpers only).
   `activeTemplates(list)` hides archived ones; `isPlanTemplate(t)`
   (schema 2); `LEGACY_SEED_TEMPLATES` (the old seed factories).
 - `generateProject(template, values, options)` (schema 1 only) → `{tasks, stats {taskCount, groupCount, leafCount, totalCost, pricedCount, unpriced}}` — evaluates `qtyFormula` against template `variables`, applies repeats/dependencies (`FLOOR_CYCLE_LAG_DAYS = 7`), prices from rate library (copy-on-generate)
-- `makeTemplateFromTasks(tasks, name)` — reverse: current project → template
+- `makeTemplateFromTasks(tasks, name, { pace })` — reverse: current project → template;
+  `pace` (Map taskId → `{ perDay }`, from `Productivity.paceByTask`) makes an
+  item with approved work keep the pace the site reached, else qty ÷ duration
 - `listTemplates()` / `saveTemplate(t)` / `deleteTemplate(id)`
 - `PARTS` — the reusable part catalog `{id, name, unit, category, productivity, rateName}`
 - `evaluateFormula(expr, vars)` — safe formula evaluator; `toISODate(date)`

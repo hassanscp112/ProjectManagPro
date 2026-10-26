@@ -13,7 +13,12 @@ import {
   rateTone,
   targetRate,
 } from '../../state/lookaheadModel.js';
+import { learnedFromProjects } from '../../state/portfolioModel.js';
 import { useProject } from '../../state/projectContext.js';
+import { logAppEvent } from '../../utils/ActivityLog.js';
+import { loadWorkTypes, upsertWorkType, workTypeMap, workTypeName } from '../../utils/planning/WorkTypes.js';
+import { acceptLearned, daysLeftAtPace, paceByTask, paceByWorkType, retimePatches, suggestedCrews } from '../../utils/Productivity.js';
+import { loadProjects } from '../../utils/Projects.js';
 import {
   addDaysDate,
   addMonthsKey,
@@ -47,6 +52,7 @@ import {
   ProgressBar,
   Segmented,
   StatusBadge,
+  Table,
   TaskPicker,
   WhoPicker,
   useToast,
@@ -62,6 +68,7 @@ const TONE_CLASS = { success: s.toneSuccess, warning: s.toneWarning, danger: s.t
 
 const pct = (rate) => (rate == null ? '—' : `${Math.round(rate * 100)}%`);
 const num = (n) => (Number(n) ? formatNumber(n) : '—');
+const dec = (n) => formatNumber(Math.round((Number(n) || 0) * 100) / 100);
 
 
 /** One KPI tile in the strip. */
@@ -78,12 +85,16 @@ function Kpi({ label, value, tone = 'neutral' }) {
  * /schedule/lookahead — the rolling plan: monthly targets per section,
  * weekly crews, and the daily plan measured by its completion rate (PPC)
  * against that day's approved orders. Plans live in PlanningStore.
+ * Pace (utils/Productivity): each item's approved quantity per working day
+ * → working days left; suggested crews for week and day rows; per work type
+ * the site's pace against the library, which a plan editor can take (and
+ * re-time this project's items not started yet).
  */
 export default function LookaheadPage() {
   const { t, lang } = useI18n();
   const toast = useToast();
   const navigate = useNavigate();
-  const { tasks, orders, registries } = useProject();
+  const { tasks, orders, registries, engineResult, applyTaskPatches, identity } = useProject();
   const can = useCan();
   // Month targets are plan editors'; week and day plans also site engineers'.
   const canMonth = can('plan.edit');
@@ -101,6 +112,13 @@ export default function LookaheadPage() {
   }, [plans]);
 
   const leaves = useMemo(() => tasks.filter((x) => !x.isGroup), [tasks]);
+  const [workTypeList, setWorkTypeList] = useState(loadWorkTypes);
+  const workTypes = useMemo(() => workTypeMap(workTypeList), [workTypeList]);
+  const paces = useMemo(() => paceByTask(tasks, orders, { plans, workTypes, registries }), [tasks, orders, plans, workTypes, registries]);
+  const computedById = useMemo(() => new Map(engineResult.tasks.map((x) => [x.id, x])), [engineResult]);
+  const typePaces = useMemo(() => [...paceByWorkType(paces, leaves).values()], [paces, leaves]);
+  const learned = useMemo(() => (typePaces.length ? learnedFromProjects(loadProjects(), workTypes, registries) : new Map()), [typePaces.length, workTypes, registries]);
+  const [retime, setRetime] = useState(true);
   const taskById = useMemo(() => new Map(tasks.map((x) => [x.id, x])), [tasks]);
   const sections = useMemo(() => planSections(tasks), [tasks]);
 
@@ -165,8 +183,46 @@ export default function LookaheadPage() {
   const doCopy = (kind) =>
     setPlans((p) => (kind === 'week' ? cloneWeekPlan(p, addWeeksKey(week, -1), week) : cloneDayPlan(p, addDaysDate(date, -1), date)));
 
+  /* ── pace ── */
+  const takeLearned = (workTypeId) => {
+    const wt = workTypes.get(workTypeId);
+    const l = learned.get(workTypeId);
+    if (!wt || !l) return;
+    upsertWorkType(acceptLearned(wt, l, { by: identity?.name || '' }));
+    setWorkTypeList(loadWorkTypes());
+    const patches = retime ? retimePatches(tasks, computedById, workTypeId, l.rate) : [];
+    if (patches.length) applyTaskPatches(patches);
+    const name = workTypeName(wt, lang);
+    logAppEvent({
+      actor: identity?.name || '',
+      kind: 'planning',
+      summary: t('schedule.pace.logged', { name, from: dec(wt.productivity), to: dec(l.rate), n: patches.length }),
+      refType: 'project',
+      refId: 'productivity',
+    });
+    toast({ title: t('schedule.pace.taken', { name, n: patches.length }) });
+  };
+
   /* ── pieces ── */
   const unitOf = (taskId) => taskById.get(taskId)?.unit || '';
+  // "At this pace: N working days left" (null until the row has an item).
+  const paceText = (taskId) => {
+    const done = computedById.get(taskId);
+    if (!taskId || !done) return null;
+    const pace = paces.get(taskId);
+    if (!pace) return t('schedule.pace.none');
+    const left = daysLeftAtPace((done.qty || 0) - (done.actualQty || 0), pace);
+    return left === 0
+      ? t('schedule.pace.finished', { rate: dec(pace.perDay), unit: unitOf(taskId) })
+      : t('schedule.pace.daysLeft', { n: formatNumber(left), rate: dec(pace.perDay), unit: unitOf(taskId) });
+  };
+  const crewText = (taskId) => {
+    const task = taskById.get(taskId);
+    const hint = task ? suggestedCrews(task, { pace: paces.get(taskId), workType: workTypes.get(task.workTypeId) }) : null;
+    if (!hint) return null;
+    const key = hint.basis === 'observed' ? 'schedule.pace.crewsObserved' : 'schedule.pace.crewsPlanned';
+    return t(key, { crews: formatNumber(hint.crews), people: hint.people ? formatNumber(hint.people) : '—' });
+  };
 
   const targetRow = (target, pickFrom) => {
     const rate = targetRate(target, actuals);
@@ -186,6 +242,7 @@ export default function LookaheadPage() {
             <span className={TONE_CLASS[tone]}>{pct(rate)}</span>
           </span>
           <ProgressBar value={Math.min(100, (rate || 0) * 100)} tone={tone === 'neutral' ? 'accent' : tone} size="sm" label={t('planning.achievement')} />
+          {paceText(target.taskId) && <span className={s.paceLine}>{paceText(target.taskId)}</span>}
         </div>
         <Field label={t('planning.note')} optional className={s.noteCell}>
           <Input value={target.note || ''} onChange={(e) => changeTarget(target, { note: e.target.value })} />
@@ -203,7 +260,7 @@ export default function LookaheadPage() {
         <Field label={t('planning.task')} className={s.taskCell}>
           <TaskPicker tasks={leaves} orders={orders} value={a.taskId} onChange={(taskId) => changeAssignment(scope, a, { taskId })} placeholder={t('schedule.pickItem')} />
         </Field>
-        <Field label={t('planning.crew')} className={s.whoCell}>
+        <Field label={t('planning.crew')} hint={crewText(a.taskId) || undefined} className={s.whoCell}>
           <WhoPicker value={a.who} onChange={(who) => changeAssignment(scope, a, { who })} registries={registries} kinds={WHO_KINDS} label={t('planning.crew')} />
         </Field>
         <Field label={t('planning.note')} optional className={s.noteCell}>
@@ -300,6 +357,55 @@ export default function LookaheadPage() {
           {otherTargets.length > 0 && (
             <Card title={t('planning.otherTasks')} titleAs="h3">
               <ul className={s.rows}>{otherTargets.map((x) => targetRow(x, leaves))}</ul>
+            </Card>
+          )}
+          {typePaces.length > 0 && (
+            <Card title={t('schedule.pace.title')} subtitle={t('schedule.pace.hint')} titleAs="h3">
+              <Table label={t('schedule.pace.title')} minWidth={620}>
+                <thead>
+                  <tr>
+                    <th>{t('schedule.pace.workType')}</th>
+                    <th className="ui-num">{t('schedule.pace.here')}</th>
+                    <th className="ui-num">{t('schedule.pace.allSites')}</th>
+                    <th className="ui-num">{t('schedule.pace.library')}</th>
+                    <th aria-label={t('common.actions')} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {typePaces.map((row) => {
+                    const wt = workTypes.get(row.workTypeId);
+                    const l = learned.get(row.workTypeId);
+                    const unit = wt?.unit || '';
+                    return (
+                      <tr key={row.workTypeId}>
+                        <td>{workTypeName(wt, lang) || row.workTypeId}</td>
+                        <td className="ui-num">
+                          {`${dec(row.perCrewDay)} ${unit}`}
+                          <div className={s.muted}>{t('schedule.pace.days', { n: formatNumber(row.days) })}</div>
+                        </td>
+                        <td className="ui-num">
+                          {l ? `${dec(l.rate)} ${unit}` : '—'}
+                          {l && <div className={s.muted}>{t('schedule.pace.days', { n: formatNumber(l.days) })}</div>}
+                        </td>
+                        <td className="ui-num">{wt ? `${dec(wt.productivity)} ${unit}` : '—'}</td>
+                        <td>
+                          {l?.suggest && wt && (
+                            <Button size="sm" variant="outline" onClick={() => takeLearned(row.workTypeId)}>
+                              {t('schedule.pace.take', { rate: dec(l.rate) })}
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
+              {[...learned.values()].some((l) => l.suggest) && (
+                <label className={s.checkRow}>
+                  <input type="checkbox" checked={retime} onChange={(e) => setRetime(e.target.checked)} />
+                  {t('schedule.pace.retime')}
+                </label>
+              )}
             </Card>
           )}
         </fieldset>

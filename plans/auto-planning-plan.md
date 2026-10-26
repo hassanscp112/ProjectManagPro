@@ -345,6 +345,12 @@ Each milestone:
     per crew.
 - *Save project as template* uses the observed productivity.
 
+- *Built (2026-10-26):* site pace = approved quantity per working day with
+  approved orders; crews per day from the day plan's people ÷ the work
+  type's crew size, else the planned crews; suggestions on the Work types
+  page and in Lookahead (*Pace by work type*), with an optional re-time of
+  the open project's items not started yet.
+
 **M7, template editor v2.** Edit and duplicate any template, the seeded ones
 included:
 - work type, scope;

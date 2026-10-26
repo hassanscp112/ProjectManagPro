@@ -2,8 +2,9 @@ import { CopyPlus, FolderPlus, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useI18n } from '../../i18n/useI18n.js';
-import { previewTemplate, templateDefaults } from '../../state/portfolioModel.js';
+import { previewTemplate, projectsActivity, templateDefaults } from '../../state/portfolioModel.js';
 import { loadTasks } from '../../state/projectModel.js';
+import { paceByTask } from '../../utils/Productivity.js';
 import { loadProjects } from '../../utils/Projects.js';
 import { loadRateLibrary } from '../../utils/RateLibrary.js';
 import { activeTemplates, deleteTemplate, listTemplates, makeTemplateFromTasks, saveTemplate, toISODate } from '../../utils/TemplateEngine.js';
@@ -65,7 +66,10 @@ export default function TemplatesPage() {
       toast({ title: t('templates.noticeNoTasks') });
       return;
     }
-    saveTemplate(makeTemplateFromTasks(tasks, fromProject.name || project.name));
+    // Items with approved work keep the pace the site really reached.
+    const [activity] = projectsActivity([project]);
+    const pace = paceByTask(tasks, activity.orders, { plans: activity.plans });
+    saveTemplate(makeTemplateFromTasks(tasks, fromProject.name || project.name, { pace }));
     setTemplates(activeTemplates(listTemplates()));
     setFromProject(null);
     toast({ title: t('templates.noticeProjectSaved') });

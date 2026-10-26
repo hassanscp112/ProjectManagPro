@@ -2,8 +2,13 @@ import { CircleCheck, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { formatNumber } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
+import { learnedFromProjects } from '../../state/portfolioModel.js';
+import { loadIdentity } from '../../utils/Identity.js';
+import { loadRegistries } from '../../utils/OrderEngine.js';
 import { TRADES } from '../../utils/planning/trades.js';
-import { deleteWorkType, loadWorkTypes, upsertWorkType, workTypeName } from '../../utils/planning/WorkTypes.js';
+import { deleteWorkType, loadWorkTypes, upsertWorkType, workTypeMap, workTypeName } from '../../utils/planning/WorkTypes.js';
+import { acceptLearned } from '../../utils/Productivity.js';
+import { loadProjects } from '../../utils/Projects.js';
 import { findRateById, loadRateLibrary } from '../../utils/RateLibrary.js';
 import { Button, ConfirmDialog, Dialog, EmptyState, Field, IconButton, Input, NumberInput, Select, StatusBadge, Table } from '../../ui/index.js';
 import s from '../library/Library.module.css';
@@ -29,7 +34,9 @@ const fromDraft = (d) => ({
  * The work-type library (tab of /rates): what each kind of work is, its
  * unit and trade, how much one crew does per working day, the crew size
  * and the rate that prices it. Seeded values are marked "check" until a
- * person confirms them. Storage: utils/planning/WorkTypes.
+ * person confirms them. The pace the site really reached (approved orders,
+ * every project) is shown beside the library value; where it differs a
+ * person can take it (utils/Productivity). Storage: utils/planning/WorkTypes.
  */
 export default function WorkTypesPanel({ canEdit }) {
   const { t, lang } = useI18n();
@@ -48,6 +55,12 @@ export default function WorkTypesPanel({ canEdit }) {
       .filter((w) => !q || [w.name, w.nameEn, w.unit, ...(w.keywords || [])].some((v) => String(v || '').toLowerCase().includes(q)));
   }, [items, query, trade]);
   const unchecked = items.filter((w) => !w.legacy && !w.checked).length;
+  const learned = useMemo(() => learnedFromProjects(loadProjects(), workTypeMap(items), loadRegistries()), [items]);
+  const suggestions = [...learned.values()].filter((l) => l.suggest).length;
+  const takeLearned = (wt, l) => {
+    upsertWorkType(acceptLearned(wt, l, { by: loadIdentity().name || '' }));
+    setItems(loadWorkTypes());
+  };
 
   const save = () => {
     if (!draft.name.trim()) return;
@@ -79,6 +92,7 @@ export default function WorkTypesPanel({ canEdit }) {
         )}
       </div>
       <p className={s.hint}>{t('templates.wt.hint', { n: unchecked })}</p>
+      {suggestions > 0 && <p className={s.hint}>{t('templates.wt.suggestions', { n: suggestions })}</p>}
 
       {shown.length === 0 ? (
         <EmptyState title={t('templates.wt.none')} />
@@ -98,6 +112,7 @@ export default function WorkTypesPanel({ canEdit }) {
           <tbody>
             {shown.map((w) => {
               const rate = findRateById(rates, w.rateId);
+              const site = learned.get(w.id);
               return (
                 <tr key={w.id}>
                   <td>
@@ -107,7 +122,19 @@ export default function WorkTypesPanel({ canEdit }) {
                   <td>{t(`planning.trade.${w.trade}`)}</td>
                   <td className="ui-num">
                     {w.fixedDays ? t('planning.wiz.fixedDays', { n: w.fixedDays }) : `${formatNumber(w.productivity)} ${w.unit}`}
-                    {w.learned?.rate ? <div className={s.muted}>{t('templates.wt.learned', { rate: formatNumber(w.learned.rate) })}</div> : null}
+                    {site ? (
+                      <div className={s.muted}>
+                        {t('templates.wt.sitePace', { rate: formatNumber(site.rate), days: formatNumber(site.days) })}
+                        {site.change !== null && Math.round(site.change * 100) !== 0 && ` (${site.change > 0 ? '+' : ''}${formatNumber(Math.round(site.change * 100))}%)`}
+                      </div>
+                    ) : w.learned?.rate ? (
+                      <div className={s.muted}>{t('templates.wt.learned', { rate: formatNumber(w.learned.rate) })}</div>
+                    ) : null}
+                    {site?.suggest && canEdit && (
+                      <Button size="sm" variant="outline" onClick={() => takeLearned(w, site)}>
+                        {t('templates.wt.useLearned', { rate: formatNumber(site.rate) })}
+                      </Button>
+                    )}
                   </td>
                   <td className="ui-num">{formatNumber(w.crew?.labour || 0)}</td>
                   <td>

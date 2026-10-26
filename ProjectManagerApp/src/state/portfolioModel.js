@@ -7,6 +7,8 @@
 // ─────────────────────────────────────────────────────────────
 
 import { ORDERS_STORAGE_KEY } from '../utils/OrderEngine.js';
+import { PLANS_STORAGE_KEY } from '../utils/PlanningStore.js';
+import { learnedProductivity } from '../utils/Productivity.js';
 import { GanttEngine } from '../utils/GanttEngine.js';
 import { generateProject, isPlanTemplate } from '../utils/TemplateEngine.js';
 import { planProject } from '../utils/planning/autoPlan.js';
@@ -79,6 +81,26 @@ const loadOrders = (storage, project) => {
     return [];
   }
 };
+
+const loadPlansOf = (storage, project) => {
+  try {
+    const parsed = JSON.parse(storage?.getItem(keyFor(project, PLANS_STORAGE_KEY)) || 'null');
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * What happened on site in each project, for learning productivity:
+ * [{ project, tasks, orders, plans }] read from each project's own stores.
+ */
+export const projectsActivity = (projects = [], storage = globalThis.localStorage) =>
+  projects.map((project) => ({ project, tasks: loadTasks(storage, project), orders: loadOrders(storage, project), plans: loadPlansOf(storage, project) }));
+
+/** Learned productivity per work type from every project (utils/Productivity). */
+export const learnedFromProjects = (projects, workTypes, registries = {}, storage = globalThis.localStorage) =>
+  learnedProductivity(projectsActivity(projects, storage), workTypes, registries);
 
 /**
  * Card figures for one project, read from its own stores: status, contract
