@@ -51,6 +51,24 @@ back to `#/projects` (and the phone *More* page lists the three pages).
      (calendar and working days), items, critical items; warnings
      (unpriced, no productivity, tasks over 120 working days, template
      problems, schedule warnings); read-only Gantt with zoom.
+  **From a BOQ** (*Start from* → *From a BOQ*, building templates only): the
+  template gives the levels and the order of work, the contract BOQ the
+  quantities and prices. Extra steps after *Levels*:
+  - **Paste BOQ** — paste rows copied from Excel (header included), or
+    *Open an Excel file (.xlsx)* (`read-excel-file`, loaded on demand; the
+    sheet with the most BOQ lines is chosen, another can be picked); the
+    header row and each column's meaning (item no., description, unit,
+    quantity, unit price, amount) are found automatically and can be changed
+    per column; a preview of the first rows; items / sections / total.
+  - **Match lines** — each BOQ item → a work type (automatic, with a
+    confidence: sure / likely / no match), lowest confidence first; filters
+    *Needs a look* / *Chosen by you* / all; pick any work type or *None*.
+    A line of work the building type doesn't use goes to *Other BOQ items*.
+    Lines chosen by hand are remembered (work-type aliases) on *Create*.
+  Then Quantities (BOQ items show "BOQ item n" instead of a formula) …
+  Review, with BOQ warnings (lines without a work type / outside the
+  template / unit differs; template work not in the BOQ is left out —
+  the items after it keep their predecessors).
   Older (schema-1) templates go Details → Start → Building → Review (the
   previous preview table). *Create and start planning* creates the draft
   (tasks + `meta.planning` with calendar, markups, crews), logs it, and
@@ -67,14 +85,15 @@ back to `#/projects` (and the phone *More* page lists the three pages).
   project as template* picks one of the projects. Builder at
   `#/templates/new`. Seed template names and rate categories are stored in
   Arabic and shown in the UI language (`templateLabels.js`).
-- **Rates `#/rates`** — two tabs. **Rate library** (shared, direct cost):
-  search, add / edit in a dialog, delete (asks first). Prices are copied at
-  generation time. **Work types** (`?tab=work-types`): the work-type
-  library — search, filter by trade, per crew-day productivity, crew size,
-  the rate it is priced by, *Mark checked* for seeded values (the hint
-  counts what is left), add / edit (names ar + en, unit, trade,
-  productivity, crew, fixed days, rate, keywords) / delete.
-  Adding, editing and deleting need `plan.edit`.
+- **Rates `#/rates`** — the rate library (shared, direct cost): search,
+  add / edit in a dialog, delete (asks first). Prices are copied at
+  generation time. (`?tab=work-types` redirects to Work types.)
+- **Work types `#/work-types`** — the work-type library
+  (`templates/WorkTypesPanel.jsx`): search, filter by trade, per crew-day
+  productivity, crew size, the rate it is priced by, *Mark checked* for
+  seeded values (the hint counts what is left), add / edit (names ar + en,
+  unit, trade, productivity, crew, fixed days, rate, keywords) / delete.
+  Adding, editing, deleting and rates need `plan.edit`.
 
 Logic: `src/state/portfolioModel.js`; storage: `utils/Projects.js`.
 

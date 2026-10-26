@@ -17,6 +17,7 @@
 
 import { translate } from '../../i18n/index.js';
 import { findRateById, findRateByName } from '../RateLibrary.js';
+import { OTHER_SECTION, applyBoq } from './boqPlan.js';
 import { expandTemplate, resolveLinks } from './generator.js';
 import { writeLinks } from './links.js';
 import { durationFor, workTypeMap, workTypeName } from './WorkTypes.js';
@@ -38,7 +39,9 @@ const asMap = (items) => (items instanceof Map ? items : workTypeMap(items));
 
 /**
  * Unit, rate and prices for each item. ctx: { workTypes, rates, markups,
- * costOverrides: { itemKey: cost } }. Items keep `priced` = a cost was found.
+ * costOverrides: { itemKey: cost } }. An item from a contract BOQ keeps the
+ * BOQ's price (contractRate) as its unit price — markups don't apply, the
+ * rate library's cost shows the margin. `priced` = it has a price.
  */
 export const priceItems = (items, { workTypes = [], rates = [], markups = DEFAULT_MARKUPS, costOverrides = {} } = {}) => {
   const wts = asMap(workTypes);
@@ -47,13 +50,14 @@ export const priceItems = (items, { workTypes = [], rates = [], markups = DEFAUL
     const rate = wt ? findRateById(rates, wt.rateId) || findRateByName(rates, wt.name) : null;
     const override = Number(costOverrides[item.key]);
     const unitCost = Number.isFinite(override) && override >= 0 && costOverrides[item.key] !== '' && costOverrides[item.key] != null ? override : rate ? Math.max(0, Number(rate.unitPrice) || 0) : 0;
+    const contract = Number(item.contractRate) > 0 ? Math.round(Number(item.contractRate) * 100) / 100 : null;
     return {
       ...item,
       unit: item.unit || (wt ? wt.unit : rate ? rate.unit : ''),
       rateId: rate ? rate.id : null,
       unitCost,
-      unitPrice: priceWithMarkups(unitCost, markups),
-      priced: unitCost > 0,
+      unitPrice: contract ?? priceWithMarkups(unitCost, markups),
+      priced: contract ? true : unitCost > 0,
     };
   });
 };
@@ -129,8 +133,33 @@ const itemName = (item, wt, lang) => (lang === 'en' ? item.nameEn || workTypeNam
  */
 export const itemsToTasks = (items, { template, levels = [], workTypes = [], startDate, lang = 'ar', wbsOffset = 1, dropped = new Set(), disabledLinks = new Set() } = {}) => {
   const wts = asMap(workTypes);
-  const kept = items.filter((it) => !dropped.has(it.key));
+  // Removed items (dropped by the person, or template work the BOQ leaves out)
+  // make no task; the items waiting for them inherit their predecessors.
+  const removed = new Set([...dropped, ...items.filter((it) => it.leftOut).map((it) => it.key)]);
+  const kept = items.filter((it) => !removed.has(it.key));
   const idByKey = new Map(kept.map((it) => [it.key, uid()]));
+  const byKey = new Map(items.map((it) => [it.key, it]));
+  const effectiveLinks = (item) => {
+    const out = [];
+    const seen = new Set();
+    const visit = (links, depth) =>
+      links.forEach((l) => {
+        if (depth === 0 && disabledLinks.has(`${item.key}>${l.to}`)) return;
+        if (!removed.has(l.to)) {
+          if (idByKey.has(l.to) && !seen.has(l.to) && l.to !== item.key) {
+            seen.add(l.to);
+            out.push(l);
+          }
+          return;
+        }
+        if (depth > 25 || seen.has(`~${l.to}`)) return;
+        seen.add(`~${l.to}`);
+        const ghost = byKey.get(l.to);
+        if (ghost) visit(ghost.links || [], depth + 1);
+      });
+    visit(item.links || [], 0);
+    return out;
+  };
   const tasks = [];
   let top = Math.max(0, parseInt(wbsOffset, 10) || 0);
 
@@ -143,9 +172,7 @@ export const itemsToTasks = (items, { template, levels = [], workTypes = [], sta
     const wt = wts.get(item.workTypeId) || null;
     const base = itemName(item, wt, lang);
     const level = item.levelIndex !== null ? levels[item.levelIndex] : null;
-    const links = (item.links || [])
-      .filter((l) => idByKey.has(l.to) && !disabledLinks.has(`${item.key}>${l.to}`))
-      .map((l) => ({ id: idByKey.get(l.to), type: l.type, lag: l.lag, ...(l.lagUnit === 'cd' ? { lagUnit: 'cd' } : {}) }));
+    const links = effectiveLinks(item).map((l) => ({ id: idByKey.get(l.to), type: l.type, lag: l.lag, ...(l.lagUnit === 'cd' ? { lagUnit: 'cd' } : {}) }));
     const task = writeLinks(
       {
         id: idByKey.get(item.key),
@@ -166,6 +193,7 @@ export const itemsToTasks = (items, { template, levels = [], workTypes = [], sta
         unitCost: item.unitCost ?? 0,
         templateKey: item.elementKey,
         floor: item.levelIndex,
+        ...(item.boqRow !== undefined ? { boqNo: item.boqNo || '' } : {}),
       },
       links
     );
@@ -213,21 +241,26 @@ export const planProject = (template, values = {}, options = {}) => {
     disabledLinks = new Set(),
     calendar = null,
     wbsOffset = 1,
+    boq = null, // { lines, assignments: Map row → workTypeId }
   } = options;
   const wts = asMap(workTypes);
   const expanded = expandTemplate(template, values, { levelOverrides });
-  const withQty = expanded.items.map((it) => {
+  // A contract BOQ replaces the template's quantities and prices.
+  const fromBoq = boq ? applyBoq(expanded.items, boq.lines, boq.assignments, wts) : null;
+  const skeleton = fromBoq ? { ...template, sections: [...(template.sections || []), OTHER_SECTION] } : template;
+  const withQty = (fromBoq ? fromBoq.items : expanded.items).map((it) => {
     const q = Number(qtyOverrides[it.key]);
-    return qtyOverrides[it.key] !== undefined && qtyOverrides[it.key] !== '' && Number.isFinite(q) && q >= 0 ? { ...it, qty: q, qtyEdited: true } : it;
+    const base = { ...it, qtyBase: it.qty };
+    return qtyOverrides[it.key] !== undefined && qtyOverrides[it.key] !== '' && Number.isFinite(q) && q >= 0 ? { ...base, qty: q, qtyEdited: true } : base;
   });
-  const linked = resolveLinks(withQty, template, expanded.levels.length);
+  const linked = resolveLinks(withQty, skeleton, expanded.levels.length);
   const priced = priceItems(linked.items, { workTypes: wts, rates, markups, costOverrides });
   const items = scheduleItems(priced, { workTypes: wts, productivity, crews });
-  const { tasks } = itemsToTasks(items, { template, levels: expanded.levels, workTypes: wts, startDate, lang, wbsOffset, dropped, disabledLinks });
+  const { tasks } = itemsToTasks(items, { template: skeleton, levels: expanded.levels, workTypes: wts, startDate, lang, wbsOffset, dropped, disabledLinks });
 
-  const live = items.filter((it) => !dropped.has(it.key));
+  const live = items.filter((it) => !dropped.has(it.key) && !it.leftOut);
   const nameOf = (it) => tasks.find((t) => t.templateKey === it.elementKey && t.floor === it.levelIndex)?.name || it.key;
-  const missingTypes = [...new Set(live.filter((it) => !wts.has(it.workTypeId)).map((it) => it.workTypeId))];
+  const missingTypes = [...new Set(live.filter((it) => it.workTypeId && !wts.has(it.workTypeId)).map((it) => it.workTypeId))];
   const stats = {
     taskCount: tasks.length,
     groupCount: tasks.filter((t) => t.isGroup).length,
@@ -238,6 +271,7 @@ export const planProject = (template, values = {}, options = {}) => {
     unpriced: live.filter((it) => !it.priced).map(nameOf),
     noProductivity: live.filter((it) => it.noProductivity).map(nameOf),
     levelCount: expanded.levels.length,
+    boq: fromBoq ? fromBoq.info : null,
   };
   return {
     levels: expanded.levels,

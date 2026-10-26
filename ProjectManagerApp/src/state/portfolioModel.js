@@ -14,7 +14,7 @@ import { loadWorkTypes } from '../utils/planning/WorkTypes.js';
 import { keyFor, projectStartDate } from '../utils/Projects.js';
 import { DEFAULT_META, addMainTask, loadMeta, loadTasks } from './projectModel.js';
 
-export const START_KINDS = ['template', 'blank', 'copy'];
+export const START_KINDS = ['template', 'boq', 'blank', 'copy'];
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const DAY_MS = 24 * 60 * 60 * 1000;

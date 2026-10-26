@@ -71,6 +71,10 @@ const warningText = (t, w) => {
     case 'noProductivity':
     case 'engine':
     case 'calendar':
+    case 'boqUnassigned':
+    case 'boqUnplaced':
+    case 'boqUnits':
+    case 'boqLeftOut':
       return `${t(`planning.wiz.warn.${w.code}`, { n: w.count })}${names}`;
     case 'longTasks':
       return `${t('planning.wiz.warn.longTasks', { n: w.count, days: w.params.days })}${names}`;

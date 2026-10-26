@@ -91,11 +91,12 @@ export function StepQuantities({ plan, template, state, dispatch, workTypes }) {
   }, [template, state.values, state.levelOverrides]);
   if (!plan) return null;
   const dropped = new Set(state.dropped);
-  const kept = plan.items.length - dropped.size;
+  const total = plan.items.filter((it) => !it.leftOut).length;
+  const kept = total - dropped.size;
 
   return (
     <Card title={t('planning.wiz.step.quantities')} subtitle={t('planning.wiz.quantitiesHint')} titleAs="h2" padding="md">
-      <p className={s.muted}>{t('planning.wiz.itemsKept', { kept, total: plan.items.length })}</p>
+      <p className={s.muted}>{t('planning.wiz.itemsKept', { kept, total })}</p>
       <div className={s.groups}>
         {groups.map((g, gi) => (
           <Group key={g.key} label={g.label} meta={t('planning.wiz.itemsCount', { n: g.items.length })} open={gi < 3}>
@@ -120,7 +121,11 @@ export function StepQuantities({ plan, template, state, dispatch, workTypes }) {
                       </td>
                       <td>{name}</td>
                       <td>
-                        <code className={cx(s.formula, 'ui-ltr')}>{item.qtyFormula}</code>
+                        {item.boqRow !== undefined ? (
+                          <span className={s.formula}>{t('planning.wiz.fromBoq', { no: item.boqNo || '—' })}</span>
+                        ) : (
+                          <code className={cx(s.formula, 'ui-ltr')}>{item.qtyFormula}</code>
+                        )}
                       </td>
                       <td className="ui-num">
                         <NumberInput
@@ -129,7 +134,7 @@ export function StepQuantities({ plan, template, state, dispatch, workTypes }) {
                           className={s.cellInput}
                           disabled={off}
                           value={state.qtyOverrides[item.key] ?? ''}
-                          placeholder={formatNumber(base.get(item.key) ?? item.qty)}
+                          placeholder={formatNumber(item.qtyBase ?? base.get(item.key) ?? item.qty)}
                           onChange={(e) => dispatch({ type: 'qty', key: item.key, value: e.target.value })}
                         />
                       </td>

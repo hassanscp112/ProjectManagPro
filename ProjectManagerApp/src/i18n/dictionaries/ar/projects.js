@@ -44,4 +44,6 @@ export default {
   'projects.copiedLog': 'تم إنشاء المشروع بنسخ «{name}» — {count} بند',
   'projects.newFromTemplate': 'مشروع جديد من هذا القالب',
   'projects.templatesHint': 'هياكل قياسية (مدرسة، بناية سكنية، مول…) تتحول إلى شجرة مهام كاملة بالكميات والأسعار والمدد والعلاقات — نقطة البداية لمشروع جديد.',
+  // Start from a BOQ
+  'projects.start_boq': 'من جدول كميات',
 };

@@ -186,7 +186,9 @@ storage. Tests: `criticalPath.test.js`, `engineParity.test.js`.
   `workTypeMap`, `workTypeName(wt, lang)`, `durationFor(qty, { productivity,
   crews, fixedDays })` = ceil(qty ÷ (productivity × crews)), 1–365, normal
   working days. Seeds + building rates in **`workTypeSeeds.js`** (~80 types,
-  marked `checked: false`). Tests: `workTypes.test.js`.
+  marked `checked: false`; `family` = interchangeable types for BOQ
+  placement; seed version 2 gives stored seeded types the new fields and
+  keywords without touching user values). Tests: `workTypes.test.js`.
 - **`buildingTemplates.js`** — `buildingTemplateSeeds()` (house, villa,
   apartments, school, mall, health center, mosque, office / mixed-use,
   warehouse), `LEVEL_USES`. Per-floor-by-trade elements with explicit links
@@ -207,6 +209,32 @@ storage. Tests: `criticalPath.test.js`, `engineParity.test.js`.
   `planProject(template, values, options)` → `{ levels, items, tasks, stats
   {…, directCost, totalCost, unpriced, noProductivity}, issues, planning }`.
   `DEFAULT_MARKUPS = { overhead: 10, contingency: 5, profit: 10 }`.
+  `options.boq = { lines, assignments }` pours a contract BOQ in (below);
+  items removed (dropped, or left out by the BOQ) make no task and the items
+  waiting for them inherit their predecessors (no gaps, no false starts).
+- **`BoqImport.js`** — `parseTable(text)` (Excel clipboard: tabs, quoted
+  multi-line cells), `parseNumber` (Arabic-Indic digits, separators, leading
+  number only), `normalizeUnit` (م3 / m3 / م³ / متر مكعب → 'م3' …),
+  `unitFamily`, `detectHeader`, `guessColumns` (names, then contents),
+  `boqLines` (items + section headings, WBS from hierarchical numbers or
+  section + running number), `readBoq(text, columns?)`, `tableToText(rows)`
+  (an .xlsx sheet's cell values → the same tab-separated text a paste gives),
+  `pickBoqSheet(sheets)` (the sheet with the most item lines). Tests:
+  `boqImport.test.js`.
+- **`Matcher.js`** — local matching of BOQ lines to work types:
+  `normalizeText` (diacritics, tatweel, alef / ya / ta marbuta, digits),
+  `stem`, `contentWords` (BOQ boilerplate dropped), `scoreLine` (shared
+  words weighted by rarity across the library, stemmed keyword phrases,
+  unit kind ±), `matchLine` → `{ best, candidates }`, `matchBoq`,
+  `confidenceOf` (high ≥ 0.55, medium ≥ 0.3), `withAlias` (a confirmed
+  manual match → exact next time).
+- **`boqPlan.js`** — `applyBoq(items, lines, assignments, workTypes)`:
+  each line spread over its work type's template items in proportion to
+  their template quantities, at the BOQ price (`contractRate`, no markups);
+  several lines of one type → variants; a type of the same `family` takes
+  the slot (tiles ↔ porcelain); template items without a line → `leftOut`;
+  the rest → section `other` (`OTHER_SECTION`). Info: `{ lines, placed,
+  unplaced, unassigned, leftOut, unitMismatch }`.
   Tests: `autoPlan.test.js` (every seeded template, several sizes: no issues,
   no engine warnings, everything priced and linked).
 

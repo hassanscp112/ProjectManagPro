@@ -1,16 +1,17 @@
-import { ArrowLeft, ArrowRight, Copy, FilePlus2, LayoutTemplate, Rocket } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Copy, FilePlus2, FileSpreadsheet, LayoutTemplate, Rocket } from 'lucide-react';
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { useBlocker, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { compactCurrency, formatNumber } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
-import { createPlanner, planOptions, plannerReducer, stepErrors, stepsFor } from '../../state/plannerModel.js';
+import { boqContext, createPlanner, planOptions, plannerReducer, stepErrors, stepsFor } from '../../state/plannerModel.js';
 import { START_KINDS, blankProjectTasks, cleanProjectDraft, copyProjectTasks, newProjectMeta, previewTemplate, summarizeProject, templateDefaults } from '../../state/portfolioModel.js';
 import { createTaskId, loadMeta, loadTasks, saveProjectPlan } from '../../state/projectModel.js';
 import { logAppEvent } from '../../utils/ActivityLog.js';
 import { GanttEngine } from '../../utils/GanttEngine.js';
 import { loadIdentity } from '../../utils/Identity.js';
 import { planProject } from '../../utils/planning/autoPlan.js';
-import { loadWorkTypes, workTypeMap } from '../../utils/planning/WorkTypes.js';
+import { withAlias } from '../../utils/planning/Matcher.js';
+import { loadWorkTypes, upsertWorkType, workTypeMap } from '../../utils/planning/WorkTypes.js';
 import { createProject, deleteProject, loadProjects, openProject, projectStartDate } from '../../utils/Projects.js';
 import { loadRateLibrary } from '../../utils/RateLibrary.js';
 import { activeTemplates, isPlanTemplate, listTemplates, toISODate } from '../../utils/TemplateEngine.js';
@@ -20,6 +21,7 @@ import { templateName } from '../templates/templateLabels.js';
 import { TemplatePreview, TemplateVariables } from '../templates/TemplatePreview.jsx';
 import { useCan } from '../useCan.js';
 import { ProjectFields } from './ProjectFields.jsx';
+import { StepBoq, StepMatch } from './wizard/BoqSteps.jsx';
 import { StepLevels, StepPrices, StepQuantities } from './wizard/PlanSteps.jsx';
 import { StepReview } from './wizard/ReviewStep.jsx';
 import { StepLinks, StepSchedule } from './wizard/ScheduleSteps.jsx';
@@ -27,7 +29,7 @@ import { WizardSteps } from './wizard/WizardNav.jsx';
 import s from './Portfolio.module.css';
 import w from './wizard/Wizard.module.css';
 
-const KIND_ICONS = { template: LayoutTemplate, blank: FilePlus2, copy: Copy };
+const KIND_ICONS = { template: LayoutTemplate, boq: FileSpreadsheet, blank: FilePlus2, copy: Copy };
 
 /**
  * /projects/new?step=… — the New project wizard. Details → where the plan
@@ -70,19 +72,20 @@ export default function NewProjectPage() {
   const derived = useMemo(() => {
     const template = templates.find((x) => x.id === state.templateId) || null;
     const source = projects.find((p) => p.id === state.sourceId) || null;
-    const building = state.kind === 'template' && isPlanTemplate(template);
+    const building = (state.kind === 'template' || state.kind === 'boq') && isPlanTemplate(template);
     const steps = stepsFor(state, template);
+    const boq = building ? boqContext(state, workTypeList) : null;
     let plan = null;
-    if (building) {
+    if (building && (state.kind === 'template' || boq)) {
       try {
-        plan = planProject(template, state.values, planOptions(state, { workTypes: workTypeList, rates, lang }));
+        plan = planProject(template, state.values, planOptions(state, { workTypes: workTypeList, rates, lang, boq }));
       } catch {
         plan = null;
       }
     }
     const legacyPreview = state.kind === 'template' && template && !building ? previewTemplate(template, state.values, state.details.startDate, rates, { lang }) : null;
-    const errors = steps.map((id) => stepErrors(state, id, template, source));
-    return { template, source, building, steps, plan, legacyPreview, errors };
+    const errors = steps.map((id) => stepErrors(state, id, template, source, boq));
+    return { template, source, building, steps, boq, plan, legacyPreview, errors };
   }, [templates, projects, state, workTypeList, rates, lang]);
   const { template, source, building, steps, plan, legacyPreview } = derived;
   const step = steps.includes(params.get('step')) ? params.get('step') : 'details';
@@ -127,7 +130,7 @@ export default function NewProjectPage() {
   }, [state.touched, navigate]);
 
   const startTasks = (startDate) => {
-    if (state.kind === 'template') return (building ? plan?.tasks : legacyPreview?.tasks) || [];
+    if (state.kind === 'template' || state.kind === 'boq') return (building ? plan?.tasks : legacyPreview?.tasks) || [];
     if (state.kind === 'copy') return source ? copyProjectTasks(loadTasks(undefined, source), projectStartDate(source), startDate) : [];
     return blankProjectTasks({ id: createTaskId(), name: t('app.newMainGroup'), startDate });
   };
@@ -153,12 +156,22 @@ export default function NewProjectPage() {
       toast({ title: t('settings.storageFull'), tone: 'danger' });
       return;
     }
+    // Lines matched by hand are remembered: next time they match by themselves.
+    if (derived.boq) {
+      derived.boq.lines.forEach((line) => {
+        const chosen = state.assignments[String(line.row)];
+        const wt = chosen ? workTypes.get(chosen) : null;
+        if (line.kind === 'item' && wt) upsertWorkType(withAlias(wt, line.description));
+      });
+    }
     const leaves = tasks.filter((x) => !x.isGroup).length;
     logAppEvent({
       actor: loadIdentity().name,
-      kind: state.kind === 'template' ? 'template' : 'project',
+      kind: state.kind === 'template' || state.kind === 'boq' ? 'template' : 'project',
       summary:
-        state.kind === 'template'
+        state.kind === 'boq'
+          ? t('planning.wiz.boqLog', { template: templateName(template, t, lang), count: leaves, lines: derived.boq?.lines.filter((l) => l.kind === 'item').length || 0 })
+          : state.kind === 'template'
           ? `${t('app.template.generatedLog')} «${templateName(template, t, lang)}» — ${leaves} ${t('app.template.itemsLog')}`
           : state.kind === 'copy'
             ? t('projects.copiedLog', { name: source.name, count: leaves })
@@ -171,7 +184,8 @@ export default function NewProjectPage() {
   };
 
   const pickTemplate = (id) => dispatch({ type: 'template', templateId: id, values: templateDefaults(templates.find((x) => x.id === id)) });
-  const stepProps = { plan, template, state, dispatch, workTypes, rates };
+  const stepProps = { plan, template, state, dispatch, workTypes, rates, boq: derived.boq };
+  const listed = state.kind === 'boq' ? templates.filter(isPlanTemplate) : templates;
 
   if (!can('plan.edit')) {
     return (
@@ -207,12 +221,13 @@ export default function NewProjectPage() {
                 onChange={(kind) => dispatch({ type: 'kind', kind })}
                 options={START_KINDS.map((k) => ({ value: k, label: t(`projects.start_${k}`), icon: KIND_ICONS[k] }))}
               />
-              {state.kind === 'template' &&
-                (templates.length === 0 ? (
+              {state.kind === 'boq' && <p className={s.muted}>{t('planning.wiz.boqStartHint')}</p>}
+              {(state.kind === 'template' || state.kind === 'boq') &&
+                (listed.length === 0 ? (
                   <EmptyState title={t('library.noTemplates')} />
                 ) : (
                   <ul className={w.templates} aria-label={t('projects.template')}>
-                    {templates.map((tpl) => (
+                    {listed.map((tpl) => (
                       <li key={tpl.id}>
                         <button type="button" className={w.templateButton} aria-pressed={tpl.id === state.templateId} onClick={() => pickTemplate(tpl.id)}>
                           <span className={w.templateIcon} aria-hidden="true">
@@ -252,7 +267,12 @@ export default function NewProjectPage() {
         )}
 
         {step === 'building' && template && (
-          <Card title={`${template.icon || '🏗️'} ${templateName(template, t, lang)}`} subtitle={building ? t('planning.wiz.buildingHint') : undefined} titleAs="h2" padding="md">
+          <Card
+            title={`${template.icon || '🏗️'} ${templateName(template, t, lang)}`}
+            subtitle={state.kind === 'boq' ? t('planning.wiz.boqBuildingHint') : building ? t('planning.wiz.buildingHint') : undefined}
+            titleAs="h2"
+            padding="md"
+          >
             <TemplateVariables key={template.id} template={template} values={state.values} onChange={(values) => Object.entries(values).forEach(([key, value]) => value !== state.values[key] && dispatch({ type: 'value', key, value }))} />
             {building && plan && (
               <p className={w.muted}>
@@ -263,6 +283,8 @@ export default function NewProjectPage() {
         )}
 
         {step === 'levels' && <StepLevels {...stepProps} />}
+        {step === 'boq' && <StepBoq {...stepProps} />}
+        {step === 'match' && <StepMatch {...stepProps} />}
         {step === 'quantities' && <StepQuantities {...stepProps} />}
         {step === 'prices' && <StepPrices {...stepProps} />}
         {step === 'schedule' && <StepSchedule {...stepProps} />}

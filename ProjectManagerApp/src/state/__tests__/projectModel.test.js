@@ -211,3 +211,29 @@ test('mergePlanning merges an object or applies an updater to meta.planning', ()
   assert.equal(c.planning.version, 1);
   assert.equal(c.status, 'draft');
 });
+
+test('deleting an item removes every link to it (extra predecessors and leveling links too)', () => {
+  const tasks = [
+    { id: 'g', wbs: '1', isGroup: true },
+    { id: 'a', wbs: '1.1' },
+    { id: 'b', wbs: '1.2' },
+    { id: 'c', wbs: '2', dependsOn: 'b', depType: 'FS', lag: 0, predecessors: [{ id: 'b', type: 'FS', lag: 0 }, { id: 'a', type: 'SS', lag: 2 }] },
+    { id: 'd', wbs: '3', dependsOn: 'x', depType: 'FS', lag: 0, levelLinks: [{ id: 'a', type: 'FS', lag: 0 }] },
+  ];
+  assert.equal(describeDelete(tasks, 'g').dependencyCount, 2);
+  const next = deleteTaskCascade(tasks, 'g');
+  assert.deepEqual(next.map((t) => t.id), ['c', 'd']);
+  assert.equal(next[0].dependsOn, null);
+  assert.equal(next[0].predecessors, undefined);
+  assert.deepEqual(next[1].levelLinks, []);
+  assert.equal(next[1].dependsOn, 'x');
+});
+
+test('normalizeTaskUpdate keeps several predecessors in step with dependsOn', () => {
+  const t = normalizeTaskUpdate({ id: 'c', dependsOn: 'z', depType: '', lag: '3', predecessors: [{ id: 'b' }, { id: 'a', type: 'SS', lag: 2 }] });
+  assert.equal(t.dependsOn, 'z');
+  assert.equal(t.depType, 'FS');
+  assert.deepEqual(t.predecessors, [{ id: 'z', type: 'FS', lag: 3 }, { id: 'a', type: 'SS', lag: 2 }]);
+  // A legacy task is unchanged.
+  assert.deepEqual(normalizeTaskUpdate({ id: 'x', dependsOn: null, depType: 'SS', lag: 4 }), { id: 'x', dependsOn: null, depType: '', lag: 0 });
+});

@@ -9,7 +9,9 @@
 // Storage: localStorage 'pm-work-types' →
 //   { items: [workType], seedVersion, removedSeeds: [id] }
 // Seeds (planning/workTypeSeeds.js) are added on first use; a later seed
-// version adds only new seed ids, never one the user removed.
+// version adds only new seed ids, never one the user removed, and gives
+// existing seeded types the fields and keywords added since (their values —
+// productivity, crew, rate — stay as the user left them).
 // Tested in __tests__/workTypes.test.js.
 // ─────────────────────────────────────────────────────────────
 
@@ -17,7 +19,7 @@ import { seedWorkTypes } from './workTypeSeeds.js';
 import { isTrade } from './trades.js';
 
 export const WORK_TYPES_KEY = 'pm-work-types';
-export const WORK_TYPE_SEED_VERSION = 1;
+export const WORK_TYPE_SEED_VERSION = 2; // 2: family (interchangeable types) + more keywords
 
 const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `wt_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -48,7 +50,18 @@ export const loadWorkTypes = () => {
     if ((Number(store.seedVersion) || 0) >= WORK_TYPE_SEED_VERSION) return store.items;
     const have = new Set(store.items.map((w) => w && w.id));
     const removed = new Set(removedOf(store));
-    const items = [...store.items, ...seedWorkTypes().filter((w) => !have.has(w.id) && !removed.has(w.id))];
+    const seeds = seedWorkTypes();
+    const seedById = new Map(seeds.map((w) => [w.id, w]));
+    const refreshed = store.items.map((w) => {
+      const seed = w && w.source === 'seed' ? seedById.get(w.id) : null;
+      if (!seed) return w;
+      return {
+        ...w,
+        family: w.family === undefined ? seed.family : w.family,
+        keywords: [...new Set([...(w.keywords || []), ...seed.keywords])],
+      };
+    });
+    const items = [...refreshed, ...seeds.filter((w) => !have.has(w.id) && !removed.has(w.id))];
     writeStore({ items, seedVersion: WORK_TYPE_SEED_VERSION, removedSeeds: [...removed] });
     return items;
   }
@@ -84,6 +97,7 @@ export const cleanWorkType = (wt = {}) => {
     keywords: Array.isArray(wt.keywords) ? wt.keywords.filter(Boolean) : [],
     aliases: Array.isArray(wt.aliases) ? wt.aliases.filter(Boolean) : [],
     fixedDays: Number.isFinite(fixedDays) && fixedDays > 0 ? fixedDays : null,
+    family: wt.family || null,
     legacy: Boolean(wt.legacy),
     checked: Boolean(wt.checked),
     source: wt.source || 'user',

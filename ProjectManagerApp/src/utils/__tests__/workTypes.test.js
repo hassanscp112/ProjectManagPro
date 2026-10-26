@@ -62,6 +62,20 @@ describe('WorkTypes store', () => {
     assert.ok(!ids.includes('marble')); // removed seed stays removed
   });
 
+  it('an upgrade gives seeded types the new fields but keeps the user values', () => {
+    const old = seedWorkTypes().map((w) => {
+      const copy = { ...w, keywords: ['قديم'] };
+      delete copy.family;
+      return copy;
+    });
+    old.find((w) => w.id === 'tiles').productivity = 33;
+    localStorage.setItem(WORK_TYPES_KEY, JSON.stringify({ items: old, seedVersion: 1, removedSeeds: [] }));
+    const tiles = loadWorkTypes().find((w) => w.id === 'tiles');
+    assert.equal(tiles.family, 'floor-finish');
+    assert.equal(tiles.productivity, 33);
+    assert.ok(tiles.keywords.includes('قديم') && tiles.keywords.includes('سيراميك'));
+  });
+
   it('saveWorkTypes replaces the list; user work types get an id and defaults', () => {
     const custom = upsertWorkType({ name: 'تغليف خشبي', trade: 'nope', productivity: -1 });
     assert.ok(custom.id);

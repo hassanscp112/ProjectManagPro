@@ -358,6 +358,7 @@ named snapshot "Before restoring …" and refuses to restore if it can't.
     rateId,                                        // pm-rate-library item that prices it
     keywords: [], aliases: [],                     // BOQ matching
     fixedDays,                                     // fixed duration (mobilization, testing…)
+    family,                                        // interchangeable types ('floor-finish'…)
     legacy, checked, source: 'seed'|'user', learned, history: []
 }]}
 ```
@@ -367,7 +368,8 @@ the integrator; until then it is not in backups).
 Generated tasks also carry (optional): `workTypeId`, `trade`, `crews`,
 `productivity`, `durationSource` (`productivity`|`fixed`|`manual`),
 `unitCost` (direct cost; `unitPrice` = contract price with markups),
-`templateKey` (element key), `floor` (level index). `meta.planning` of a
+`templateKey` (element key), `floor` (level index), `boqNo` (the contract
+BOQ item number, plans made from a BOQ). `meta.planning` of a
 generated project: `{ version, calendar, markups: { overhead, contingency,
 profit }, crews }`.
 
