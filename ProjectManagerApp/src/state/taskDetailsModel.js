@@ -84,7 +84,10 @@ export const directChildren = (tasks = [], task) => {
 /** Children that can be linked to a column: leaves not already BOQ-linked. */
 export const linkableLeaves = (children = []) => children.filter((c) => !c.isGroup && !c.boqLink);
 
-/** Orders on the item's scope: per contractor (count, quantity, expenses) and evidence counts. */
+/**
+ * Orders on the item's scope: per contractor (count, quantity, expenses),
+ * evidence counts, and `photoIds` — every order photo, newest order first.
+ */
 export const orderRollup = (scopeOrders = [], contractors = []) => {
   const byContractor = new Map();
   let tests = 0;
@@ -107,7 +110,11 @@ export const orderRollup = (scopeOrders = [], contractors = []) => {
     else entry.expense += toNum(o.amount);
     byContractor.set(o.who.contractorId, entry);
   });
-  return { contractors: [...byContractor.values()].sort((a, b) => b.count - a.count), tests, completions, expenses };
+  const photoIds = scopeOrders
+    .filter((o) => Array.isArray(o.evidence) && o.evidence.length > 0)
+    .sort((a, b) => (b.recordedAt || '').localeCompare(a.recordedAt || ''))
+    .flatMap((o) => o.evidence.filter(Boolean));
+  return { contractors: [...byContractor.values()].sort((a, b) => b.count - a.count), tests, completions, expenses, photoIds };
 };
 
 /** Whole days from start to end ('YYYY-MM-DD'), or null. */

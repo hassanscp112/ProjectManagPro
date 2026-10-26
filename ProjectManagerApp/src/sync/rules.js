@@ -10,8 +10,8 @@
 // A rule: [collection, part, whenField, whenValue, action]
 //   part      the list inside the store ('' = the store is the list,
 //             '$doc' = everything outside the lists). Rules for keyed lists
-//             (diary days, plan months / weeks / days, meta.planning) are
-//             ready for when the registry declares those lists keyed.
+//             (diary days, plan months / weeks / days, meta.planning)
+//             give one item per key.
 //   when…     the rule applies when data[whenField] === whenValue; the
 //             rule without a condition applies otherwise
 //   action    a permissions.js action, or alternatives joined by '|'
@@ -51,14 +51,16 @@ export const COLLECTION_RULES = [
   ['pm-registries', 'contractors', '', '', 'people.edit'],
   ['pm-registries', 'teams', '', '', 'people.edit'],
   ['pm-registries', 'workers', '', '', 'people.edit'],
-  ['pm-plans', DOC_ITEM, '', '', 'record.work'],
-  ['pm-plans', 'months', '', '', 'record.work'],
-  ['pm-plans', 'weeks', '', '', 'record.work'],
-  ['pm-plans', 'days', '', '', 'record.work'],
+  ['pm-plans', DOC_ITEM, '', '', 'plan.lookahead'],
+  ['pm-plans', 'months', '', '', 'plan.edit'], // month targets
+  ['pm-plans', 'weeks', '', '', 'plan.lookahead'],
+  ['pm-plans', 'days', '', '', 'plan.lookahead'],
   ['pm-rate-library', DOC_ITEM, '', '', 'plan.edit'],
   ['pm-rate-library', 'items', '', '', 'plan.edit'],
   ['pm-templates', DOC_ITEM, '', '', 'plan.edit'],
   ['pm-templates', 'templates', '', '', 'plan.edit'],
+  ['pm-work-types', DOC_ITEM, '', '', 'plan.edit'],
+  ['pm-work-types', 'items', '', '', 'plan.edit'],
   ['pm-activity', '', '', '', ANY_WRITER],
   ['pm-certificates', DOC_ITEM, '', '', 'certificates.prepare'],
   ['pm-certificates', 'certificates', '', '', 'certificates.prepare'],

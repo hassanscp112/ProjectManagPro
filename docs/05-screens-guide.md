@@ -127,13 +127,31 @@ Three sub-pages (tabs; Pending shows a count, as does the sidebar item):
   contractor/team/workers/none). Optional fields say "(optional)"; required ones
   show "Required" after a save attempt. **Enter / "Save and record next"** saves
   and re-seeds the same type with smart defaults (today, last who); "Save" saves
-  and closes. "Repeat last order" copies type, task, unit and who. Side panel:
-  pending approvals (Approve) and today's orders.
+  and closes. "Repeat last order" copies type, task, unit and who (never photos).
+  Side panel: pending approvals (Approve) and today's orders.
+- **Photos** (every type, after the spec fields; `ui/PhotoPicker`) — phone:
+  *Take photo* (rear camera, `capture="environment"`) and *Gallery* (several);
+  desktop: *Add photos*. At most 6; each is compressed first (thumbnail shows
+  a spinner meanwhile, Save waits: "Preparing photos…") and can be removed.
+  `useOrderEntry` keeps `photos` beside `draft`; `save()` is async: new order
+  id → each photo to FileDB (`order_photos`, `{ orderId }`) → order with
+  `evidence: ids`. A `saving` flag blocks a double submit ("Saving…"). If the
+  photos cannot be stored the order is saved without them and a red toast
+  says so.
 - **Phone** (`PhoneRecordFlow.jsx`) — type screen (repeat card + cards) →
   full-screen form (bottom bar hidden, Save pinned at the bottom) → done screen
-  (record another of this type / another type / Home).
+  (photo count when photos were attached; record another of this type /
+  another type / Home).
 - **Order log `#/record/log`** — today/week figures, filters (dates, type,
-  contractor, task), table on desktop / rows on phone, Approve + delete (confirm).
+  contractor, task), table on desktop / rows on phone, Approve + delete
+  (confirm; it names the photos, which are deleted with the order).
+- **Order rows** (`OrderRow`, the log table, Home, task panel / details) — a
+  camera button with the photo count opens the order's photos
+  (`OrderPhotos.jsx`; the viewer dialog `OrderPhotosDialog.jsx` is loaded
+  lazily). Viewer (`ui/PhotoViewer`): one photo, previous / next (arrow keys,
+  mirrored in RTL), "2 / 5", download. Photos are read by
+  `app/useOrderPhotos.js` (ids → `getFilesByIds` → object URLs, revoked on
+  change / unmount).
 - **Pending `#/record/pending`** — formal orders still `recorded`.
 
 Rules (unchanged): quick orders are approved on save by the current user;
@@ -175,10 +193,13 @@ Two sub-pages (tabs) — templates and rates moved up to the projects level:
   the selected column's source. Saves raw formulas. Storage:
   `utils/CalculatorTemplates.js`.
 - **Files `#/library/files`** — folders: root → *Items* → one per top-level
-  section (`task_<id>`); the open folder is in `?folder=`;
-  `#/library/files/:taskId` opens the folder of that item's section (the task
-  panel's *Files*). Upload (button or drop), download, delete (asks first).
-  Blobs live in IndexedDB (`utils/FileDB`).
+  section (`task_<id>`), and root → *Order photos* (`order_photos`); the open
+  folder is in `?folder=`; `#/library/files/:taskId` opens the folder of that
+  item's section (the task panel's *Files*). Upload (button or drop),
+  download, delete (asks first). *Order photos* lists every order's photos,
+  newest first, with a thumbnail and the order (type · item · date, or
+  "Deleted order"): view (viewer), download, delete — no upload; deleting a
+  photo also removes it from its order. Blobs live in IndexedDB (`utils/FileDB`).
 Logic: `src/state/libraryModel.js`.
 
 ## Reports — `src/app/reports/` (rebuilt in Phase 5)
@@ -193,12 +214,27 @@ whatever the screen theme.
 
 **Daily `#/reports/daily`** — *Day* (date with previous / next / Today) or
 *Period* (from–to, notes filtered by engineer). Per day: figures (orders, work
-value, expenses, pending), **Work done** (quantity orders grouped by item with
-who did it, valued at the contract unit price), **Recorded expenses**, and
-**Site notes**. The side card adds a note (engineer prefilled from the
-identity, optional item, the note). Notes never record quantities (golden rule
-5); old notes that have one show it as "Quantity noted". Deleting a note asks
-first. Storage: `utils/DailyNotes.js`.
+value, expenses, pending), **Site diary** (weather, max temperature, working
+hours; manpower by trade and equipment by type with totals; recorded by),
+**Work done** (quantity orders grouped by item with who did it, valued at the
+contract unit price), **Recorded expenses**, **Visitors** and **Issues** (from
+the diary), a marked slot for the day's photos (roadmap WS8), and **Site
+notes**. A period prints the days with orders, notes or a diary (diary-only
+days only when no engineer is picked); the day view says when a day has no
+diary. The side column (day view, screen only) holds the **diary card** — the
+day at a glance and *Fill in / Edit the diary* (`record.work`; other roles see
+a read-only line) — and the note form (engineer prefilled from the identity,
+optional item, the note). The diary editor is a drawer (a bottom sheet on
+phones): weather chips (tap again to clear), temperature, hours, rows for
+manpower (trade + count), equipment (type + count) and visitors (name,
+organisation, purpose), issues. A new day opens with manpower **prefilled from
+the day's plan crews** (Lookahead); *From the day plan* refills it and *Same as
+yesterday* copies weather, hours, manpower and equipment from the last
+recorded day. Saving an empty diary removes the day. Notes never record
+quantities (golden rule 5); old notes that have one show it as "Quantity
+noted". Deleting a note asks first. Storage: `utils/DailyNotes.js`,
+`utils/SiteDiary.js`; diary components `reports/DiaryParts.jsx`
+(+ `Diary.module.css`).
 
 **Monthly `#/reports/monthly`** — month with previous / next (defaults to the
 **previous** month). Sections: summary figures (as of today — said under them),
@@ -206,8 +242,29 @@ S-curve (`home/SCurve.jsx`), BOQ progress per top-level section (approved
 quantity orders before vs within the month, remaining, %), the month's orders,
 variation orders (old → new follows the reading direction), quantities per
 contractor plus internal crews, money summary (work value − expenses per
-category, net), signature lines. The project name comes from `ui.projectName`
-/ `ui.projectContract` (the legacy sheet had it hardcoded in Arabic).
+category, net), **Delays this month** (`reports/MonthDelays.jsx`: the events
+that touch the month with the part inside it, days in the month — a day under
+two events counts once — excusable days, claimed / granted), signature lines.
+The project name comes from `ui.projectName` / `ui.projectContract` (the
+legacy sheet had it hardcoded in Arabic).
+
+**Delays `#/reports/delays`** — the delay register (`reports/DelaysPage.jsx`),
+a printable `ReportSheet` "as of today": figures (events, delay days with
+overlaps counted once, excusable days, claimed — drafts excluded — granted,
+awaiting decision, notice warnings), the events newest first (title with
+cause, recorded by and affected items; period; days — an open event runs to
+today; excusable; notice date with a badge: in time / late notice / no notice
+/ due by; claimed / granted; status), totals and signature lines. Filters:
+status and cause (the totals follow them; a badge on the sheet names them). On
+phones the register is a list of cards; paper always gets the table. *New
+delay*, a row's edit button (or a click on the row / card) open the editor
+drawer (`record.work` only):
+title, cause chips, start / end (empty = ongoing), affected items (task picker
+plus removable chips), excusable or not, **notice date** with a live warning
+when it is more than 28 days after the start, or when no notice was given and
+the 28 days have passed (FIDIC 20.1), status, days claimed, days granted (when
+granted), notes; Delete asks first. A new event records `recordedBy` from
+`currentActor()`. Storage: `utils/Delays.js`; rules: `state/diaryModel.js`.
 
 **Activity `#/reports/activity`** — three views kept in the URL (`?view=task`,
 `?view=heatmap`):
@@ -222,7 +279,7 @@ category, net), signature lines. The project name comes from `ui.projectName`
    days; click a day for its entries (variation orders only in whole-project
    scope). Opens scrolled to the latest weeks.
 
-Logic: `src/state/reportsModel.js`; month / weekday names and the issue stamp:
+Logic: `src/state/reportsModel.js` (diary and delays: `src/state/diaryModel.js`); month / weekday names and the issue stamp:
 `src/app/dates.js`.
 
 ## Finance — `src/app/finance/FinancePage.jsx` (rebuilt in Phase 6)
@@ -242,6 +299,46 @@ save the date and the slow-changing fields stay for fast repeated entry.
   materials, expense types, advance statuses): add / remove; they are user
   data and stay as entered.
 Storage: `utils/Finance.js`; rules: `src/state/financeModel.js`.
+
+### Payment certificates (الذرعات) — `src/app/finance/Certificate*.jsx`
+
+The Finance tab **Certificates**. Two kinds: **subcontractor** (that
+contractor's approved work at the rates agreed with them) and **main contract
+/ employer** (all approved work, by anyone, at the BOQ unit prices). Numbers
+run per kind and contractor.
+- **List `#/finance/certificates`** (`CertificatesPage.jsx`) — filters: kind
+  (all / subcontractor / main contract) and contractor; a table on desktop
+  (No., for, period, status, gross to date, net payable, "N without a rate")
+  and rows on phones; each opens its certificate. *New certificate* needs
+  `certificates.prepare`.
+- **New certificate** (`CertificateNewDialog.jsx`) — kind, contractor, period
+  end (default today). A series has one draft at a time: if one exists the
+  dialog offers *Open draft No. N*; the period must end after the last issued
+  certificate.
+- **Rates & terms `?view=rates`** (`CertificateRates.jsx`) — the agreed rates
+  as a contractor × item table (BOQ price shown beside them); *With orders*
+  (default) / *All items*, search, and a contractor picker (one contractor at a
+  time on phones; `&contractor=id` preselects one). A cell where that
+  contractor has orders but no rate is marked "needs a rate". Below: the
+  default terms (retention %, retention limit, main-contract advance, advance
+  recovery %, currency label). Fields save when left (Enter too).
+- **Certificate `#/finance/certificates/:id`** (`CertificatePage.jsx`) — a
+  printable `ReportSheet`: who it is for, number, terms, orders counted; **Work
+  done** per item — quantity and amount, each previous / this period / to date,
+  × the rate ("No rate" lines are flagged and left out); **Summary** — gross,
+  less retention, less advance recovery (with the advance left), less other
+  deductions → net due to date, less previous certificates → **net payable**;
+  other deductions; note; three signature lines (subcontractor: preparer,
+  project manager, subcontractor; main contract: contractor, resident engineer,
+  employer's representative). *Print* prints the sheet only.
+  - **Draft**: follows the order log live; notices say what blocks issuing
+    (items without a rate → *Set the rates*; a period before the last issued
+    one; no approved work). The side card edits the period end, the terms
+    (copied from the previous certificate of the series), other deductions and
+    the note. *Delete draft* asks first. *Issue certificate*
+    (`certificates.issue`) asks first, then freezes lines, totals and the
+    certified orders and logs it in Activity.
+  - **Issued**: frozen; the side card shows who issued it and when.
 
 ## People — `src/app/people/PeoplePage.jsx` (rebuilt in Phase 6)
 
@@ -267,9 +364,25 @@ Storage: `utils/Finance.js`; rules: `src/state/financeModel.js`.
   (`useBackupRestore.jsx`, shared with the Schedule's More menu). Restore
   downloads a safety backup of the current data first. The "Browser storage"
   row shows whether the browser may clear the data (Protect asks again).
+  Under it, the storage meter (`utils/StoragePersistence.getStorageUsage`):
+  *Space used on this device* (the browser's quota for the app, shown when
+  the browser reports it), *Project data* (localStorage of its ~5 MB limit)
+  and *Order photos* (count · size, all projects). A bar turns orange and a
+  warning asks for a backup when either reaches 80 %. Read once when the
+  page opens.
 - **Snapshots** — counts and size; create a named snapshot; named ones can be
   restored, renamed, deleted; automatic daily ones (last 14) restored. Restore
   asks first, keeps the current data as a "Before restoring …" snapshot, and reloads. Snapshots cover tasks + project meta only.
+
+## App updates and offline — `src/app/UpdatePrompt.jsx` (every screen)
+
+Builds only (no service worker in dev; see [02 §7](02-architecture.md)).
+- **"A new version is ready · Reload"** — a banner at the top centre (above
+  the page, hidden when printing) when a new deployment has downloaded.
+  *Reload* switches to it; *Later* (×) hides the banner until the next
+  launch. The app never reloads on its own, so nothing being typed is lost.
+- **"Ready to work offline"** — a toast once, when the app has finished
+  saving itself for offline use after the first visit.
 
 ## Task Details — `src/app/schedule/TaskDetailsPage.jsx` (rebuilt in Phase 7)
 
@@ -286,7 +399,9 @@ sum × waste factor; the **elements map** sorted in progress → on hold → not
 started → completed (completed hidden behind a toggle); the latest 10
 **orders** on the item or below it (Approve inline) with a per-contractor
 roll-up; **money** (contract, executed, variance, linked expenses);
-**evidence** (tests, completions, a link to the item's files); and the
+**evidence** (tests, completions, photo count + the latest 8 photos from
+orders on the item or below it — `orderRollup().photoIds`, newest order
+first — and a link to the item's files); and the
 **sub-items** table (name opens the sub-item's panel, or its details for
 groups).
 

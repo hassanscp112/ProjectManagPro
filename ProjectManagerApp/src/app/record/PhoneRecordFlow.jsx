@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Camera, Check, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useI18n } from '../../i18n/useI18n.js';
@@ -88,6 +88,12 @@ export default function PhoneRecordFlow() {
           <StatusBadge tone={approved ? 'success' : 'warning'} size="md">
             {approved ? t('record.doneApproved') : t('record.doneRecorded')}
           </StatusBadge>
+          {saved.evidence?.length > 0 && (
+            <span className={s.donePhotos}>
+              <Camera size={18} aria-hidden="true" />
+              {t('record.donePhotos', { n: saved.evidence.length })}
+            </span>
+          )}
         </div>
         <div className={s.doneActions}>
           <Button variant="primary" size="lg" block onClick={() => open(saved.type)}>
@@ -104,15 +110,15 @@ export default function PhoneRecordFlow() {
     );
   }
 
-  const { spec } = entry;
+  const { spec, saving, photosBusy } = entry;
   return (
     <Page area="record" bare>
       <form
         className={cx(s.groups, s.phoneForm)}
         noValidate
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          const order = entry.save();
+          const order = await entry.save();
           if (!order) return;
           toast({ title: savedMessage(t, order) });
           setSaved(order);
@@ -132,8 +138,8 @@ export default function PhoneRecordFlow() {
         </div>
         <OrderForm entry={entry} size="lg" />
         <div className={s.saveBar}>
-          <Button variant="primary" size="lg" block type="submit">
-            {t('record.save')}
+          <Button variant="primary" size="lg" block type="submit" disabled={saving || photosBusy} aria-busy={saving || undefined}>
+            {saving ? t('record.saving') : photosBusy ? t('record.photosPreparing') : t('record.save')}
           </Button>
         </div>
       </form>

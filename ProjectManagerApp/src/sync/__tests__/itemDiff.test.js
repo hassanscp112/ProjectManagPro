@@ -19,7 +19,7 @@ import { storeFor } from '../../utils/storeRegistry.js';
 const TASKS = storeFor('project-manager-gantt-tasks');
 const ORDERS = storeFor('pm-orders');
 const FINANCE = storeFor('project-manager-finance-data');
-const PLANS = storeFor('pm-plans');
+const CONFIG = storeFor('project-manager-finance-config');
 
 const baseFrom = (entry, value) => {
   const base = {};
@@ -56,7 +56,7 @@ describe('itemDiff — explode', () => {
   });
 
   it('a store without lists is one document', () => {
-    const items = explodeStore(PLANS, { months: {} });
+    const items = explodeStore(CONFIG, { months: {} });
     assert.deepEqual([...items.keys()], [DOC_ITEM]);
   });
 
@@ -197,6 +197,6 @@ describe('itemDiff — materialize and apply', () => {
   });
 
   it('a store without lists takes the new document', () => {
-    assert.deepEqual(applyItems(PLANS, { months: {} }, [{ key: DOC_ITEM, data: { months: { '2026-10': {} } } }]), { months: { '2026-10': {} } });
+    assert.deepEqual(applyItems(CONFIG, { units: [] }, [{ key: DOC_ITEM, data: { units: ['m3'] } }]), { units: ['m3'] });
   });
 });

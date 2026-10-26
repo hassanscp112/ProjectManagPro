@@ -95,4 +95,9 @@ export default {
     'Enter the approver name to approve "{type}" dated {date}. Once approved, the quantity counts toward executed work.',
   'orders.approverPlaceholder': 'Approver name / signature',
 
+  // Photo evidence
+  'orders.photosButton': 'Order photos ({n})',
+  'orders.photosTitle': 'Photos · {type} · {date}',
+  'orders.photosLoadFailed': 'The photos could not be loaded from this device.',
+  'orders.deleteConfirmPhotos': 'Its photos ({n}) will be deleted too.',
 };

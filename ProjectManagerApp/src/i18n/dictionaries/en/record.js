@@ -44,4 +44,11 @@ export default {
   'record.showAll': 'Show all',
   'record.filters': 'Filters',
   'record.approverLabel': 'Approver name',
+
+  // Photos
+  'record.saving': 'Saving…',
+  'record.photosPreparing': 'Preparing photos…',
+  'record.photosNotSaved': 'Order saved without its photos',
+  'record.photosNotSavedBody': 'The photos could not be stored on this device (storage full or blocked).',
+  'record.donePhotos': 'Photos attached: {n}',
 };

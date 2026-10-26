@@ -35,8 +35,9 @@ const DETAIL_KEYS = ['location', 'sampleRef', 'result', 'depth', 'note'];
 /**
  * The stored order for a valid draft. Quick orders are approved on save
  * (approver = current user); formal orders start as 'recorded'.
+ * `evidence`: ids of the photos already stored for this order (FileDB).
  */
-export const buildOrderFromDraft = (draft, spec, { tasks = [], userName = '', id, now }) => {
+export const buildOrderFromDraft = (draft, spec, { tasks = [], userName = '', id, now, evidence = [] }) => {
   const task = tasks.find((t) => t.id === draft.taskId) || null;
   const isValue = spec.family === 'value';
   const isQuick = spec.tier === 'quick';
@@ -63,7 +64,7 @@ export const buildOrderFromDraft = (draft, spec, { tasks = [], userName = '', id
     amount: isValue ? null : toNumberOrNull(draft.amount),
     category: isValue ? null : spec.label,
     details,
-    evidence: [],
+    evidence: (Array.isArray(evidence) ? evidence : []).filter(Boolean),
     status: isQuick ? 'approved' : 'recorded',
     approvedBy: isQuick ? userName || null : null,
   };
@@ -75,7 +76,7 @@ export const latestOrder = (orders = []) =>
 
 /**
  * A fresh draft that repeats an earlier order: same type, task, unit and
- * who; today's date; quantity/amount and notes left empty.
+ * who; today's date; quantity/amount, notes and photos left empty.
  */
 export const repeatOrderDraft = (order) => {
   if (!order) return null;

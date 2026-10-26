@@ -54,6 +54,29 @@ test('formal orders start recorded; expenses carry amount and category, not quan
   assert.deepEqual({ qty: fuel.quantity, amount: fuel.amount, cat: fuel.category, who: fuel.who, task: fuel.taskId }, { qty: null, amount: 75000, cat: ORDER_TYPES.fuel.label, who: { kind: 'none' }, task: null });
 });
 
+test('evidence: the stored photo ids go on the order; none by default', () => {
+  const draft = { type: 'quick_work', date: '2026-10-25', taskId: '2.1.2', quantity: '5', who: { kind: 'none' } };
+  const withPhotos = buildOrderFromDraft(draft, ORDER_TYPES.quick_work, { tasks, id: 'o4', now: 'T', evidence: ['f1', '', 'f2', null] });
+  assert.deepEqual(withPhotos.evidence, ['f1', 'f2']);
+  assert.deepEqual(buildOrderFromDraft(draft, ORDER_TYPES.quick_work, { tasks, id: 'o5', now: 'T' }).evidence, []);
+  // A draft never smuggles evidence in: only the ids passed at save time count.
+  assert.deepEqual(buildOrderFromDraft({ ...draft, evidence: ['x'] }, ORDER_TYPES.quick_work, { tasks, id: 'o6', now: 'T' }).evidence, []);
+  // Every type carries the field (photos are offered on every type).
+  Object.values(ORDER_TYPES).forEach((spec) => {
+    const order = buildOrderFromDraft({ type: spec.type, date: '2026-10-25', who: { kind: 'none' } }, spec, { tasks, id: 'o', now: 'T', evidence: ['p'] });
+    assert.deepEqual(order.evidence, ['p'], spec.type);
+  });
+});
+
+test('repeat last order copies no photos', () => {
+  const last = { id: 'b', type: 'material', taskId: '2.1.2', unit: 'م3', amount: 9, evidence: ['f1', 'f2'], who: { kind: 'none' }, recordedAt: 'T' };
+  const draft = repeatOrderDraft(last);
+  assert.equal('evidence' in draft, false);
+  assert.equal('photos' in draft, false);
+  const again = buildOrderFromDraft({ ...draft, amount: '10' }, ORDER_TYPES.material, { tasks, id: 'o7', now: 'T2' });
+  assert.deepEqual(again.evidence, []);
+});
+
 test('latestOrder and repeatOrderDraft reproduce the last order without its quantity', () => {
   const orders = [
     { id: 'a', type: 'fuel', recordedAt: '2026-10-24T08:00:00Z' },

@@ -9,8 +9,9 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
 ```
  main.jsx ─ fonts + src/ui tokens/base css ─ applyTheme(loadTheme()) ─ ensureProjects()
    └─ I18nProvider → UiProvider (Radix direction, tooltips, toasts) → App
-        └─ App.jsx = AppErrorBoundary + SyncRuntime (server sync, sign-in gate — §7)
-                     + RouterProvider (hash URLs)
+        └─ App.jsx = AppErrorBoundary + SyncRuntime (server sync, sign-in gate — §8)
+             │         + RouterProvider (hash URLs)
+             │         + UpdatePrompt (service worker, "new version" banner; §7)
              ├─ /login (stand-alone: sign in, server address, "use without an account")
              ├─ projects level: PortfolioLayout → /projects, /projects/new,
              │                  /templates, /templates/new, /rates  (no project open)
@@ -121,7 +122,7 @@ over. Sub-pages show as tabs under the page title (`AREA_TABS` in
 | Engine | `engineResult = useMemo(() => GanttEngine.calculate(...), [tasks, projectMeta, orders])` |
 | Undo | 50-step history; a 1 s typing burst counts as one step; `ganttView` (edit mode, zoom, columns, critical-only, search, collapsed groups) survives navigation |
 | Auto snapshot | `writeAutoSnapshot()` on any tasks/meta/identity change (no-op if today's exists) |
-| Task actions | `updateTask`, `addMainTask`, `addSubTask`, `requestDeleteTask` → `confirmDeleteTask` (dialog in `AppLayout`), `setBoqLink`, `linkBoqToExisting` |
+| Task actions | `updateTask`, `addMainTask`, `addSubTask`, `requestDeleteTask` → `confirmDeleteTask` (dialog in `AppLayout`), `setBoqLink`, `linkBoqToExisting`, `applyTaskPatches([{ id, patch }])` (several tasks, one undo step — `projectModel.applyTaskPatchList`), `setPlanning(patch \| updater)` (merges into `meta.planning`, not undoable — `projectModel.mergePlanning`) |
 | Lifecycle | `signOff(signedBy)`, `setStatus(status)`, `raiseVariation(draft)` → true when recorded |
 | Backup/restore | Schedule toolbar's More menu and Settings via `utils/DataIO` (validate → confirm → safety download → write keys + files → reload) |
 | Crashes | `app/ErrorPage.jsx`: a screen crash shows the error page inside the shell (router `errorElement` on a pathless route); a shell crash shows it full-window; `AppErrorBoundary` in `App.jsx` catches the project store. All offer a backup download |
@@ -247,7 +248,78 @@ ProjectProvider also listens to the `storage` event for the same four keys.
 
 ---
 
-## 7. Accounts and server sync (`src/sync`)
+## 7. Build, installable app (PWA), deployment and E2E tests
+
+**Base path.** `vite.config.js` sets `base: process.env.VITE_BASE || '/'`.
+Locally the app lives at the root (dev server `localhost:5173`, fixed port);
+the GitHub Pages build uses `VITE_BASE=/ProjectManagPro/`. The hash router
+needs no server rewrites, so any static host works.
+
+**Installable / offline (vite-plugin-pwa 2, Workbox `generateSW`).**
+- `npm run build` also writes `dist/manifest.webmanifest`, `dist/sw.js` and a
+  Workbox runtime file. The manifest: «مدير المشروع», `lang: 'ar'`,
+  `dir: 'rtl'`, standalone, theme `#553285`, white background,
+  `start_url` / `scope` `'.'` (relative to the base), the icons below.
+- The service worker precaches every `js, css, html, svg, png, ico, woff2`
+  file of the build (≤ 4 MB each; the largest chunk is BoqPage with
+  jspreadsheet) and answers every navigation with `index.html`. Cache name
+  `workbox-precache-v2-<scope>`. After the first visit the whole app, every
+  lazy screen and the fonts open offline.
+- No service worker in dev (`devOptions.enabled: false`): there
+  `virtual:pwa-register/react` is a stub, so dev servers never cache.
+- `registerType: 'prompt'`, `injectRegister: false`: `src/app/UpdatePrompt.jsx`
+  (mounted beside `RouterProvider`) registers the worker with `useRegisterSW`.
+  A new deployment installs in the background and **waits**; the banner
+  "A new version is ready · Reload" appears and only the user's Reload
+  switches over (skip-waiting + one reload). It never reloads by itself — a
+  half-filled order would be lost. While open, the app checks for a new
+  version every hour (when online). The first install shows the toast "Ready
+  to work offline" once.
+
+**Icons.** One source, `public/app-icon.svg` (aubergine tile, white roof over
+three plan bars). `npm run icons` (`pwa-assets.config.js`,
+`@vite-pwa/assets-generator`, preset `minimal-2023` with an aubergine instead
+of white background for the maskable and Apple icons) writes next to it:
+`pwa-64x64.png`, `pwa-192x192.png`, `pwa-512x512.png`,
+`maskable-icon-512x512.png`, `apple-touch-icon-180x180.png`, `favicon.ico`.
+They are committed; rerun the script after changing the SVG. `index.html`
+links the favicon, the SVG icon and the Apple icon, and sets `theme-color`
+and the "standalone on the home screen" metas.
+
+**Deployment.** `.github/workflows/deploy-pages.yml` runs on every push to
+`main` (and by hand): in `ProjectManagerApp/`, Node 22, `npm ci`, `npm test`,
+`npm run build` with `VITE_BASE=/ProjectManagPro/`, then
+`upload-pages-artifact` (`dist`) and `deploy-pages` →
+https://hassanscp112.github.io/ProjectManagPro/. The repository's Pages
+source must be set once to **GitHub Actions** (Settings → Pages).
+The Pages site is a **different origin** from `localhost:5173`: it starts
+with empty storage. Move data with Backup on one and Restore on the other.
+
+**Checking a Pages build locally.** Build with the base, then preview:
+`VITE_BASE=/ProjectManagPro/ npm run build` and
+`VITE_BASE=/ProjectManagPro/ npm run preview -- --port 4173`, open
+http://localhost:4173/ProjectManagPro/. In Git Bash prefix both with
+`MSYS_NO_PATHCONV=1` (it otherwise rewrites `/ProjectManagPro/` into a
+Windows path); in PowerShell set `$env:VITE_BASE='/ProjectManagPro/'`.
+DevTools → Application shows the manifest, the worker and the precache.
+
+**E2E smoke tests.** `npm run test:e2e` (Playwright, `playwright.config.js`,
+specs in `e2e/`). It starts its own dev server on port **5190** with empty
+browser profiles, so real data is never touched; first run
+`npx playwright install chromium`. `smoke.spec.js` creates a project from the
+first template and opens every route (with real ids) as a fresh deep link
+in Arabic and English, desktop and 375 px phone: no console errors, no error
+page. `record-order.spec.js` records a quick work order and finds it in the
+order log. Tests run one at a time (parallel full page loads exhaust the
+browser against the unbundled dev server); the suite takes about 3 minutes.
+Helpers (`e2e/helpers.js`) seed the language and a user name (so the
+first-run identity dialog stays closed) and click through the DOM
+(`element.click()`), because pointer clicks can time out in some
+environments. Output goes to `test-results/` (git-ignored).
+
+---
+
+## 8. Accounts and server sync (`src/sync`)
 
 Optional: without a server (or with *Use without an account*) the app is a
 single-device app exactly as above. With one (Supabase, address in

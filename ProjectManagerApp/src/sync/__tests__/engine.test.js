@@ -178,6 +178,25 @@ describe('sync engine — pull', () => {
     assert.deepEqual(b.read(ORDERS).orders.map((o) => o.id), ['o2', 'o1']);
   });
 
+  it('keyed stores sync per key: two devices edit different diary days offline', async () => {
+    const DIARY = 'pm-site-diary';
+    const server = setup();
+    const a = device(server, 'site');
+    const b = device(server, 'office');
+    a.write(DIARY, { days: { '2026-10-25': { weather: 'sunny' } } });
+    await a.sync();
+    await b.sync();
+    a.write(DIARY, { days: { '2026-10-25': { weather: 'sunny' }, '2026-10-26': { weather: 'dust' } } });
+    b.write(DIARY, { days: { '2026-10-25': { weather: 'rain', note: 'stopped at noon' } } });
+    await a.sync();
+    await b.sync();
+    await a.sync();
+    const expected = { '2026-10-25': { weather: 'rain', note: 'stopped at noon' }, '2026-10-26': { weather: 'dust' } };
+    assert.deepEqual(a.read(DIARY).days, expected);
+    assert.deepEqual(b.read(DIARY).days, expected);
+    assert.equal(server.changes.filter((c) => c.outcome === 'rejected').length, 0, 'no conflict');
+  });
+
   it('rebuilds a whole store on a device that never had it', async () => {
     const server = setup();
     const a = device(server, 'admin');

@@ -11,6 +11,7 @@ import {
   Ellipsis,
   FileText,
   FolderKanban,
+  HardHat,
   House,
   LayoutTemplate,
   SlidersHorizontal,
@@ -34,6 +35,7 @@ export const PORTFOLIO_AREAS = [
   { key: 'projects', labelKey: 'projects.navProjects', icon: FolderKanban, path: '/projects' },
   { key: 'templates', labelKey: 'app.nav.templates', icon: LayoutTemplate, path: '/templates' },
   { key: 'rates', labelKey: 'templates.tabRates', icon: Tags, path: '/rates' },
+  { key: 'work-types', labelKey: 'templates.navWorkTypes', icon: HardHat, path: '/work-types' },
 ];
 
 export const SETTINGS_AREA = { key: 'settings', labelKey: 'ui.navSettings', icon: SlidersHorizontal, path: '/settings' };
@@ -51,6 +53,7 @@ export const AREA_TABS = {
     { to: '/schedule', labelKey: 'schedule.tabGantt', end: true, alsoActive: ['/schedule/task/'] },
     { to: '/schedule/lookahead', labelKey: 'schedule.tabLookahead' },
     { to: '/schedule/baseline', labelKey: 'schedule.tabBaseline' },
+    { to: '/schedule/resources', labelKey: 'schedule.tabResources' },
   ],
   reports: [
     { to: '/reports/daily', labelKey: 'app.nav.reports' },

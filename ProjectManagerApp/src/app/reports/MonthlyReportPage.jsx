@@ -13,6 +13,7 @@ import { issueStamp, monthLabel } from '../dates.js';
 import SCurve from '../home/SCurve.jsx';
 import { Page } from '../Page.jsx';
 import { formatDay, orderFigure, orderSubject, typeLabel } from '../record/orderMeta.js';
+import { MonthDelaysSection } from './MonthDelays.jsx';
 import { ReportSheet, SheetSection } from './ReportSheet.jsx';
 import s from './Reports.module.css';
 
@@ -246,6 +247,8 @@ export default function MonthlyReportPage() {
             </table>
           </div>
         </SheetSection>
+
+        <MonthDelaysSection month={month} />
 
         <SheetSection title={t('reports.perContractorTitle')}>
           <div className={s.tableWrap}>

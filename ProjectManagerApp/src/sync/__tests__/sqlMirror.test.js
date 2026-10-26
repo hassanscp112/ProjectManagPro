@@ -1,11 +1,13 @@
 // The server's role matrix and collection rules (SQL) must say the same as
 // the app's (permissions.js, sync/rules.js) and cover every synced store.
 // Adding an action, a role or a synced store without the matching SQL
-// migration fails here.
+// migration fails here. Rows come from the `-- BEGIN <table>` / `-- END
+// <table>` insert blocks of every migration, so a later migration adds rows
+// with the same markers.
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ACTIONS, ROLES } from '../../utils/permissions.js';
@@ -14,14 +16,22 @@ import { DOC_ITEM } from '../itemDiff.js';
 import { COLLECTION_RULES, FILES_COLLECTION, PROJECTS_COLLECTION, scopeOf } from '../rules.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const schema = readFileSync(path.join(here, '..', '..', '..', 'supabase', 'migrations', '20261026120000_schema.sql'), 'utf8');
+const migrationsDir = path.join(here, '..', '..', '..', 'supabase', 'migrations');
+const migrations = readdirSync(migrationsDir)
+  .filter((f) => f.endsWith('.sql'))
+  .sort()
+  .map((f) => readFileSync(path.join(migrationsDir, f), 'utf8'))
+  .join('\n');
 
+// Every `-- BEGIN <name>` … `-- END <name>` insert block of every migration.
 const block = (name) => {
-  const match = schema.match(new RegExp(`-- BEGIN ${name}[^\\n]*\\n([\\s\\S]*?)-- END ${name}`));
-  assert.ok(match, `block ${name} in the schema migration`);
-  return [...match[1].matchAll(/\(([^()]*)\)/g)]
-    .map((m) => [...m[1].matchAll(/'([^']*)'/g)].map((v) => v[1]))
-    .filter((row) => row.length > 0);
+  const matches = [...migrations.matchAll(new RegExp(`-- BEGIN ${name}\\b[^\\n]*\\n([\\s\\S]*?)-- END ${name}\\b`, 'g'))];
+  assert.ok(matches.length > 0, `block ${name} in the migrations`);
+  return matches.flatMap((match) =>
+    [...match[1].matchAll(/\(([^()]*)\)/g)]
+      .map((m) => [...m[1].matchAll(/'([^']*)'/g)].map((v) => v[1]))
+      .filter((row) => row.length > 0)
+  );
 };
 
 describe('SQL mirrors the app rules', () => {

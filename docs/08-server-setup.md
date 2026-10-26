@@ -1,6 +1,6 @@
 # 08 — Server Setup: the Shared Database
 
-> Last verified 2026-10-26. Read [02-architecture.md](02-architecture.md) §7
+> Last verified 2026-10-26. Read [02-architecture.md](02-architecture.md) §8
 > first for how the app syncs. Scripts: `ProjectManagerApp/supabase/server/`.
 
 The app works fully on one device without any server. A server adds

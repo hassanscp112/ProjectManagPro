@@ -188,7 +188,19 @@ user**. The session starts in plan mode and builds after the user approves.
   `app/templates/*`, `app/portfolio/NewProjectPage.jsx`,
   `app/library/Boq*`;
 - the dictionaries `templates`, `planning`, `schedule`, `gantt`, `projects`
-  and `calculator`.
+  and `calculator`;
+- granted on 2026-10-26 (request 4 in `plans/auto-planning-plan.md`): the
+  predecessor handling in `state/projectModel.js` (`deleteTaskCascade`,
+  `describeDelete`, `normalizeTaskUpdate`), which uses P's own
+  `utils/planning/links.js`.
+
+Done for P by the integrator on `roadmap/integration`: `pm-work-types` in
+the store registry, the `plan.lookahead` permission, `applyTaskPatches` /
+`setPlanning` in `ProjectProvider` (pure helpers `applyTaskPatchList` /
+`mergePlanning` at the end of `projectModel.js`), and placeholder routes
+`#/work-types` (projects-level sidebar) and `#/schedule/resources` (Schedule
+tab), with their pages in P's folders. The `.xlsx` parser is waiting for the
+user to approve a library (WS2 owns `package.json`).
 
 **Must keep:** the order-derived executed quantity, the sign-off and
 baseline locks, and the variation-order flow.

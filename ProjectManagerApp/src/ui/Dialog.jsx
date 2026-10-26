@@ -111,7 +111,7 @@ export function Drawer({ open, onOpenChange, title, description, footer, wide = 
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
         <RadixDialog.Overlay className={cx('ui-portal', s.overlay)} />
-        <RadixDialog.Content className={cx('ui-portal', s.panel, wide ? s.drawerWide : s.drawer)} onOpenAutoFocus={focusMarkedField}>
+        <RadixDialog.Content className={cx('ui-portal', s.panel, s.drawer, wide && s.drawerWide)} onOpenAutoFocus={focusMarkedField}>
           <span className={s.handle} aria-hidden="true" />
           <PanelChrome title={title} description={description} footer={footer}>
             {children}

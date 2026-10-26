@@ -125,3 +125,41 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* Storage meter (Backup card) */
+.meters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-3);
+}
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+}
+.meterHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 var(--ui-space-3);
+  font-size: var(--ui-fs-sm);
+}
+.meterValue {
+  color: var(--ui-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.storageWarn {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-2);
+  margin: 0;
+  padding: var(--ui-space-3);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-warning-soft);
+  color: var(--ui-warning);
+  font-size: var(--ui-fs-sm);
+}
+.storageWarn svg {
+  flex: none;
+  margin-top: 2px;
+}

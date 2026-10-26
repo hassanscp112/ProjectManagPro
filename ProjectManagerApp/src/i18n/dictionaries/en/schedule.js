@@ -6,6 +6,8 @@ export default {
   'schedule.tabGantt': 'Timeline',
   'schedule.tabLookahead': 'Lookahead',
   'schedule.tabBaseline': 'Baseline',
+  'schedule.tabResources': 'Resources',
+  'schedule.resourcesPlaceholder': 'Resources and leveling are being built.',
 
   // Toolbar
   'schedule.zoom': 'Zoom',

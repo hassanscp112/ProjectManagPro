@@ -127,6 +127,7 @@ describe('history keys', () => {
     assert.deepEqual(itemKeysFor('project-manager-gantt-tasks', 't1'), ['t1']);
     assert.deepEqual(itemKeysFor('project-manager-finance-data', 'm1'), ['machinery/m1', 'materials/m1', 'pettyCash/m1', 'payroll/m1']);
     assert.deepEqual(itemKeysFor('pm-orders', 'orders/o1'), ['orders/o1']);
-    assert.deepEqual(itemKeysFor('pm-plans', 'anything'), ['$doc']);
+    assert.deepEqual(itemKeysFor('project-manager-finance-config', 'anything'), ['$doc']);
+    assert.deepEqual(itemKeysFor('pm-site-diary', '2026-10-26'), ['days/2026-10-26'], 'a keyed list');
   });
 });
