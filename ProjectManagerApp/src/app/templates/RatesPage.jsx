@@ -1,23 +1,31 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { formatNumber } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
 import { RATE_CATEGORIES, addRate, deleteRate, loadRateLibrary, updateRate } from '../../utils/RateLibrary.js';
-import { Button, ConfirmDialog, Dialog, EmptyState, Field, IconButton, Input, NumberInput, Select, StatusBadge, Table } from '../../ui/index.js';
+import { Button, ConfirmDialog, Dialog, EmptyState, Field, IconButton, Input, NumberInput, Segmented, Select, StatusBadge, Table } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
+import { useCan } from '../useCan.js';
 import { categoryLabel } from './templateLabels.js';
+import WorkTypesPanel from './WorkTypesPanel.jsx';
 import s from '../library/Library.module.css';
 
 /**
  * /rates — the IQD rate library the template generator prices
- * items from. Prices are copied at generation time. Storage: RateLibrary.
+ * items from (direct cost; projects add their markups). Prices are copied
+ * at generation time. Storage: RateLibrary. The second tab
+ * (?tab=work-types) is the work-type library (WorkTypesPanel).
  */
 export default function RatesPage() {
   const { t } = useI18n();
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'work-types' ? 'work-types' : 'rates';
   const [rates, setRates] = useState(loadRateLibrary);
   const [query, setQuery] = useState('');
   const [draft, setDraft] = useState(null);
   const [toDelete, setToDelete] = useState(null);
+  const canEdit = useCan()('plan.edit');
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return rates;
@@ -33,13 +41,37 @@ export default function RatesPage() {
     setDraft(null);
   };
 
+  const tabs = (
+    <Segmented
+      label={t('templates.wt.tabs')}
+      value={tab}
+      onChange={(next) => setParams(next === 'rates' ? {} : { tab: next }, { replace: true })}
+      options={[
+        { value: 'rates', label: t('templates.tabRates') },
+        { value: 'work-types', label: t('templates.wt.title') },
+      ]}
+    />
+  );
+
+  if (tab === 'work-types') {
+    return (
+      <Page area="rates">
+        {tabs}
+        <WorkTypesPanel canEdit={canEdit} />
+      </Page>
+    );
+  }
+
   return (
     <Page area="rates">
+      {tabs}
       <div className={s.toolbar}>
         <Input type="search" className={s.search} aria-label={t('templates.searchRates')} placeholder={t('templates.searchRates')} value={query} onChange={(e) => setQuery(e.target.value)} />
-        <Button variant="primary" icon={Plus} onClick={() => setDraft({ id: null, name: '', unit: 'م2', unitPrice: '', category: RATE_CATEGORIES[0] })}>
-          {t('library.addRate')}
-        </Button>
+        {canEdit && (
+          <Button variant="primary" icon={Plus} onClick={() => setDraft({ id: null, name: '', unit: 'م2', unitPrice: '', category: RATE_CATEGORIES[0] })}>
+            {t('library.addRate')}
+          </Button>
+        )}
       </div>
 
       {shown.length === 0 ? (
@@ -65,8 +97,12 @@ export default function RatesPage() {
                   <StatusBadge icon={false}>{categoryLabel(r.category, t)}</StatusBadge>
                 </td>
                 <td className={s.rowActions}>
-                  <IconButton icon={Pencil} label={t('common.edit')} size="sm" variant="ghost" onClick={() => setDraft({ ...r, unitPrice: String(r.unitPrice ?? '') })} />
-                  <IconButton icon={Trash2} label={t('common.delete')} size="sm" variant="ghost" onClick={() => setToDelete(r)} />
+                  {canEdit && (
+                    <>
+                      <IconButton icon={Pencil} label={t('common.edit')} size="sm" variant="ghost" onClick={() => setDraft({ ...r, unitPrice: String(r.unitPrice ?? '') })} />
+                      <IconButton icon={Trash2} label={t('common.delete')} size="sm" variant="ghost" onClick={() => setToDelete(r)} />
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

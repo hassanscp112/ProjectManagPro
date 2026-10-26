@@ -21,14 +21,42 @@ back to `#/projects` (and the phone *More* page lists the three pages).
   details* (dialog), *Delete project* (asks, downloads a full backup first,
   then removes its keys and files). Empty state with *New project*. Figures
   come from each project's own stores (`portfolioModel.summarizeProject`).
-- **New project `#/projects/new`** — details (name required, contract,
-  location, start date) and *Start from*: **Template** (pick one, its
-  variables, live preview priced from the rate library, dated from the start
-  date), **Blank** (one empty main group), **Copy a project** (task tree,
-  quantities, prices, links; nothing executed; dates moved by the start-date
-  gap). *Create and start planning* creates it as a draft, logs it in the new
-  project's activity, and opens the Schedule with editing on. Arriving from
-  Templates preselects that template and its values.
+- **New project `#/projects/new?step=…`** — a step-by-step wizard (stepper
+  on top, Back / Next in a sticky footer; a step opens once every step
+  before it is complete; leaving with unsaved answers asks first — the
+  shell's `#/` links are routed through the router while answers exist).
+  Needs `plan.edit`.
+  1. **Details** — name (required), contract, location, start date.
+  2. **Start from** — a template (cards), **Blank** (one empty main group) or
+     **Copy a project** (task tree, quantities, prices, links, its
+     `meta.planning`; nothing executed; dates moved by the start-date gap).
+  3. **Building** — the template's variables (numbers, choices, yes / no)
+     with a live summary (levels · items · value).
+  For a **building template** (schema 2) the wizard continues:
+  4. **Levels** — per level area / height / use (defaults greyed).
+  5. **Quantities** — items grouped by section / level, each with its
+     formula; type a quantity to replace it, untick to drop the item.
+  6. **Prices** — overhead / contingency / profit %, direct cost vs
+     contract value; per-item unit cost (rate cost greyed; unpriced rows
+     highlighted) → unit price with markups.
+  7. **Calendar & durations** — calendar preset (Friday + Iraqi holidays ·
+     Friday · Friday + Saturday · every day), rest-day toggles, holidays
+     list (add / remove), reduced-pace periods (Ramadan, pace 0.75);
+     crews per task per trade (auto, or fixed 1–6); productivity per work
+     type for this project (library value greyed; fixed-duration types
+     show their days).
+  8. **Links** — every item with the items it waits for (type, lag); click a
+     link to switch it off; filter "switched off".
+  9. **Review** — contract value, direct cost, start, finish, duration
+     (calendar and working days), items, critical items; warnings
+     (unpriced, no productivity, tasks over 120 working days, template
+     problems, schedule warnings); read-only Gantt with zoom.
+  Older (schema-1) templates go Details → Start → Building → Review (the
+  previous preview table). *Create and start planning* creates the draft
+  (tasks + `meta.planning` with calendar, markups, crews), logs it, and
+  opens the Schedule with editing on. Arriving from Templates preselects
+  that template and its values. Logic: `src/state/plannerModel.js`; steps:
+  `app/portfolio/wizard/*`.
 - **Templates `#/templates`** — template cards (archived ones hidden): the
   nine building templates (names and variable labels in the UI language;
   choice and yes / no variables as selects) plus any custom ones; picking
@@ -39,8 +67,14 @@ back to `#/projects` (and the phone *More* page lists the three pages).
   project as template* picks one of the projects. Builder at
   `#/templates/new`. Seed template names and rate categories are stored in
   Arabic and shown in the UI language (`templateLabels.js`).
-- **Rates `#/rates`** — the IQD rate library (shared): search, add / edit in
-  a dialog, delete (asks first). Prices are copied at generation time.
+- **Rates `#/rates`** — two tabs. **Rate library** (shared, direct cost):
+  search, add / edit in a dialog, delete (asks first). Prices are copied at
+  generation time. **Work types** (`?tab=work-types`): the work-type
+  library — search, filter by trade, per crew-day productivity, crew size,
+  the rate it is priced by, *Mark checked* for seeded values (the hint
+  counts what is left), add / edit (names ar + en, unit, trade,
+  productivity, crew, fixed days, rate, keywords) / delete.
+  Adding, editing and deleting need `plan.edit`.
 
 Logic: `src/state/portfolioModel.js`; storage: `utils/Projects.js`.
 
@@ -70,6 +104,14 @@ Logic: `src/state/homeModel.js`.
 
 Three sub-pages (tabs): **Timeline `#/schedule`**, **Lookahead
 `#/schedule/lookahead`**, **Baseline `#/schedule/baseline`**.
+
+**Permissions** (`useCan`): *Edit*, add / delete and quick edit need
+`plan.edit`; sign-off, start execution, complete and re-baseline need
+`plan.signOff`; *Variation orders* needs `vo.draft`. Lookahead month targets
+need `plan.edit`, week and day plans `plan.lookahead` (until that action
+exists: the `record.work` roles) — read-only otherwise (a disabled
+fieldset). Templates (new / delete / save project), the template builder's
+*Save*, rates, work types and BOQ grids need `plan.edit`.
 
 **Timeline** (`SchedulePage.jsx` + `Gantt.jsx`):
 - KPI strip (cost, progress, planned, deviation, duration, active items,
