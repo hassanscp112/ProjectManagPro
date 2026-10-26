@@ -47,9 +47,10 @@ describe('storeRegistry', () => {
 
   it('keeps every key the app had, plus the roadmap stores', () => {
     LEGACY_KEYS.forEach((key) => assert.ok(ALL_STORE_KEYS.includes(key), key));
-    ['pm-certificates', 'pm-site-diary', 'pm-delays', 'pm-server', 'pm-session'].forEach((key) =>
+    ['pm-certificates', 'pm-site-diary', 'pm-delays', 'pm-work-types', 'pm-server', 'pm-session'].forEach((key) =>
       assert.ok(ALL_STORE_KEYS.includes(key), key)
     );
+    assert.equal(storeFor('pm-work-types').scope, 'global');
   });
 
   it('feeds the backup and project key lists', () => {

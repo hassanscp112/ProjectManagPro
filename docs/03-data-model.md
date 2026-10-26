@@ -14,7 +14,9 @@ There is **no server and no database**. Everything is stored in the browser:
 > Registered ahead for the roadmap (`plans/roadmap-plan.md`), not used yet:
 > the device-only `pm-server`, `pm-session`. Files may carry `orderId` (an
 > order's photo). In use: `pm-certificates` (project, owner `Certificates`,
-> §13), `pm-site-diary` and `pm-delays` (project, §10a).
+> §13), `pm-site-diary` and `pm-delays` (project, §10a). Also registered
+> ahead for auto-planning (`plans/auto-planning-plan.md`): the global
+> `pm-work-types` (`{ items: [...] }`, owner `utils/planning/WorkTypes.js`).
 
 ---
 

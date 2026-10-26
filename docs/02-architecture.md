@@ -116,7 +116,7 @@ over. Sub-pages show as tabs under the page title (`AREA_TABS` in
 | Engine | `engineResult = useMemo(() => GanttEngine.calculate(...), [tasks, projectMeta, orders])` |
 | Undo | 50-step history; a 1 s typing burst counts as one step; `ganttView` (edit mode, zoom, columns, critical-only, search, collapsed groups) survives navigation |
 | Auto snapshot | `writeAutoSnapshot()` on any tasks/meta/identity change (no-op if today's exists) |
-| Task actions | `updateTask`, `addMainTask`, `addSubTask`, `requestDeleteTask` → `confirmDeleteTask` (dialog in `AppLayout`), `setBoqLink`, `linkBoqToExisting` |
+| Task actions | `updateTask`, `addMainTask`, `addSubTask`, `requestDeleteTask` → `confirmDeleteTask` (dialog in `AppLayout`), `setBoqLink`, `linkBoqToExisting`, `applyTaskPatches([{ id, patch }])` (several tasks, one undo step — `projectModel.applyTaskPatchList`), `setPlanning(patch \| updater)` (merges into `meta.planning`, not undoable — `projectModel.mergePlanning`) |
 | Lifecycle | `signOff(signedBy)`, `setStatus(status)`, `raiseVariation(draft)` → true when recorded |
 | Backup/restore | Schedule toolbar's More menu and Settings via `utils/DataIO` (validate → confirm → safety download → write keys + files → reload) |
 | Crashes | `app/ErrorPage.jsx`: a screen crash shows the error page inside the shell (router `errorElement` on a pathless route); a shell crash shows it full-window; `AppErrorBoundary` in `App.jsx` catches the project store. All offer a backup download |

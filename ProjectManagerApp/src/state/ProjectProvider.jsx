@@ -15,6 +15,7 @@ import {
   TASKS_STORAGE_KEY,
   addMainTask,
   addSubTask,
+  applyTaskPatchList,
   applyVariation,
   countPendingApprovals,
   createTaskId,
@@ -23,6 +24,7 @@ import {
   linkExistingBoq,
   loadMeta,
   loadTasks,
+  mergePlanning,
   normalizeTaskUpdate,
   replaceTask,
   signOffProject,
@@ -174,6 +176,17 @@ export function ProjectProvider({ children }) {
     setTasks((prev) => linkExistingBoq(prev, parentTaskId, column, leafTaskId));
   };
 
+  /** Several task changes at once (planner, leveling): [{ id, patch }], one undo step. */
+  const applyTaskPatches = (patches) => {
+    const next = applyTaskPatchList(tasks, patches);
+    if (next === tasks) return;
+    pushToHistory(tasks);
+    setTasks((prev) => applyTaskPatchList(prev, patches));
+  };
+
+  /** Merge into meta.planning: an object patch, or (planning) => nextPlanning. Not on the undo stack. */
+  const setPlanning = (updaterOrPatch) => setProjectMeta((prev) => mergePlanning(prev, updaterOrPatch));
+
   /* ── lifecycle ── */
 
   const signOff = (signedBy) => {
@@ -247,6 +260,8 @@ export function ProjectProvider({ children }) {
     deletePreview,
     setBoqLink,
     linkBoqToExisting,
+    applyTaskPatches,
+    setPlanning,
     undo,
     canUndo,
     ganttView,

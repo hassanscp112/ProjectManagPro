@@ -3,6 +3,8 @@
 export default {
   // ── Header + tabs ──
   'templates.tabRates': 'Rate Library',
+  'templates.navWorkTypes': 'Work types',
+  'templates.workTypesPlaceholder': 'The work-type library is being built.',
 
   // ── Seeded template display names (storage keeps the Arabic name) ──
   'templates.nameSchool': 'School',

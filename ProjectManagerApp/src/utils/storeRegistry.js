@@ -58,6 +58,9 @@ export const STORES = [
   { key: 'pm-site-diary', scope: 'project', owner: 'SiteDiary', sync: true },
   // { events: [{ id, title, cause, start, end, taskIds, noticeDate, … }] }
   { key: 'pm-delays', scope: 'project', owner: 'Delays', lists: [{ path: 'events', idField: 'id' }], sync: true },
+  // { items: [{ id, name, nameEn, unit, trade, productivity, crew, … }] } — the
+  // work-type catalog auto-planning prices and schedules from (utils/planning/WorkTypes.js)
+  { key: 'pm-work-types', scope: 'global', owner: 'WorkTypes', lists: [{ path: 'items', idField: 'id' }], sync: true },
   // { url, anonKey } — which server this device talks to
   { key: 'pm-server', scope: 'device', owner: 'sync', sync: false },
   // signed-in user and device id on this device
