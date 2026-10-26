@@ -122,4 +122,17 @@ export default {
   'schedule.warnDependencyCycle': 'Circular dependency: {cycle}',
   'schedule.warnSelfDependency': 'An item cannot depend on itself',
   'schedule.warnMissingPredecessor': 'The predecessor does not exist ({id})',
+  // Predecessor list and pinning (quick edit)
+  'schedule.predecessors': 'Predecessors',
+  'schedule.addPredecessor': 'Add predecessor',
+  'schedule.removePredecessor': 'Remove predecessor',
+  'schedule.chooseItem': 'Choose an item…',
+  'schedule.lagUnit': 'Lag counted in',
+  'schedule.lagWorkingDays': 'Working days',
+  'schedule.lagCalendarDays': 'Calendar days',
+  'schedule.calendarDaysShort': 'cal. days',
+  'schedule.pinLabel': 'Dates',
+  'schedule.pin': 'Pin dates',
+  'schedule.pinned': 'Pinned',
+  'schedule.pinHint': 'Resource leveling never moves a pinned item',
 };

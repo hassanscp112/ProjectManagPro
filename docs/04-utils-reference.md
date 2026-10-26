@@ -1,7 +1,7 @@
 # 04 — Utils Reference (the engines)
 
 `ProjectManagerApp/src/utils/` — pure logic + localStorage persistence.
-**No React here.** All modules are plain ES modules; most are covered by
+(Planning sections last verified 2026-10-26.) **No React here.** All modules are plain ES modules; most are covered by
 tests in `__tests__/` (run: `npm test` from `ProjectManagerApp/`).
 
 Dependency order (leaf → top):
@@ -9,14 +9,17 @@ Dependency order (leaf → top):
 ```
 storeRegistry, permissions                                             (standalone: the store list and the role matrix)
 Projects                                                               (imports storeRegistry; every project-scoped owner imports it)
-CalculatorEngine, CriticalPath, ImageCompress, RateLibrary             (standalone)
+planning/WorkCalendar, planning/links                                  (standalone: working days, task links)
+planning/network                                                       (imports WorkCalendar: the forward pass)
+CalculatorEngine, ImageCompress, RateLibrary                           (standalone)
+CriticalPath                                                           (imports planning/*)
 Identity                                                               (imports Projects + src/sync/session)
 FileDB, DataIO                                                         (import Projects)
 ActivityLog, PlanningStore, Registries, Snapshots                      (import i18n / Projects)
 SiteDiary, Delays                                                      (import Identity / Projects)
 OrderEngine                                                            (imports i18n)
 TemplateEngine                                                         (imports RateLibrary)
-GanttEngine                                                            (imports OrderEngine + CriticalPath)
+GanttEngine                                                            (imports OrderEngine + CriticalPath + planning/*)
 Certificates                                                           (imports i18n / Projects / ActivityLog / Identity / Registries)
 ```
 
@@ -78,27 +81,69 @@ Pipeline explained in [02-architecture.md §3](02-architecture.md). Returns:
   sCurve: [{ date, pv, ev, ac, isFuture }],          // one point per week
   perWbsEvm: [{ wbs, name, taskCount, bac, pv, ev, ac, spi, cpi }],
   expenses, scheduleStartDate, scheduleEndDate, projectDuration,
+  projectWorkingDays,          // working days on the project calendar
+  calendarIssues,              // [{ code }] from a bad calendar spec
   warnings,   // [{ taskId, wbs, name, code, params, message }]
 }
 ```
 
+**Scheduling:** every predecessor counts (`task.predecessors`, read through
+`planning/links.js`); a task starts at the LATEST of its link constraints
+(FS/SS/FF/SF + lag), else at `manualStart`/project start; leveling links only
+delay it. It runs on the project's working calendar
+(`projectMeta.planning.calendar`, see `planning/WorkCalendar.js`): durations
+and lags are working days, `endDate` is the exclusive end (start + duration
+when every day works). With no calendar the results are exactly the old
+7-day engine's — guarded by differential tests against a frozen copy
+(`__tests__/engineParity.test.js`, `__tests__/fixtures/legacy*.js`).
+
 Each computed task also carries `warnings: [{ code, params, message }]`.
-Codes: `duplicateWbs {wbs}`, `overExecuted`, `invalidDepType` (coerced to FS),
+Codes: `duplicateWbs {wbs}`, `overExecuted`, `invalidDepType` (coerced to FS;
+`{id}` for an extra link),
 `dependencyCycle {cycle}`, `selfDependency`, `missingPredecessor {id}`.
 `message` is an Arabic fallback; the UI shows `code` + `params` in its own
 language (`src/app/schedule/warningText.js`, keys `schedule.warn*`).
 
 Also exports date helpers `addDays(dateStr, days)` and `daysBetween(a, b)`.
 `projectMeta.baseline.tasks` (map by task id) drives scope/exec variance.
-Tests: `ganttEngine.test.js`.
+Tests: `ganttEngine.test.js`, `ganttEngineLinks.test.js`, `engineParity.test.js`.
 
 ---
 
 ## CriticalPath.js — CPM
 
-`computeCriticalPath(computedTasks)` → `{ criticalIds: Set, floatById: Map }`.
-Needs tasks with `id, isGroup, startDate, endDate, dependsOn, depType, lag`.
-Pure, no storage. Tests: `criticalPath.test.js`.
+`computeCriticalPath(computedTasks, timing?)` → `{ criticalIds: Set, floatById: Map }`.
+Needs tasks with `id, isGroup, startDate, endDate` and their links (`links`
+from the engine, or `dependsOn/depType/lag/predecessors`); leveling links
+count too. `timing = { cal, ES, EF }` (working units from the forward pass)
+makes float working days; without it every day counts. Acyclic networks:
+one reverse topological pass; with a cycle: the old relaxation. Pure, no
+storage. Tests: `criticalPath.test.js`, `engineParity.test.js`.
+
+---
+
+## planning/ — auto-planning building blocks (no storage)
+
+- **`links.js`** — a task's predecessors. `readLinks(task)` (slot 0 from
+  `dependsOn/depType/lag`, extras from `predecessors[1..]`),
+  `writeLinks(task, links)` (mirrors slot 0), `linksPatch(links)` (an
+  editor's changed fields), `readLevelLinks`, `hasLinkTo(task, idSet)`,
+  `removeLinksTo(task, idSet)` (a legacy task gives exactly the old cleared
+  object), `formatLinks(links, wbsOf)` / `parseLinks(text, idOf)` for the
+  grid text `2.1FS+3; 2.4SS; 3.2FF-2d` (`d` = calendar days). Tests:
+  `links.test.js`.
+- **`WorkCalendar.js`** — working time: `getCalendar(spec)` (memoized; no
+  spec or nothing off = the identity calendar), units of 100 per normal
+  working day, `cum(k)`, `startDayOf(T)` (skips days off), `endDayOf(T)`
+  (exclusive end), date helpers `addWorkingDays`, `workingDaysBetween`,
+  `nextWorkingDay`, `isWorkingDay`, `normalizeCalendarSpec`,
+  `presetCalendar(preset, startDate)` (`fridayHolidays` · `friday` ·
+  `fridaySaturday` · `allDays`; `IRAQ_FIXED_HOLIDAYS`). Tests:
+  `workCalendar.test.js`.
+- **`network.js`** — the forward pass (`forwardPass`, iterative, reproduces
+  the old recursion's warnings and cycle texts), `linkBound`,
+  `shiftByLag` / `unshiftByLag` (shared with CriticalPath). Stale leveling
+  links that contradict the logic are dropped.
 
 ---
 

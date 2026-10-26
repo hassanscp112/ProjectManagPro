@@ -1,5 +1,6 @@
 # 03 — Data Model: Where Every Byte Lives
 
+<!-- Planning sections (task links, meta.planning) last verified 2026-10-26. -->
 There is **no server and no database**. Everything is stored in the browser:
 
 - **localStorage** — all structured data (20 keys, listed first)
@@ -98,9 +99,19 @@ There is **no server and no database**. Everything is stored in the browser:
   actualQuantity: 9413,          // executed qty (manual ONLY if no orders exist)
   unitPrice: 1350,               // IQD per unit
   unit: 'م3',
-  dependsOn: 'other-task-id' | null,
+  dependsOn: 'other-task-id' | null,  // the FIRST predecessor (slot 0)
   depType: 'FS' | 'SS' | 'FF' | 'SF',
-  lag: 7,                        // days, can be negative (overlap)
+  lag: 7,                        // working days, can be negative (overlap)
+
+  // optional (auto-planning) — absent on older tasks, all mean "as before":
+  predecessors: [{ id, type, lag, lagUnit?: 'cd' }], // EVERY predecessor; [0] mirrors
+                                 // dependsOn/depType/lag, which always win for slot 0.
+                                 // Only stored when there are 2+ links or a 'cd' lag.
+                                 // lagUnit 'cd' = calendar days (curing), else working days.
+                                 // Read/write ONLY through utils/planning/links.js.
+  levelLinks: [{ id, type: 'FS', lag: 0 }], // written by resource leveling (crew hand-overs);
+                                 // they only delay the start and never override the logic
+  pinned: true,                  // resource leveling never moves this item
 
   // quantity take-off (group tasks, editable in the full task details page, Edit view):
   elementColumns: [{ id, name, unit, wasteFactor, linkedTaskId|null }],
@@ -117,7 +128,10 @@ There is **no server and no database**. Everything is stored in the browser:
 `qty, actualQty, price, totalCost, actualCost, progress, startDate, endDate,
 elementSumRaw, elementSum, boqLinked, orderSource {manual, formalQty, quickQty,
 orderCount}, baselineQty, scopeVariance, execVariance, weight,
-weightedProgress, plannedProgress, plannedCost, isCritical, warnings`
+weightedProgress, plannedProgress, plannedCost, isCritical, totalFloat,
+warnings`, and (auto-planning) `links` (every logic link, lag parsed),
+`levelLinks` (normalized), `drivingLinkId` (the predecessor that sets the
+start), `spanDays` (calendar days the bar covers — `duration` is working days)
 
 Rule of thumb: **raw = what the user set, computed = what the engine derived.**
 Screens that let editing receive raw `tasks` from App; read-only views receive
@@ -137,9 +151,21 @@ Screens that let editing receive raw `tasks` from App; read-only views receive
     tasks: { [taskId]: { quantity, unitPrice, unit, duration,
                          manualStart, name, wbs } }   // frozen copy per task
   } | null,
-  variations: [ /* Variation Order records, below */ ]
+  variations: [ /* Variation Order records, below */ ],
+  // optional (auto-planning); absent = every day is a working day, as before:
+  planning: {
+    version: 1,
+    calendar: {
+      weekRest: [5],                                   // UTC weekdays off (5 = Friday)
+      holidays: [{ from: 'YYYY-MM-DD', to, name }],    // days off
+      periods: [{ from, to, factor: 0.75, name }],     // reduced pace (Ramadan)
+      workdays: ['YYYY-MM-DD'],                        // worked although off
+    },
+  }
 }
 ```
+`planning` is not in `DEFAULT_META`. Durations and lags are working days on
+this calendar (`utils/planning/WorkCalendar.js`).
 
 ### Variation Order record
 

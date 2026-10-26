@@ -90,9 +90,7 @@
 .cPct { width: 68px; }
 .cDur { width: 56px; }
 .cDate { width: 100px; }
-.cPred { width: 180px; }
-.cRel { width: 132px; }
-.cLag { width: 72px; }
+.cPred { width: 200px; }
 .cQty { width: 108px; }
 .cUnit { width: 72px; }
 .cPrice { width: 104px; }
@@ -180,6 +178,10 @@
 }
 .cellInput:disabled {
   opacity: 0.5;
+}
+.cellInvalid,
+.cellInvalid:focus-visible {
+  border-color: var(--ui-danger);
 }
 .locked {
   display: inline-flex;

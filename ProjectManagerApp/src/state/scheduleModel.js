@@ -8,6 +8,7 @@
 // as UTC days. Tested in __tests__/scheduleModel.test.js.
 // ─────────────────────────────────────────────────────────────
 
+import { readLinks } from '../utils/planning/links.js';
 import { getTaskAndDescendantIds } from './projectModel.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -139,10 +140,11 @@ export const visibleRows = (tasks = [], { collapsed = new Set(), criticalOnly = 
  * Why a grid field can't be edited, or null when it can:
  * 'boq' (quantity comes from a linked element column), 'signed'
  * (contract frozen at sign-off), 'orders' (executed comes from approved
- * orders), 'dependency' (start follows the predecessor), 'noDependency'
+ * orders), 'dependency' (start follows the predecessors), 'noDependency'
  * (relation/lag need a predecessor), 'group' (groups are rolled up).
  */
 export const fieldLock = (task, field, isSigned) => {
+  const linked = (Array.isArray(task.links) ? task.links : readLinks(task)).length > 0;
   if (task.isGroup && !['wbs', 'name'].includes(field)) return 'group';
   switch (field) {
     case 'quantity':
@@ -154,7 +156,7 @@ export const fieldLock = (task, field, isSigned) => {
     case 'actualQuantity':
       return task.orderSource && task.orderSource.manual === false ? 'orders' : null;
     case 'manualStart':
-      return task.dependsOn ? 'dependency' : null;
+      return linked ? 'dependency' : null;
     case 'depType':
     case 'lag':
       return task.dependsOn ? null : 'noDependency';

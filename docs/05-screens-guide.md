@@ -83,10 +83,15 @@ Three sub-pages (tabs): **Timeline `#/schedule`**, **Lookahead
 - **Edit mode**: every cell becomes an input; locks come from `fieldLock()` and
   show a lock icon with the reason: BOQ-linked qty/unit, contract qty/unit/price
   after sign-off (change them with a variation order), executed qty from
-  orders, start when a predecessor drives it, relation/lag without a
-  predecessor, rolled-up fields on groups. Predecessor/relation/lag columns
-  appear in edit mode only. Add sub-item / delete per row, add main group at
-  the bottom. Edits send only the changed fields (`onUpdate(id, patch)`).
+  orders, start when a predecessor drives it, rolled-up fields on groups.
+  A **Predecessors** text column appears in edit mode only: every link of the
+  item as `2.1FS+3; 2.4SS; 3.2FF-2d` (WBS, type — FS when left out — lag in
+  working days, `d` = calendar days); applied on Enter / leaving the cell,
+  text naming no item stays red with a tooltip, Esc restores. Add sub-item /
+  delete per row, add main group at the bottom. Edits send only the changed
+  fields (`onUpdate(id, patch)`).
+- Bars are drawn over the calendar days they span (`spanDays`): with a
+  project calendar, days off widen a bar.
 - Phones: KPIs and toolbars become sideways-swiping rows; optional columns and
   WBS hide; the chart keeps one screen of height and the page scrolls.
 
@@ -94,10 +99,15 @@ Three sub-pages (tabs): **Timeline `#/schedule`**, **Lookahead
 bottom sheet on phones): status / critical / float / warning chips, progress with
 the planned marker, facts (qty, executed, remaining, price, value, earned value,
 dates, duration, predecessor), quick edit (same locks), sub-items, latest 5
-orders on the item or below it, and actions: *Record work* (opens Record with
+orders on the item or below it (facts list every predecessor), and actions: *Record work* (opens Record with
 the item preselected — `navigate('/record', { state: { taskId } })`), *Files*,
 *Full details* (`#/schedule/task/:id/details`, see Task Details below), *Delete* (confirm). A URL whose item no longer exists falls back to
 `#/schedule`.
+
+Quick edit lists the predecessors (`LinksEditor.jsx`): one row per link —
+the item it waits for, type, lag and whether the lag counts working or
+calendar days — plus *Add predecessor*; and a *Pin dates* toggle (resource
+leveling never moves a pinned item).
 
 **Dialogs** (`LifecycleDialogs.jsx`): sign-off / re-baseline (name prefilled
 with the last signer, else the current user) and variation orders (item,

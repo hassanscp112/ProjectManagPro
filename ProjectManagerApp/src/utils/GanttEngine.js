@@ -1,5 +1,8 @@
 import { sumValueOrdersByTask, sumExpenses } from './OrderEngine.js';
 import { computeCriticalPath } from './CriticalPath.js';
+import { readLevelLinks, readLinks } from './planning/links.js';
+import { forwardPass } from './planning/network.js';
+import { UNITS_PER_DAY, dayIndex, getCalendar } from './planning/WorkCalendar.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const VALID_DEP_TYPES = new Set(['FS', 'SS', 'FF', 'SF']);
@@ -36,15 +39,15 @@ const parseDate = (dateStr) => {
 
 const formatDate = (date) => date.toISOString().split('T')[0];
 
-const isDescendantOf = (task, parent) => {
-  if (!task.wbs || !parent.wbs || task.id === parent.id) return false;
-  return task.wbs.startsWith(`${parent.wbs}.`);
-};
+const wbsDepth = (task) => (task.wbs || '').split('.').length;
 
-const compareByWbsDepth = (a, b) => {
-  const aDepth = (a.wbs || '').split('.').length;
-  const bDepth = (b.wbs || '').split('.').length;
-  return bDepth - aDepth;
+// A link as the engine reads it: lag parsed to whole days, the type kept raw
+// (an invalid one is reported and treated as FS in the warning phase).
+const normalizeLink = (link, source) => {
+  const out = { id: link.id, type: link.type, lag: parseWholeNumber(link.lag), source };
+  if (link.lagUnit === 'cd') out.lagUnit = 'cd';
+  if (source === 'level' && !VALID_DEP_TYPES.has(out.type)) out.type = 'FS';
+  return out;
 };
 
 // Warning codes (stable, translated by the UI) with their Arabic fallback
@@ -135,15 +138,35 @@ export const daysBetween = (startDate, endDate) => {
 // Linear interpolation of a task's progress fraction at a given point in time.
 // Returns 0 before the task starts, 1 after it ends, and a linear fraction in
 // between. Mirrors the per-task plannedProgress logic used at "today".
-const progressAtDate = (task, dateMs) => {
+// With a working calendar the fraction is measured in working time, so days
+// off add no progress.
+const fractionBetween = (startMs, endMs, dateMs, cal) => {
+  if (dateMs <= startMs) return 0;
+  if (dateMs >= endMs) return 1;
+  if (cal && !cal.isIdentity) {
+    const a = cal.cum(Math.round(startMs / DAY_MS));
+    const b = cal.cum(Math.round(endMs / DAY_MS));
+    return b > a ? (cal.cum(Math.round(dateMs / DAY_MS)) - a) / (b - a) : 1;
+  }
+  return (dateMs - startMs) / (endMs - startMs);
+};
+
+const progressAtDate = (task, dateMs, cal) => {
   const start = parseDate(task.startDate);
   const end = parseDate(task.endDate);
   if (!start || !end) return 0;
-  const startMs = start.getTime();
-  const endMs = end.getTime();
-  if (dateMs <= startMs) return 0;
-  if (dateMs >= endMs) return 1;
-  return (dateMs - startMs) / (endMs - startMs);
+  return fractionBetween(start.getTime(), end.getTime(), dateMs, cal);
+};
+
+// Planned share of a task done by today (a finished window counts as done
+// even on its last day — the order of the checks matters for milestones).
+const plannedFractionToday = (task, todayMs, cal) => {
+  const start = parseDate(task.startDate);
+  const end = parseDate(task.endDate);
+  if (!start || !end) return 0;
+  if (todayMs >= end.getTime()) return 1;
+  if (todayMs <= start.getTime()) return 0;
+  return progressAtDate(task, todayMs, cal);
 };
 
 // Build the S-curve: weekly samples of cumulative Planned Value (PV),
@@ -156,7 +179,7 @@ const progressAtDate = (task, dateMs) => {
 //                  by elapsed time as an approximation of when cost was incurred)
 //
 // Returns [] when there are no leaf tasks or no schedule window.
-export const buildSCurve = (leafTasks, scheduleStart, scheduleEnd) => {
+export const buildSCurve = (leafTasks, scheduleStart, scheduleEnd, cal = null) => {
   if (!leafTasks.length || !scheduleStart || !scheduleEnd) return [];
 
   const startMs = parseDate(scheduleStart)?.getTime();
@@ -172,14 +195,22 @@ export const buildSCurve = (leafTasks, scheduleStart, scheduleEnd) => {
     return Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
   })();
 
+  // Each task's window parsed once (null = no valid dates ⇒ fraction 0).
+  const windows = leafTasks.map((task) => {
+    const start = parseDate(task.startDate);
+    const end = parseDate(task.endDate);
+    return start && end ? [start.getTime(), end.getTime()] : null;
+  });
+
   const points = [];
   for (let offset = 0; offset <= totalDays; offset += stepDays) {
     const t = startMs + offset * DAY_MS;
     let pv = 0;
     let ev = 0;
     let ac = 0;
-    leafTasks.forEach((task) => {
-      const frac = progressAtDate(task, t);
+    leafTasks.forEach((task, i) => {
+      const w = windows[i];
+      const frac = w ? fractionBetween(w[0], w[1], t, cal) : 0;
       pv += task.totalCost * frac;
       ev += task.totalCost * task.progress * frac;
       ac += task.actualCost * frac;
@@ -254,6 +285,9 @@ export class GanttEngine {
   static calculate(tasks, projectStartDate, projectMeta, orders = []) {
     const warnings = [];
     const projectStart = parseDate(projectStartDate) ? projectStartDate : formatDate(new Date());
+    // The project's working calendar (projectMeta.planning.calendar); none =
+    // every day is a working day, exactly as before.
+    const cal = getCalendar(projectMeta && projectMeta.planning ? projectMeta.planning.calendar : null);
 
     const orderTotals = sumValueOrdersByTask(orders);
 
@@ -291,6 +325,9 @@ export class GanttEngine {
         actualCost: task.isGroup ? 0 : actualQty * price,
         progress: task.isGroup || qty === 0 ? 0 : clamp(actualQty / qty, 0, 1),
         warnings: [],
+        // Every predecessor (slot 0 = dependsOn/depType/lag), lags parsed once.
+        links: readLinks(task).map(link => normalizeLink(link, 'logic')),
+        levelLinks: readLevelLinks(task).map(link => normalizeLink(link, 'level')),
       };
     });
 
@@ -330,125 +367,86 @@ export class GanttEngine {
       if (task.actualQty > task.qty && task.qty > 0) {
         addTaskWarning(task, 'overExecuted', {}, warnings);
       }
-      if (task.dependsOn && !VALID_DEP_TYPES.has(task.depType)) {
-        task.depType = 'FS';
-        addTaskWarning(task, 'invalidDepType', {}, warnings);
-      }
+      task.links.forEach((link, index) => {
+        if (VALID_DEP_TYPES.has(link.type)) return;
+        link.type = 'FS';
+        if (index === 0) {
+          task.depType = 'FS';
+          addTaskWarning(task, 'invalidDepType', {}, warnings);
+        } else {
+          addTaskWarning(task, 'invalidDepType', { id: link.id }, warnings);
+        }
+      });
     });
 
-    const state = new Map();
-    const applyBaselineSchedule = (task) => {
-      task.startDate = task.manualStart || projectStart;
-      task.endDate = addDays(task.startDate, task.duration);
-    };
+    // Early dates (iterative walk over every link, on the working calendar).
+    const timing = forwardPass(computedTasks, tasksById, {
+      cal,
+      projectStart,
+      warn: (task, code, params) => addTaskWarning(task, code, params, warnings),
+    });
 
-    const resolveTaskSchedule = (task, stack = []) => {
-      const currentState = state.get(task.id);
-      if (currentState === 'done') return;
-
-      if (currentState === 'visiting') {
-        const cycle = [...stack, task].map(item => item.wbs || item.id).join(' > ');
-        addTaskWarning(task, 'dependencyCycle', { cycle }, warnings);
-        applyBaselineSchedule(task);
-        state.set(task.id, 'done');
-        return;
+    // Group roll-up, deepest groups first: each group's descendants are the
+    // tasks whose WBS starts with "<group wbs>." (found through a prefix map,
+    // in task order so the cost sums add up exactly as before).
+    const byPrefix = new Map();
+    computedTasks.forEach(task => {
+      if (!task.wbs) return;
+      const parts = task.wbs.split('.');
+      for (let n = 1; n < parts.length; n++) {
+        const prefix = parts.slice(0, n).join('.');
+        const list = byPrefix.get(prefix);
+        if (list) list.push(task);
+        else byPrefix.set(prefix, [task]);
       }
-
-      state.set(task.id, 'visiting');
-      applyBaselineSchedule(task);
-
-      if (task.dependsOn) {
-        if (task.dependsOn === task.id) {
-          addTaskWarning(task, 'selfDependency', {}, warnings);
-        } else {
-          const dependency = tasksById.get(task.dependsOn);
-
-          if (!dependency) {
-            addTaskWarning(task, 'missingPredecessor', { id: task.dependsOn }, warnings);
-          } else {
-            resolveTaskSchedule(dependency, [...stack, task]);
-
-            if (dependency.startDate && dependency.endDate) {
-              switch (task.depType) {
-                case 'FS':
-                  task.startDate = addDays(dependency.endDate, task.lag);
-                  task.endDate = addDays(task.startDate, task.duration);
-                  break;
-                case 'SS':
-                  task.startDate = addDays(dependency.startDate, task.lag);
-                  task.endDate = addDays(task.startDate, task.duration);
-                  break;
-                case 'FF':
-                  task.endDate = addDays(dependency.endDate, task.lag);
-                  task.startDate = addDays(task.endDate, -task.duration);
-                  break;
-                case 'SF':
-                  task.endDate = addDays(dependency.startDate, task.lag);
-                  task.startDate = addDays(task.endDate, -task.duration);
-                  break;
-                default:
-                  break;
-              }
-            }
-          }
-        }
-      }
-
-      state.set(task.id, 'done');
-    };
-
-    computedTasks.forEach(task => resolveTaskSchedule(task));
-
+    });
     computedTasks
       .filter(task => task.isGroup)
-      .sort(compareByWbsDepth)
+      .sort((a, b) => wbsDepth(b) - wbsDepth(a))
       .forEach(group => {
-        const descendants = computedTasks.filter(task => isDescendantOf(task, group));
+        const descendants = group.wbs ? (byPrefix.get(group.wbs) || []).filter(task => task.id !== group.id) : [];
         if (descendants.length === 0) return;
 
-        const leafDescendants = descendants.filter(task => !task.isGroup);
-        group.totalCost = leafDescendants.reduce((sum, task) => sum + task.totalCost, 0);
-        group.actualCost = leafDescendants.reduce((sum, task) => sum + task.actualCost, 0);
+        let totalCost = 0;
+        let actualCost = 0;
+        let minStart = null;
+        let maxEnd = null;
+        descendants.forEach(task => {
+          if (!task.isGroup) {
+            totalCost += task.totalCost;
+            actualCost += task.actualCost;
+          }
+          if (task.startDate && (minStart === null || task.startDate < minStart)) minStart = task.startDate;
+          if (task.endDate && (maxEnd === null || task.endDate > maxEnd)) maxEnd = task.endDate;
+        });
+        group.totalCost = totalCost;
+        group.actualCost = actualCost;
         group.progress = group.totalCost > 0 ? clamp(group.actualCost / group.totalCost, 0, 1) : 0;
-
-        const starts = descendants.map(task => task.startDate).filter(Boolean).sort();
-        const ends = descendants.map(task => task.endDate).filter(Boolean).sort();
-        if (starts.length > 0 && ends.length > 0) {
-          group.startDate = starts[0];
-          group.endDate = ends[ends.length - 1];
+        if (minStart !== null && maxEnd !== null) {
+          group.startDate = minStart;
+          group.endDate = maxEnd;
           group.duration = daysBetween(group.startDate, group.endDate);
         }
       });
+
+    // Calendar days each bar spans (leaf durations are working days).
+    computedTasks.forEach(task => {
+      task.spanDays = daysBetween(task.startDate, task.endDate);
+    });
 
     const leafTasks = computedTasks.filter(task => !task.isGroup);
     const projectTotalCost = leafTasks.reduce((sum, task) => sum + task.totalCost, 0);
     const projectActualCost = leafTasks.reduce((sum, task) => sum + task.actualCost, 0);
     const projectTotalProgress = projectTotalCost > 0 ? (projectActualCost / projectTotalCost) * 100 : 0;
 
+    // "Today" as a UTC day (local calendar date), the same for every task.
+    const now = new Date();
+    const todayMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
     computedTasks.forEach(task => {
       task.weight = projectTotalCost > 0 ? task.totalCost / projectTotalCost : 0;
       task.weightedProgress = task.progress * task.weight;
-      
-      let plannedProgress = 0;
-      const start = parseDate(task.startDate);
-      const end = parseDate(task.endDate);
-      const today = new Date();
-      // Reset time for today to start of day UTC to match parseDate
-      const todayMs = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-      
-      if (start && end) {
-        const startMs = start.getTime();
-        const endMs = end.getTime();
-        if (todayMs >= endMs) {
-          plannedProgress = 1;
-        } else if (todayMs <= startMs) {
-          plannedProgress = 0;
-        } else {
-          plannedProgress = (todayMs - startMs) / (endMs - startMs);
-        }
-      }
-      task.plannedProgress = plannedProgress;
-      task.plannedCost = task.totalCost * plannedProgress;
+      task.plannedProgress = plannedFractionToday(task, todayMs, cal);
+      task.plannedCost = task.totalCost * task.plannedProgress;
     });
 
     const projectPlannedCost = leafTasks.reduce((sum, task) => sum + task.plannedCost, 0);
@@ -478,11 +476,11 @@ export class GanttEngine {
     const scheduleEndDate = endDates[endDates.length - 1] || projectStart;
 
     // S-curve (planned vs earned vs actual over time) + per-WBS EVM roll-up.
-    const sCurve = buildSCurve(leafTasks, scheduleStartDate, scheduleEndDate);
+    const sCurve = buildSCurve(leafTasks, scheduleStartDate, scheduleEndDate, cal);
     const perWbsEvm = buildPerWbsEvm(computedTasks);
 
     // Critical path (CPM backward pass) — flags leaves with zero float.
-    const { criticalIds, floatById } = computeCriticalPath(computedTasks);
+    const { criticalIds, floatById } = computeCriticalPath(computedTasks, { cal, ES: timing.ES, EF: timing.EF });
     computedTasks.forEach(task => {
       if (!task.isGroup) {
         task.isCritical = criticalIds.has(task.id);
@@ -508,6 +506,12 @@ export class GanttEngine {
       scheduleStartDate,
       scheduleEndDate,
       projectDuration: daysBetween(scheduleStartDate, scheduleEndDate),
+      // Working days from start to finish on the project calendar (equals
+      // projectDuration when every day is a working day).
+      projectWorkingDays: cal.isIdentity
+        ? daysBetween(scheduleStartDate, scheduleEndDate)
+        : Math.max(0, (cal.cum(dayIndex(scheduleEndDate)) - cal.cum(dayIndex(scheduleStartDate))) / UNITS_PER_DAY),
+      calendarIssues: cal.issues,
       warnings,
     };
   }

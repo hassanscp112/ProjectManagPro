@@ -66,6 +66,15 @@ test('fieldLock reproduces the Gantt locks', () => {
   assert.equal(fieldLock({ isGroup: true }, 'name', true), null);
 });
 
+test('fieldLock: any predecessor (extra links, computed links) drives the start', () => {
+  const leaf = { isGroup: false };
+  // A legacy writer cleared dependsOn but an extra link remains.
+  assert.equal(fieldLock({ ...leaf, dependsOn: null, predecessors: [{ id: 'a' }, { id: 'b', type: 'FS', lag: 0 }] }, 'manualStart', false), 'dependency');
+  // Engine output carries the normalized links.
+  assert.equal(fieldLock({ ...leaf, links: [{ id: 'b', type: 'SS', lag: 0 }] }, 'manualStart', false), 'dependency');
+  assert.equal(fieldLock({ ...leaf, links: [] }, 'manualStart', false), null);
+});
+
 test('childrenOf, ordersInScope and scheduleStatus', () => {
   assert.deepEqual(childrenOf(tree, tree[3]).map((t) => t.id), ['g21']);
   const orders = [
