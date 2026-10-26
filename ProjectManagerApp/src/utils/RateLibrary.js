@@ -3,10 +3,16 @@
    Single source of truth for unit prices. Prices are COPY-ON-GENERATE:
    TemplateEngine snapshots them when a project is generated; editing
    the library afterwards never touches existing projects.
-   Storage: localStorage key 'pm-rate-library' → { items: [...] }
+   Storage: localStorage key 'pm-rate-library' → { items: [...], seedVersion }
+   seedVersion 2 added the building-works rates the work-type library
+   (utils/planning/workTypeSeeds.js) prices with — added once to existing
+   libraries, so items the user deleted later are never brought back.
    ═══════════════════════════════════════════════════════════════════ */
 
+import { BUILDING_RATES } from './planning/workTypeSeeds.js';
+
 export const STORAGE_KEY = 'pm-rate-library';
+export const RATE_SEED_VERSION = 2;
 
 const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
@@ -16,7 +22,7 @@ const uid = () =>
 /* Default catalog: ~40 realistic Iraqi market items (mid-range IQD,
    editable by the user). id values are stable so PARTS.rateName /
    template lookups survive re-seeding. */
-export const DEFAULT_RATES = [
+const BASE_RATES = [
   // ── خرسانة ──
   { id: 'r-conc-c25', name: 'خرسانة جاهزة C25', unit: 'م3', unitPrice: 190000, category: 'خرسانة' },
   { id: 'r-conc-c20', name: 'خرسانة جاهزة C20', unit: 'م3', unitPrice: 170000, category: 'خرسانة' },
@@ -69,16 +75,23 @@ export const DEFAULT_RATES = [
   { id: 'r-canopy', name: 'مظلة معدنية (ساندويج بانل)', unit: 'م2', unitPrice: 35000, category: 'أبواب ونوافذ' },
 ];
 
+export const DEFAULT_RATES = [...BASE_RATES, ...BUILDING_RATES];
+
 export const RATE_CATEGORIES = [
+  'أعمال عامة',
   'خرسانة',
   'حديد',
+  'هياكل حديدية',
   'بناء',
   'تشطيبات',
   'أعمال ترابية',
   'عزل',
   'كهرباء',
   'صحية',
+  'تكييف',
   'أبواب ونوافذ',
+  'أنظمة خاصة',
+  'أعمال خارجية',
 ];
 
 const readStore = () => {
@@ -97,23 +110,32 @@ export const seedDefaults = () => {
   if (store && Array.isArray(store.items)) return store.items;
   const items = DEFAULT_RATES.map((r) => ({ ...r }));
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ items }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, seedVersion: RATE_SEED_VERSION }));
   } catch {
     /* storage unavailable — in-memory defaults still returned */
   }
   return items;
 };
 
+/* A library seeded before version 2: add the building rates it lacks, once. */
+const upgradeStore = (store) => {
+  const have = new Set(store.items.map((r) => r && r.id));
+  const items = [...store.items, ...BUILDING_RATES.filter((r) => !have.has(r.id)).map((r) => ({ ...r }))];
+  return saveRateLibrary(items);
+};
+
 export const loadRateLibrary = () => {
   const store = readStore();
-  if (store && Array.isArray(store.items) && store.items.length > 0) return store.items;
+  if (store && Array.isArray(store.items) && store.items.length > 0) {
+    return (Number(store.seedVersion) || 1) < RATE_SEED_VERSION ? upgradeStore(store) : store.items;
+  }
   return seedDefaults();
 };
 
 export const saveRateLibrary = (items) => {
   const normalized = Array.isArray(items) ? items : [];
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: normalized }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: normalized, seedVersion: RATE_SEED_VERSION }));
   } catch {
     /* ignore write failures */
   }
@@ -147,6 +169,9 @@ export const deleteRate = (id) => {
   saveRateLibrary(next);
   return next;
 };
+
+/* Lookup by id (the work-type library links rates by id). */
+export const findRateById = (items, id) => (Array.isArray(items) ? items : []).find((r) => r && r.id === id) || null;
 
 /* Exact-name lookup used by the template generator for price snapshotting. */
 export const findRateByName = (items, name) =>

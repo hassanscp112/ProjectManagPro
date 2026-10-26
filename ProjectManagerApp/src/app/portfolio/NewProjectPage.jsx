@@ -14,12 +14,12 @@ import {
   templateDefaults,
   validateProjectDraft,
 } from '../../state/portfolioModel.js';
-import { createTaskId, loadTasks, saveProjectPlan } from '../../state/projectModel.js';
+import { createTaskId, loadMeta, loadTasks, saveProjectPlan } from '../../state/projectModel.js';
 import { logAppEvent } from '../../utils/ActivityLog.js';
 import { loadIdentity } from '../../utils/Identity.js';
 import { createProject, deleteProject, loadProjects, openProject, projectStartDate } from '../../utils/Projects.js';
 import { loadRateLibrary } from '../../utils/RateLibrary.js';
-import { listTemplates, toISODate } from '../../utils/TemplateEngine.js';
+import { activeTemplates, listTemplates, toISODate } from '../../utils/TemplateEngine.js';
 import { Button, Card, EmptyState, Field, Segmented, Select, useToast } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
 import { templateName } from '../templates/templateLabels.js';
@@ -40,7 +40,7 @@ export default function NewProjectPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const templates = useMemo(() => listTemplates(), []);
+  const templates = useMemo(() => activeTemplates(listTemplates()), []);
   const projects = useMemo(() => loadProjects(), []);
 
   const initialTemplate = templates.find((x) => x.id === state?.templateId) || templates[0] || null;
@@ -54,8 +54,8 @@ export default function NewProjectPage() {
   const template = templates.find((x) => x.id === templateId) || null;
   const source = projects.find((p) => p.id === sourceId) || null;
   const preview = useMemo(
-    () => (kind === 'template' ? previewTemplate(template, values, draft.startDate, loadRateLibrary()) : null),
-    [kind, template, values, draft.startDate]
+    () => (kind === 'template' ? previewTemplate(template, values, draft.startDate, loadRateLibrary(), { lang }) : null),
+    [kind, template, values, draft.startDate, lang]
   );
   const sourceSummary = useMemo(() => (kind === 'copy' && source ? summarizeProject(source) : null), [kind, source]);
 
@@ -85,7 +85,9 @@ export default function NewProjectPage() {
       return;
     }
     openProject(project.id);
-    if (!saveProjectPlan(project, { tasks, meta: newProjectMeta() })) {
+    // A generated plan brings its planning settings; a copy keeps the source's.
+    const planning = kind === 'template' ? preview?.planning : kind === 'copy' && source ? loadMeta(undefined, source).planning : null;
+    if (!saveProjectPlan(project, { tasks, meta: newProjectMeta(planning || null) })) {
       deleteProject(project.id);
       toast({ title: t('settings.storageFull'), tone: 'danger' });
       return;
@@ -96,7 +98,7 @@ export default function NewProjectPage() {
       kind: kind === 'template' ? 'template' : 'project',
       summary:
         kind === 'template'
-          ? `${t('app.template.generatedLog')} «${templateName(template, t)}» — ${leaves} ${t('app.template.itemsLog')}`
+          ? `${t('app.template.generatedLog')} «${templateName(template, t, lang)}» — ${leaves} ${t('app.template.itemsLog')}`
           : kind === 'copy'
             ? t('projects.copiedLog', { name: source.name, count: leaves })
             : t('projects.createdLog'),
@@ -136,7 +138,7 @@ export default function NewProjectPage() {
                   <Select value={templateId} onChange={(e) => pickTemplate(e.target.value)}>
                     {templates.map((tpl) => (
                       <option key={tpl.id} value={tpl.id}>
-                        {`${tpl.icon || '🏗️'} ${templateName(tpl, t)}`}
+                        {`${tpl.icon || '🏗️'} ${templateName(tpl, t, lang)}`}
                       </option>
                     ))}
                   </Select>

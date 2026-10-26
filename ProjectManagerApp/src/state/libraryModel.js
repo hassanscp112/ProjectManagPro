@@ -44,6 +44,20 @@ export const upsertCalcTemplate = (list, template) =>
 /* ─────────────── template builder ─────────────── */
 
 /**
+ * A schema-1 element's "depends on": another element's index, optionally
+ * with a repetition ('5@2' = element 5 on floor 2, '5@last'); anything else
+ * (itself, out of range, garbage) → null.
+ */
+const cleanDepOn = (depOn, index, count) => {
+  if (depOn === null || depOn === '' || depOn === undefined) return null;
+  const m = String(depOn).trim().match(/^(\d+)(@(\d+|last))?$/);
+  if (!m) return null;
+  const target = Number(m[1]);
+  if (target >= count || target === index) return null;
+  return m[2] ? `${target}${m[2]}` : target;
+};
+
+/**
  * Check a builder draft and turn it into a template to save:
  * → { error: 'name' | 'elements' } or { template }. Variables without a key
  * are dropped; "repeats per" must name a variable; "depends on" must point
@@ -54,17 +68,14 @@ export const cleanTemplateDraft = (draft) => {
   if (!draft.elements.length) return { error: 'elements' };
   const variables = draft.variables.filter((v) => (v.key || '').trim()).map((v) => ({ ...v, key: v.key.trim(), default: Number(v.default) || 0 }));
   const keys = new Set(variables.map((v) => v.key));
-  const elements = draft.elements.map((el, i) => {
-    const dep = el.depOn === null || el.depOn === '' || el.depOn === undefined ? null : Number(el.depOn);
-    return {
-      ...el,
-      lag: Number(el.lag) || 0,
-      repeatsVar: el.repeatsVar && keys.has(el.repeatsVar) ? el.repeatsVar : null,
-      depOn: Number.isInteger(dep) && dep >= 0 && dep < draft.elements.length && dep !== i ? dep : null,
-    };
-  });
+  const elements = draft.elements.map((el, i) => ({
+    ...el,
+    lag: Number(el.lag) || 0,
+    repeatsVar: el.repeatsVar && keys.has(el.repeatsVar) ? el.repeatsVar : null,
+    depOn: cleanDepOn(el.depOn, i, draft.elements.length),
+  }));
   return {
-    template: { name: draft.name.trim(), icon: draft.icon || '🏗️', variables, elements, version: 1, source: 'custom' },
+    template: { name: draft.name.trim(), icon: draft.icon || '🏗️', variables, elements, version: Number(draft.version) || 1, source: 'custom' },
   };
 };
 

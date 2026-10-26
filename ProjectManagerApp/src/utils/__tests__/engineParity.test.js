@@ -16,7 +16,7 @@ const { computeCriticalPath } = await import('../CriticalPath.js');
 const { GanttEngine: LegacyEngine } = await import('./fixtures/legacyGanttEngine.js');
 const { computeCriticalPath: legacyCriticalPath } = await import('./fixtures/legacyCriticalPath.js');
 const { INITIAL_TASKS } = await import('../../state/projectModel.js');
-const { listTemplates, generateProject } = await import('../TemplateEngine.js');
+const { LEGACY_SEED_TEMPLATES, generateProject } = await import('../TemplateEngine.js');
 
 // Small deterministic PRNG (mulberry32).
 const rng = (seed) => () => {
@@ -160,7 +160,7 @@ describe('engine parity with the pre-upgrade engine', () => {
 
   it('seeded building templates at 1, 2 and 5 floors compute identically', () => {
     localStorage.clear();
-    listTemplates().forEach((template) => {
+    LEGACY_SEED_TEMPLATES.map((factory) => factory()).forEach((template) => {
       [1, 2, 5].forEach((floors) => {
         const values = Object.fromEntries((template.variables || []).map((v) => [v.key, v.key === 'floors' ? floors : v.default]));
         const { tasks } = generateProject(template, values, { startDate: '2030-03-01' });

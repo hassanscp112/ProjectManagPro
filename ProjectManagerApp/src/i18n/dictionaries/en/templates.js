@@ -86,4 +86,12 @@ export default {
   'templates.noticeNeedElement': 'Add at least one item to the template.',
   'templates.noticeNoTasks': 'The current project has no tasks to save as a template.',
   'templates.noticeProjectSaved': 'Current project saved as a template (fixed quantities, no variables).',
+  // Rate categories added with the building work types
+  'templates.catGeneral': 'General',
+  'templates.catSteelStructure': 'Steel structures',
+  'templates.catHvac': 'Air conditioning',
+  'templates.catSystems': 'Specialist systems',
+  'templates.catExternal': 'External works',
+  'templates.answerNo': 'No',
+  'templates.answerYes': 'Yes',
 };

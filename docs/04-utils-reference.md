@@ -140,6 +140,42 @@ storage. Tests: `criticalPath.test.js`, `engineParity.test.js`.
   the old recursion's warnings and cycle texts), `linkBound`,
   `shiftByLag` / `unshiftByLag` (shared with CriticalPath). Stale leveling
   links that contradict the logic are dropped.
+- **`Formula.js`** — template formulas without `eval`: `evaluate(src, vars)`
+  → `{ value, error: null|'syntax'|'unknown', names? }`, `quantityOf`
+  (≥ 0, 2 decimals), `conditionHolds` (empty = true), `compileFormula`
+  (cached). Operators `+ - * / % < <= > >= == != && || ! ?:`, functions
+  `min max ceil floor round abs sqrt pow if`, `Math.` prefix, `PI`.
+  Tests: `formula.test.js`.
+- **`trades.js`** — `TRADES` (18 crew trades; labels `planning.trade.*`).
+- **`WorkTypes.js`** — the work-type library (`pm-work-types`, global):
+  `loadWorkTypes` (seeds / tops up new seeds once, never a removed one),
+  `saveWorkTypes`, `upsertWorkType`, `deleteWorkType`, `cleanWorkType`,
+  `workTypeMap`, `workTypeName(wt, lang)`, `durationFor(qty, { productivity,
+  crews, fixedDays })` = ceil(qty ÷ (productivity × crews)), 1–365, normal
+  working days. Seeds + building rates in **`workTypeSeeds.js`** (~80 types,
+  marked `checked: false`). Tests: `workTypes.test.js`.
+- **`buildingTemplates.js`** — `buildingTemplateSeeds()` (house, villa,
+  apartments, school, mall, health center, mosque, office / mixed-use,
+  warehouse), `LEVEL_USES`. Per-floor-by-trade elements with explicit links
+  (columns after the slab below + 7 calendar days curing, masonry after the
+  slab above, finishes chain, roof after the top slab…).
+- **`generator.js`** — `templateValues`, `buildLevels(template, vars,
+  overrides)` (basement + ground + upper floors, per-level area / height /
+  use), `buildingVars`, `expandTemplate(template, values, { levelOverrides })`
+  → `{ vars, levels, items, issues }`, `resolveLinks(items, template,
+  levelCount)` (floor selectors, `if` filters, lists of keys; a level item
+  whose rules all miss waits for the level anchor, default `slab`).
+  Tests: `generator.test.js`.
+- **`autoPlan.js`** — `priceItems` (rate by `rateId`, cost overrides,
+  `priceWithMarkups(cost, markups)` = cost × (1 + Σ%/100)), `scheduleItems`
+  (productivity overrides, crews per trade, else `autoCrews` toward
+  `CREW_TARGET_DAYS` {level 20, once 40}, max 6), `itemsToTasks` (sections,
+  one group per level, names via `levelName(level, lang)` + `planning.gen.atLevel`),
+  `planProject(template, values, options)` → `{ levels, items, tasks, stats
+  {…, directCost, totalCost, unpriced, noProductivity}, issues, planning }`.
+  `DEFAULT_MARKUPS = { overhead: 10, contingency: 5, profit: 10 }`.
+  Tests: `autoPlan.test.js` (every seeded template, several sizes: no issues,
+  no engine warnings, everything priced and linked).
 
 ---
 
@@ -196,8 +232,13 @@ Tests: `planningStore.test.js` (pure helpers only).
 
 ## TemplateEngine.js — project generator
 
-**Storage:** `pm-templates`. Imports RateLibrary.
-- `generateProject(template, values, options)` → `{tasks, stats {taskCount, groupCount, leafCount, totalCost, pricedCount, unpriced}}` — evaluates `qtyFormula` against template `variables`, applies repeats/dependencies (`FLOOR_CYCLE_LAG_DAYS = 7`), prices from rate library (copy-on-generate)
+**Storage:** `pm-templates` (`{templates, seedVersion}`). Imports RateLibrary.
+- `listTemplates()` seeds the nine schema-2 building templates
+  (`planning/buildingTemplates.js`); a seed-version-1 store keeps its
+  templates, its five schema-1 seeds get `archived: true`.
+  `activeTemplates(list)` hides archived ones; `isPlanTemplate(t)`
+  (schema 2); `LEGACY_SEED_TEMPLATES` (the old seed factories).
+- `generateProject(template, values, options)` (schema 1 only) → `{tasks, stats {taskCount, groupCount, leafCount, totalCost, pricedCount, unpriced}}` — evaluates `qtyFormula` against template `variables`, applies repeats/dependencies (`FLOOR_CYCLE_LAG_DAYS = 7`), prices from rate library (copy-on-generate)
 - `makeTemplateFromTasks(tasks, name)` — reverse: current project → template
 - `listTemplates()` / `saveTemplate(t)` / `deleteTemplate(id)`
 - `PARTS` — the reusable part catalog `{id, name, unit, category, productivity, rateName}`
@@ -210,8 +251,11 @@ Tests: `templateEngine.test.js`.
 ## RateLibrary.js — IQD price catalog
 
 **Storage:** `pm-rate-library` = `{items: [{id, name, unit, unitPrice, category}]}`.
-`DEFAULT_RATES` (~40 civil items) + `RATE_CATEGORIES` (closed set) +
-`seedDefaults/loadRateLibrary/saveRateLibrary/addRate/updateRate/deleteRate/findRateByName`.
+`DEFAULT_RATES` (~40 civil items + `BUILDING_RATES` from
+`planning/workTypeSeeds.js`; `RATE_SEED_VERSION = 2` adds the building
+rates once to older libraries) + `RATE_CATEGORIES` (closed set) +
+`seedDefaults/loadRateLibrary/saveRateLibrary/addRate/updateRate/deleteRate/findRateByName/findRateById`.
+Prices are direct cost; markups are added per project.
 
 ---
 

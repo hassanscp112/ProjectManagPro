@@ -86,4 +86,12 @@ export default {
   'templates.noticeNeedElement': 'أضف بنداً واحداً على الأقل للنموذج.',
   'templates.noticeNoTasks': 'لا توجد مهام في المشروع الحالي لحفظها كنموذج.',
   'templates.noticeProjectSaved': 'تم حفظ المشروع الحالي كنموذج (كميات ثابتة بدون متغيرات).',
+  // Rate categories added with the building work types
+  'templates.catGeneral': 'أعمال عامة',
+  'templates.catSteelStructure': 'هياكل حديدية',
+  'templates.catHvac': 'تكييف',
+  'templates.catSystems': 'أنظمة خاصة',
+  'templates.catExternal': 'أعمال خارجية',
+  'templates.answerNo': 'لا',
+  'templates.answerYes': 'نعم',
 };

@@ -6,7 +6,7 @@ import { previewTemplate, templateDefaults } from '../../state/portfolioModel.js
 import { loadTasks } from '../../state/projectModel.js';
 import { loadProjects } from '../../utils/Projects.js';
 import { loadRateLibrary } from '../../utils/RateLibrary.js';
-import { deleteTemplate, listTemplates, makeTemplateFromTasks, saveTemplate, toISODate } from '../../utils/TemplateEngine.js';
+import { activeTemplates, deleteTemplate, listTemplates, makeTemplateFromTasks, saveTemplate, toISODate } from '../../utils/TemplateEngine.js';
 import { Button, Card, ConfirmDialog, Dialog, EmptyState, Field, IconButton, Input, Select, cx, useToast } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
 import { templateName } from './templateLabels.js';
@@ -15,14 +15,14 @@ import s from '../library/Library.module.css';
 
 /** Values and preview of the chosen template, and "New project from it". */
 function TemplateDetail({ template }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
   const [values, setValues] = useState(() => templateDefaults(template));
-  const preview = useMemo(() => previewTemplate(template, values, toISODate(new Date()), loadRateLibrary()), [template, values]);
+  const preview = useMemo(() => previewTemplate(template, values, toISODate(new Date()), loadRateLibrary(), { lang }), [template, values, lang]);
   if (!preview) return null;
 
   return (
-    <Card title={`${template.icon || '🏗️'} ${templateName(template, t)}`} titleAs="h2" padding="md" className={s.main}>
+    <Card title={`${template.icon || '🏗️'} ${templateName(template, t, lang)}`} titleAs="h2" padding="md" className={s.main}>
       <TemplateVariables template={template} values={values} onChange={setValues} />
       <TemplatePreview preview={preview} />
       <div className={s.actionsEnd}>
@@ -41,10 +41,10 @@ function TemplateDetail({ template }) {
  * Storage: TemplateEngine.
  */
 export default function TemplatesPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const toast = useToast();
   const navigate = useNavigate();
-  const [templates, setTemplates] = useState(listTemplates);
+  const [templates, setTemplates] = useState(() => activeTemplates(listTemplates()));
   const [params, setParams] = useSearchParams();
   const [toDelete, setToDelete] = useState(null);
   const [fromProject, setFromProject] = useState(null); // { projectId, name } while the dialog is open
@@ -61,7 +61,7 @@ export default function TemplatesPage() {
       return;
     }
     saveTemplate(makeTemplateFromTasks(tasks, fromProject.name || project.name));
-    setTemplates(listTemplates());
+    setTemplates(activeTemplates(listTemplates()));
     setFromProject(null);
     toast({ title: t('templates.noticeProjectSaved') });
   };
@@ -91,7 +91,7 @@ export default function TemplatesPage() {
                   {tpl.icon || '🏗️'}
                 </span>
                 <span className={s.tplText}>
-                  <strong>{templateName(tpl, t)}</strong>
+                  <strong>{templateName(tpl, t, lang)}</strong>
                   <span className={s.muted}>{t('templates.cardMeta', { vars: (tpl.variables || []).length, elements: (tpl.elements || []).length })}</span>
                 </span>
               </button>
@@ -107,12 +107,12 @@ export default function TemplatesPage() {
         open={toDelete !== null}
         onOpenChange={(o) => !o && setToDelete(null)}
         title={t('templates.confirmDeleteTemplate')}
-        message={toDelete ? templateName(toDelete, t) : ''}
+        message={toDelete ? templateName(toDelete, t, lang) : ''}
         confirmLabel={t('common.delete')}
         tone="danger"
         onConfirm={() => {
           deleteTemplate(toDelete.id);
-          setTemplates(listTemplates());
+          setTemplates(activeTemplates(listTemplates()));
           if (selected?.id === toDelete.id) setParams({}, { replace: true });
         }}
       />
