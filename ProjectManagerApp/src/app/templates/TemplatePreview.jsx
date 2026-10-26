@@ -1,17 +1,41 @@
 import { compactCurrency, formatNumber } from '../../i18n/index.js';
 import { useI18n } from '../../i18n/useI18n.js';
-import { Field, NumberInput, Table, cx } from '../../ui/index.js';
+import { Field, NumberInput, Select, Table, cx } from '../../ui/index.js';
+import { variableLabel } from './templateLabels.js';
 import s from '../library/Library.module.css';
 
-/** A template's variable inputs (values: { key: number }). */
+/**
+ * A template's variable inputs (values: { key: number }): numbers, choices
+ * (building templates: slab system, finish level…) and yes / no.
+ */
 export function TemplateVariables({ template, values, onChange, children }) {
+  const { t, lang } = useI18n();
+  const set = (key, value) => onChange({ ...values, [key]: value });
   return (
     <div className={s.varForm}>
-      {(template.variables || []).map((v) => (
-        <Field key={v.key} label={v.label || v.key}>
-          <NumberInput value={values[v.key] ?? ''} onChange={(e) => onChange({ ...values, [v.key]: e.target.value })} />
-        </Field>
-      ))}
+      {(template.variables || []).map((v) => {
+        const value = values[v.key] ?? v.default ?? '';
+        return (
+          <Field key={v.key} label={variableLabel(v, lang)}>
+            {v.type === 'choice' ? (
+              <Select value={String(value)} onChange={(e) => set(v.key, Number(e.target.value))}>
+                {(v.options || []).map((o) => (
+                  <option key={o.value} value={String(o.value)}>
+                    {lang === 'en' && o.labelEn ? o.labelEn : o.label}
+                  </option>
+                ))}
+              </Select>
+            ) : v.type === 'bool' ? (
+              <Select value={Number(value) ? '1' : '0'} onChange={(e) => set(v.key, Number(e.target.value))}>
+                <option value="0">{t('templates.answerNo')}</option>
+                <option value="1">{t('templates.answerYes')}</option>
+              </Select>
+            ) : (
+              <NumberInput value={value} min={v.min} max={v.max} unit={v.unit} onChange={(e) => set(v.key, e.target.value)} />
+            )}
+          </Field>
+        );
+      })}
       {children}
     </div>
   );

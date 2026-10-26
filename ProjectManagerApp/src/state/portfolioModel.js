@@ -8,7 +8,9 @@
 
 import { ORDERS_STORAGE_KEY } from '../utils/OrderEngine.js';
 import { GanttEngine } from '../utils/GanttEngine.js';
-import { generateProject } from '../utils/TemplateEngine.js';
+import { generateProject, isPlanTemplate } from '../utils/TemplateEngine.js';
+import { planProject } from '../utils/planning/autoPlan.js';
+import { loadWorkTypes } from '../utils/planning/WorkTypes.js';
 import { keyFor, projectStartDate } from '../utils/Projects.js';
 import { DEFAULT_META, addMainTask, loadMeta, loadTasks } from './projectModel.js';
 
@@ -63,8 +65,11 @@ export const copyProjectTasks = (tasks = [], fromStart, toStart) => {
   });
 };
 
-/** A new project's meta: always a draft (planning), no baseline yet. */
-export const newProjectMeta = () => ({ ...DEFAULT_META, variations: [] });
+/**
+ * A new project's meta: always a draft (planning), no baseline yet; a
+ * generated plan brings its planning settings (calendar, markups, crews).
+ */
+export const newProjectMeta = (planning = null) => (planning ? { ...DEFAULT_META, variations: [], planning } : { ...DEFAULT_META, variations: [] });
 
 const loadOrders = (storage, project) => {
   try {
@@ -106,10 +111,24 @@ export const summarizeProject = (project, storage = globalThis.localStorage) => 
 export const sortProjects = (projects = []) =>
   [...projects].sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
 
-/** A template's generated tasks and stats for the given values, or null if it can't be generated. */
-export const previewTemplate = (template, values, startDate, rateLibrary) => {
+/**
+ * A template's generated tasks and stats for the given values, or null if
+ * it can't be generated. Building templates (schema 2) go through the
+ * auto-planner (options: { lang, workTypes, markups }) and also return
+ * `planning` for the new project's meta.
+ */
+export const previewTemplate = (template, values, startDate, rateLibrary, options = {}) => {
   if (!template) return null;
   try {
+    if (isPlanTemplate(template)) {
+      return planProject(template, values, {
+        startDate,
+        lang: options.lang || 'ar',
+        rates: rateLibrary,
+        workTypes: options.workTypes || loadWorkTypes(),
+        markups: options.markups,
+      });
+    }
     return generateProject(template, values, { startDate, rateLibrary });
   } catch {
     return null;

@@ -283,21 +283,55 @@ named snapshot "Before restoring …" and refuses to restore if it can't.
 ## 8. Templates & rate library
 
 ```js
-// pm-templates
-{ templates: [{
-    id, name, icon, version, createdAt, source,
+// pm-templates  (seedVersion 2: the nine building templates; older seeds archived)
+{ seedVersion: 2, templates: [
+  // schema 1 (older / custom templates; generateProject)
+  { id, name, icon, version, createdAt, source, archived?,
     variables: [{ key, label, default }],          // e.g. floors, lengths
     elements: [{
       partId, name, qtyFormula,                    // formula references variables
       group, repeatsVar,                           // repeat element per variable value
-      depOn, depType, lag,                         // dependency wiring
+      depOn, depType, lag,                         // dependency wiring ('5@2', '5@last')
       isGroup, depth, unit, fixedUnitPrice, productivity, rateName
-    }]
-}]}
+    }] },
+  // schema 2 (building templates; utils/planning/autoPlan.planProject)
+  { id, schema: 2, kind: 'building', type: 'apartments', name, nameEn, icon, version, createdAt, source,
+    variables: [{ key, label, labelEn, type: 'number'|'int'|'bool'|'choice', default, min?, max?, unit?,
+                  options?: [{ value, label, labelEn }] }],
+    levels: { count: 'floors', basement: 'basement', area: 'areaPerFloor', height: 'floorHeight',
+              use: 'residential', groundUse?, basementUse?, anchor? },
+    sections: [{ key: 'prelim'|'sub'|'level'|'roof'|'external'|'systems', name, nameEn }],
+    elements: [{ key, workType, section, scope: 'once'|'level', qty /*formula*/, when? /*formula*/,
+                 name?, nameEn?, crews?,
+                 links: [{ to: key|[keys], floor?: 'same'|'prev'|'next'|'first'|'last'|'all'|{offset},
+                           if?: 'first'|'notFirst'|'last'|'notLast', type, lag, lagUnit? }] }] },
+]}
 
 // pm-rate-library  (copy-on-generate: templates snapshot prices, later edits don't propagate)
-{ items: [{ id, name, unit, unitPrice /*IQD*/, category }] }   // ~40 seeded defaults
+// Prices are DIRECT COST; a project adds its markups (meta.planning.markups).
+{ seedVersion: 2, items: [{ id, name, unit, unitPrice /*IQD*/, category, checked? }] }
+// ~40 base items + the building rates (ids 'rb-…'), added once to older libraries
+
+// pm-work-types  (global; utils/planning/WorkTypes.js) — the work-type library
+{ seedVersion: 1, removedSeeds: [id], items: [{
+    id, name, nameEn, unit, trade,                 // trade: utils/planning/trades.js
+    productivity,                                  // qty per crew per working day
+    crew: { labour, equipment: { crane: 1, … } },  // one crew
+    rateId,                                        // pm-rate-library item that prices it
+    keywords: [], aliases: [],                     // BOQ matching
+    fixedDays,                                     // fixed duration (mobilization, testing…)
+    legacy, checked, source: 'seed'|'user', learned, history: []
+}]}
 ```
+**`pm-work-types` must be registered in `storeRegistry.js`** (requested from
+the integrator; until then it is not in backups).
+
+Generated tasks also carry (optional): `workTypeId`, `trade`, `crews`,
+`productivity`, `durationSource` (`productivity`|`fixed`|`manual`),
+`unitCost` (direct cost; `unitPrice` = contract price with markups),
+`templateKey` (element key), `floor` (level index). `meta.planning` of a
+generated project: `{ version, calendar, markups: { overhead, contingency,
+profit }, crews }`.
 
 ---
 

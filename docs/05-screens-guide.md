@@ -29,8 +29,13 @@ back to `#/projects` (and the phone *More* page lists the three pages).
   gap). *Create and start planning* creates it as a draft, logs it in the new
   project's activity, and opens the Schedule with editing on. Arriving from
   Templates preselects that template and its values.
-- **Templates `#/templates`** — template cards; picking one (`?t=id`) shows
-  its variables, a live preview and *New project from this template*. *Save
+- **Templates `#/templates`** — template cards (archived ones hidden): the
+  nine building templates (names and variable labels in the UI language;
+  choice and yes / no variables as selects) plus any custom ones; picking
+  one (`?t=id`) shows its variables, a live preview priced from the rate
+  library with the default markups and *New project from this template*.
+  A building template creates its project with `meta.planning` (markups);
+  a copied project keeps the source's `meta.planning`. *Save
   project as template* picks one of the projects. Builder at
   `#/templates/new`. Seed template names and rate categories are stored in
   Arabic and shown in the UI language (`templateLabels.js`).

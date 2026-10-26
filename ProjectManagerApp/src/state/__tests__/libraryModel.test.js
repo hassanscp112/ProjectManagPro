@@ -63,6 +63,17 @@ test('template builder draft check', () => {
   assert.equal(template.source, 'custom');
 });
 
+test('cleanTemplateDraft keeps repetition selectors (5@2, 5@last) and the template version', () => {
+  const { template } = cleanTemplateDraft({
+    name: 'T',
+    version: 3,
+    variables: [],
+    elements: [{ depOn: null }, { depOn: '0@2' }, { depOn: '0@last' }, { depOn: '9@1' }, { depOn: '3@x' }],
+  });
+  assert.deepEqual(template.elements.map((e) => e.depOn), [null, '0@2', '0@last', null, null]);
+  assert.equal(template.version, 3);
+});
+
 test('file folders and sizes', () => {
   const tasks = [{ id: 'a', wbs: '1' }, { id: 'b', wbs: '1.1' }, { id: 'c', wbs: '2' }];
   assert.deepEqual(childFolders(FOLDER_ROOT, tasks), [{ id: FOLDER_TASKS }, { id: FOLDER_ORDER_PHOTOS }]);
