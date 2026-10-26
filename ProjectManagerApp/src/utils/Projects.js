@@ -21,6 +21,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { PROJECT_STORE_KEYS } from './storeRegistry.js';
+import { notifyStoreChange } from './storeEvents.js';
 
 export const PROJECTS_STORAGE_KEY = 'pm-projects';
 export const LAST_PROJECT_KEY = 'pm-last-project';
@@ -257,6 +258,7 @@ export const mergeServerProjects = (serverProjects, { hidden = [], changedOnServ
   if (result.added.length || result.updated.length || result.revoked.length) {
     saveProjects(next, storage);
     if (current) current = next.find((p) => p.id === current.id) || current;
+    notifyStoreChange(PROJECTS_STORAGE_KEY);
   }
   return result;
 };
