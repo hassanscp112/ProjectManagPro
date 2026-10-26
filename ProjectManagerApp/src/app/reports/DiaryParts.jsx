@@ -7,6 +7,8 @@ import { copyDiaryDay, diaryDraft, diaryTotals, equipmentSuggestions, manpowerFr
 import { getDayPlans, loadPlans } from '../../utils/PlanningStore.js';
 import { WEATHER_KINDS, createDiaryRowId, isDiaryDayEmpty } from '../../utils/SiteDiary.js';
 import { Button, Card, ChipGroup, Drawer, Field, IconButton, Input, NumberInput, Textarea, cx, useToast } from '../../ui/index.js';
+import { HistoryStamps } from '../../ui/HistoryStamps.jsx';
+import { useLastChange } from '../history/useLastChange.js';
 import { formatDay } from '../record/orderMeta.js';
 import { SheetSection } from './ReportSheet.jsx';
 import d from './Diary.module.css';
@@ -96,7 +98,7 @@ export function DiaryConditions({ entry, showEmpty }) {
   }
   const totals = diaryTotals(entry);
   return (
-    <SheetSection title={t('diary.title')} aside={entry.recordedBy ? <span className={s.tag}>{t('diary.recordedBy', { name: entry.recordedBy })}</span> : null}>
+    <SheetSection title={t('diary.title')} aside={<HistoryStamps record={entry} time={false} className={s.tag} />}>
       <Conditions entry={entry} />
       <div className={d.counts}>
         <CountTable title={t('diary.manpower')} colLabel={t('diary.trade')} rows={entry.manpower} label={(r) => tradeLabel(r.trade, t)} total={totals.workers} />
@@ -341,6 +343,7 @@ export function DiaryCard({ day, dayLabel, diary, canEdit, onSave }) {
   const entry = diary.days[day];
   const empty = !entry || isDiaryDayEmpty(entry);
   const totals = empty ? null : diaryTotals(entry);
+  const lastEdit = useLastChange('pm-site-diary', `days/${day}`, entry);
   const Icon = entry ? WEATHER_ICONS[entry.weather] : null;
 
   const openEditor = () => {
@@ -379,7 +382,7 @@ export function DiaryCard({ day, dayLabel, diary, canEdit, onSave }) {
               <li>{t('diary.equipTotal', { count: formatNumber(totals.equipment) })}</li>
               {totals.visitors > 0 && <li>{t('diary.visitorsTotal', { count: formatNumber(totals.visitors) })}</li>}
             </ul>
-            {entry.updatedBy && <p className={s.footnote}>{t('diary.updatedBy', { name: entry.updatedBy })}</p>}
+            <HistoryStamps record={entry} last={lastEdit} collection="pm-site-diary" itemId={`days/${day}`} name={formatDay(day)} className={s.footnote} />
           </>
         )}
         {canEdit ? (

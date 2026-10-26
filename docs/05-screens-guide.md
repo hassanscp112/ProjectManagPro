@@ -305,7 +305,8 @@ whatever the screen theme.
 **Daily `#/reports/daily`** — *Day* (date with previous / next / Today) or
 *Period* (from–to, notes filtered by engineer). Per day: figures (orders, work
 value, expenses, pending), **Site diary** (weather, max temperature, working
-hours; manpower by trade and equipment by type with totals; recorded by),
+hours; manpower by trade and equipment by type with totals; recorded by /
+last edited by),
 **Work done** (quantity orders grouped by item with who did it, valued at the
 contract unit price), **Recorded expenses**, **Visitors** and **Issues** (from
 the diary), **Photos of the day** (`DayPhotos.jsx`: every photo of the day's
@@ -313,8 +314,9 @@ orders, `dayReport().photoIds`, in report order; thumbnails open the viewer; on
 paper 18 mm thumbnails kept together), and **Site notes**. A period prints the days with orders, notes or a diary (diary-only
 days only when no engineer is picked); the day view says when a day has no
 diary. The side column (day view, screen only) holds the **diary card** — the
-day at a glance and *Fill in / Edit the diary* (`record.work`; other roles see
-a read-only line) — and the note form (engineer prefilled from the identity,
+day at a glance with its *Recorded by · Last edited by* stamps and a History
+link, and *Fill in / Edit the diary* (`record.work`; other roles see a
+read-only line) — and the note form (engineer prefilled from the identity,
 optional item, the note). The diary editor is a drawer (a bottom sheet on
 phones): weather chips (tap again to clear), temperature, hours, rows for
 manpower (trade + count), equipment (type + count) and visitors (name,
@@ -343,11 +345,12 @@ legacy sheet had it hardcoded in Arabic).
 a printable `ReportSheet` "as of today": figures (events, delay days with
 overlaps counted once, excusable days, claimed — drafts excluded — granted,
 awaiting decision, notice warnings), the events newest first (title with
-cause, recorded by and affected items; period; days — an open event runs to
+cause, *Recorded by · Last edited by* with a History link, and affected items; period; days — an open event runs to
 today; excusable; notice date with a badge: in time / late notice / no notice
 / due by; claimed / granted; status), totals and signature lines. Filters:
 status and cause (the totals follow them; a badge on the sheet names them). On
-phones the register is a list of cards; paper always gets the table. *New
+phones the register is a list of cards (stamps and History link under each);
+paper always gets the table. *New
 delay*, a row's edit button (or a click on the row / card) open the editor
 drawer (`record.work` only):
 title, cause chips, start / end (empty = ongoing), affected items (task picker
@@ -357,21 +360,79 @@ the 28 days have passed (FIDIC 20.1), status, days claimed, days granted (when
 granted), notes; Delete asks first. A new event records `recordedBy` from
 `currentActor()`. Storage: `utils/Delays.js`; rules: `state/diaryModel.js`.
 
-**Activity `#/reports/activity`** — three views kept in the URL (`?view=task`,
-`?view=heatmap`):
-1. **Feed** — orders, variation orders and app events, newest first; kind
-   chips, date range, recorded-by search, 100 at a time. Expense rows show the
-   category in words.
-2. **Item history** — pick an item → totals (contract vs executed, variance,
+**Activity `#/reports/activity`** — four views kept in the URL (`?view=person`,
+`?view=task`, `?view=heatmap`):
+1. **Feed** — *in a shared project (signed in)*: the server's timeline, i.e.
+   everyone's changes (`getProjectTimeline`), newest first, 100 at a time
+   with *Load older changes*; filters **type** (work orders, expenses,
+   variation orders, plan items, diary, delays, certificates, photos and
+   files, events, or the organization's people / templates / rates), **person**
+   (project members and everyone in the rows) and **dates** (local days, both
+   included). Each row: kind and record, what happened, who, when, *Waiting to
+   sync* / *Not kept* / *Refused* badges, the order's figure and a History
+   link. *Offline or the server can't be read*: a notice, this device's
+   waiting changes, then the local feed below. *No server, local mode or a
+   project only on this device*: the local feed — orders, variation orders
+   and app events, newest first; kind chips, date range, recorded-by search,
+   100 at a time. Expense rows show the category in words, app events their
+   kind in words (payment certificate, project status, project, template);
+   order and variation rows have a History link (stamps in its tooltip).
+2. **By person** — "what did X do": a person (starts on you) and a period
+   (today, last 7 days, last 30 days, dates). Shared project: their changes in
+   the project and the organization's lists, with totals (changes, active
+   days, waiting, not kept) and counts per type. Otherwise the names recorded
+   on this device, with totals per kind.
+3. **Item history** — pick an item → totals (contract vs executed, variance,
    values, entries / approved) and its entries oldest first.
-3. **Heatmap** — approved work value per day over 12 months, Saturday →
+4. **Heatmap** — approved work value per day over 12 months, Saturday →
    Friday weeks, plum ramp (5 steps), a ring on days with orders but no
    approved value; whole project or one contractor; 90-day recorded / empty
    days; click a day for its entries (variation orders only in whole-project
    scope). Opens scrolled to the latest weeks.
 
-Logic: `src/state/reportsModel.js` (diary and delays: `src/state/diaryModel.js`); month / weekday names and the issue stamp:
-`src/app/dates.js`.
+Logic: `src/state/reportsModel.js` (local feed: `filterFeed`, `feedActors`,
+`feedSummary`, `eventKindKey`) and `src/state/historyModel.js` (server
+timeline: `timelineQuery`, `filterTimeline`, `timelineActors`,
+`personSummary`, `periodDays`); the server views are `app/history/Timeline.jsx`
+(+ `timelineHooks.jsx`). Diary and delays: `src/state/diaryModel.js`; month /
+weekday names and the issue stamp: `src/app/dates.js`.
+
+## History — `src/app/history/HistoryPage.jsx`
+
+`#/history/:collection/:id` (collection = the store key, e.g. `pm-orders`; id =
+the record id or its item key, encoded — a diary day is
+`days%2F2026-10-26`). Opened from the **History** buttons
+(`ui/HistoryButton.jsx`: an icon link; with `record` its tooltip and
+accessible name carry the stamps) on order rows (`record/OrderRow.jsx`, so
+also Home, Record, the task panel and task details), Activity rows, the
+certificate toolbar, delay rows and cards, the diary card and people rows.
+- Header: kind of record, its name, and the stamps *Recorded by · Approved
+  by · Issued by · Last edited by* (`ui/HistoryStamps.jsx`; the last editor
+  comes from the server's newest change when it is later than the record's
+  own `updatedBy`).
+- **Signed in, shared project:** every version newest first
+  (`getHistory`; this device's waiting changes on top, marked *Waiting to
+  sync*): what happened (added / changed / deleted / restored / uploaded),
+  who, when, which device (*This device* or a short id), *Not kept* for a
+  version that lost a conflict or was refused (with the reason), *Restored an
+  earlier version*, and the **fields before → after** (`ui/HistoryDiff.jsx`:
+  labelled fields, nested values as *Who › Kind*, lists of records matched by
+  id as *Manpower › Helper › Count*, plain lists as *Added / Removed*, ids
+  shown as names — tasks, contractors, teams, workers, an order's *who* —
+  codes in words and dates as dates; six fields, then *Show N more*). The version in force is marked *Current
+  version*.
+- **Restore this version** (older versions, a deletion — brings the record
+  back — or a version that was not kept): shown when the role may write that
+  version over the current one (the same sync rule as any edit:
+  `historyModel.restoreGate` → `src/sync/rules.checkChange`; e.g. replacing an
+  approved formal order needs `orders.approve`), disabled with the reason
+  otherwise and while offline. It asks first, then `restoreVersion` writes it
+  as a **new** change by you; nothing in the history is removed.
+- **Offline / server unreadable:** a notice and only the changes waiting on
+  this device (with *Try again* when the server failed).
+- **No server, signed out or a project only on this device:** a clear empty
+  state, then *On this device*: the record's own stamps (or that it is no
+  longer here) and the app events logged about it.
 
 ## Finance — `src/app/finance/FinancePage.jsx` (rebuilt in Phase 6)
 
@@ -441,8 +502,9 @@ run per kind and contractor.
   contractor has orders but no rate is marked "needs a rate". Below: the
   default terms (retention %, retention limit, main-contract advance, advance
   recovery %, currency label). Fields save when left (Enter too).
-- **Certificate `#/finance/certificates/:id`** (`CertificatePage.jsx`) — a
-  printable `ReportSheet`: who it is for, number, terms, orders counted; **Work
+- **Certificate `#/finance/certificates/:id`** (`CertificatePage.jsx`) — the
+  toolbar shows *Recorded by · Issued by · Last edited by* and a History link
+  (screen only); a printable `ReportSheet`: who it is for, number, terms, orders counted; **Work
   done** per item — quantity and amount, each previous / this period / to date,
   × the rate ("No rate" lines are flagged and left out); **Summary** — gross,
   less retention, less advance recovery (with the advance left), less other
@@ -470,6 +532,7 @@ run per kind and contractor.
   manual; *Auto* resets it.
 - Deleting asks first; deleting a worker says how many teams use them and
   automatic teams resize. Rules: `src/state/peopleModel.js`.
+- Each row (and team card) has a **History** link (`#/history/pm-registries/<list>%2F<id>`).
 
 ## Settings — `src/app/settings/SettingsPage.jsx` (rebuilt in Phase 6)
 
@@ -481,7 +544,9 @@ run per kind and contractor.
   lifecycle actions are.
 - **Backup & restore** — full JSON backup / restore incl. uploaded files
   (`useBackupRestore.jsx`, shared with the Schedule's More menu). Restore
-  downloads a safety backup of the current data first. The "Browser storage"
+  downloads a safety backup of the current data first. Signed in to a server,
+  its confirm also says the restored data will be sent to the server as edits
+  by you, recorded in the history. The "Browser storage"
   row shows whether the browser may clear the data (Protect asks again).
   Under it, the storage meter (`utils/StoragePersistence.getStorageUsage`):
   *Space used on this device* (the browser's quota for the app, shown when

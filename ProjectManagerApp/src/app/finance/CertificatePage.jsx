@@ -20,7 +20,9 @@ import {
   cx,
   useToast,
 } from '../../ui/index.js';
+import { HistoryStamps } from '../../ui/HistoryStamps.jsx';
 import { issueStamp } from '../dates.js';
+import { useLastChange } from '../history/useLastChange.js';
 import { formatDay } from '../record/orderMeta.js';
 import { ReportSheet, SheetSection } from '../reports/ReportSheet.jsx';
 import { Page } from '../Page.jsx';
@@ -177,6 +179,7 @@ export default function CertificatePage() {
   const [stamp, setStamp] = useState(() => issueStamp());
   const [confirm, setConfirm] = useState(null); // 'issue' | 'delete'
   const cert = doc.certificates.find((c) => c.id === id) || null;
+  const lastEdit = useLastChange('pm-certificates', id, cert);
   const r = useMemo(
     () => (cert ? computeCertificate(cert, { certificates: doc.certificates, rates: doc.rates, tasks, orders }) : null),
     [cert, doc, tasks, orders]
@@ -248,6 +251,7 @@ export default function CertificatePage() {
         <Button as="a" href="#/finance/certificates" variant="ghost" icon={dir === 'rtl' ? ArrowRight : ArrowLeft}>
           {t('certificates.backToList')}
         </Button>
+        <HistoryStamps record={cert} last={lastEdit} collection="pm-certificates" itemId={cert.id} name={t('certificates.sheetTitle', { number: cert.number })} />
         <div className={s.spacer} />
         {draft && canPrepare && (
           <Button variant="ghost" icon={Trash2} onClick={() => setConfirm('delete')}>

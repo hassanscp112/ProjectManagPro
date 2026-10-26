@@ -5,8 +5,9 @@
 // print in a range, and the site-notes filters. Monthly: BOQ progress
 // per section (before vs within the month), the month's orders and
 // variation orders, quantities per contractor, the money summary.
-// Activity: feed filters, one item's story totals, the heatmap (days,
-// buckets, Saturday-first weeks) and the empty-days radar.
+// Activity: feed filters (and one person's feed), event kind labels, one
+// item's story totals, the heatmap (days, buckets, Saturday-first weeks)
+// and the empty-days radar. The server's timeline: historyModel.js.
 // Dates are 'YYYY-MM-DD' strings handled as UTC days.
 // Tested in __tests__/reportsModel.test.js.
 // ─────────────────────────────────────────────────────────────
@@ -253,9 +254,10 @@ export const monthlyReport = ({ orders = [], tasks = [], variations = [], month 
 
 /**
  * Feed entries matching a kind chip ('all' | 'value' | 'expense' |
- * 'variation' | 'event'), a date range and an actor search.
+ * 'variation' | 'event'), a date range, an actor search and (`person`)
+ * one person's exact name.
  */
-export const filterFeed = (feed = [], { chip = 'all', from = '', to = '', actor = '' } = {}) => {
+export const filterFeed = (feed = [], { chip = 'all', from = '', to = '', actor = '', person = '' } = {}) => {
   const q = actor.trim().toLowerCase();
   return asArray(feed).filter((e) => {
     if (chip === 'variation' || chip === 'event') {
@@ -264,8 +266,37 @@ export const filterFeed = (feed = [], { chip = 'all', from = '', to = '', actor 
     if (from && (e.date || '') < from) return false;
     if (to && (e.date || '') > to) return false;
     if (q && !(e.actor || '').toLowerCase().includes(q)) return false;
+    if (person && (e.actor || '').trim() !== person) return false;
     return true;
   });
+};
+
+/** Dictionary keys for the app event kinds (pm-activity `kind`); others → 'activity.kind.other'. */
+export const EVENT_KIND_KEYS = {
+  certificate: 'activity.kind.certificate',
+  lifecycle: 'activity.kind.lifecycle',
+  project: 'activity.kind.project',
+  template: 'activity.kind.template',
+};
+export const eventKindKey = (kind) => (kind ? EVENT_KIND_KEYS[kind] || 'activity.kind.other' : '');
+
+/** The names in a local feed (who recorded, approved or acted), sorted. */
+export const feedActors = (feed = []) =>
+  [...new Set(asArray(feed).map((e) => String(e?.actor || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+/** A local feed at a glance: { total, days, orders, value, expense, variations, events }. */
+export const feedSummary = (entries = []) => {
+  const list = asArray(entries).filter(Boolean);
+  const orders = list.filter((e) => e.kind === 'order');
+  return {
+    total: list.length,
+    days: new Set(list.map((e) => e.date).filter(Boolean)).size,
+    orders: orders.length,
+    value: orders.filter((e) => e.family === 'value').length,
+    expense: orders.filter((e) => e.family === 'expense').length,
+    variations: list.filter((e) => e.kind === 'variation').length,
+    events: list.filter((e) => e.kind === 'event').length,
+  };
 };
 
 /** One item's history totals (orders of any status count as recorded work). */

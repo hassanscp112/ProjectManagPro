@@ -24,6 +24,7 @@ import {
   cx,
   useToast,
 } from '../../ui/index.js';
+import { HistoryStamps } from '../../ui/HistoryStamps.jsx';
 import { issueStamp } from '../dates.js';
 import { Page } from '../Page.jsx';
 import { formatDay } from '../record/orderMeta.js';
@@ -353,9 +354,8 @@ export default function DelaysPage() {
                           <tr key={e.id} className={canEdit ? d.rowButton : undefined} onClick={() => open(e)}>
                             <td>
                               <span className={d.eventTitle}>{e.title}</span>
-                              <span className={d.eventMeta}>
-                                {[t(`diary.cause.${e.cause}`), e.recordedBy && t('diary.recordedBy', { name: e.recordedBy })].filter(Boolean).join(' · ')}
-                              </span>
+                              <span className={d.eventMeta}>{t(`diary.cause.${e.cause}`)}</span>
+                              <HistoryStamps record={e} time={false} collection="pm-delays" itemId={e.id} name={e.title} />
                               {items.length > 0 && <span className={d.eventMeta}>{items.join(' · ')}</span>}
                             </td>
                             <td className={s.num}>{periodText(e, t)}</td>
@@ -418,6 +418,7 @@ export default function DelaysPage() {
                             <NoticeBadge event={e} today={today} />
                           </span>
                         </Comp>
+                        <HistoryStamps record={e} time={false} collection="pm-delays" itemId={e.id} name={e.title} />
                       </li>
                     );
                   })}
