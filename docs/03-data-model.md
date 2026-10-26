@@ -375,9 +375,14 @@ named snapshot "Before restoring …" and refuses to restore if it can't.
     keywords: [], aliases: [],                     // BOQ matching
     fixedDays,                                     // fixed duration (mobilization, testing…)
     family,                                        // interchangeable types ('floor-finish'…)
-    legacy, checked, source: 'seed'|'user', learned, history: []
+    legacy, checked, source: 'seed'|'user',
+    learned: { rate, days, samples, projects, at } | null, // the site pace a person took
+    history: [{ at, by, field: 'productivity', from, to, source: 'learned', days }],
 }]}
 ```
+Learned productivity is computed on demand from approved quantity orders of
+every project (`utils/Productivity.js`); nothing is stored until a person
+takes it (*Use …* on the Work types page or in Lookahead).
 **`pm-work-types` must be registered in `storeRegistry.js`** (requested from
 the integrator; until then it is not in backups).
 

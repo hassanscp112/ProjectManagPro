@@ -83,7 +83,8 @@ back to `#/projects` (and the phone *More* page lists the three pages).
   A building template creates its project with `meta.planning` (markups);
   a copied project keeps the source's `meta.planning`. *Save
   project as template* picks one of the projects. Builder at
-  `#/templates/new`. Seed template names and rate categories are stored in
+  `#/templates/new`. A template saved from a project keeps, for items with
+  approved work, the pace the site reached. Seed template names and rate categories are stored in
   Arabic and shown in the UI language (`templateLabels.js`).
 - **Rates `#/rates`** — the rate library (shared, direct cost): search,
   add / edit in a dialog, delete (asks first). Prices are copied at
@@ -93,7 +94,11 @@ back to `#/projects` (and the phone *More* page lists the three pages).
   productivity, crew size, the rate it is priced by, *Mark checked* for
   seeded values (the hint counts what is left), add / edit (names ar + en,
   unit, trade, productivity, crew, fixed days, rate, keywords) / delete.
-  Adding, editing, deleting and rates need `plan.edit`.
+  Under each productivity: the **site pace** (approved orders, every
+  project: per crew-day, working days, % off the library) and, when it is
+  more than 15 % off over at least 5 working days, *Use …* (keeps the old
+  value in the type's history); a hint counts those suggestions.
+  Adding, editing, deleting, taking a site pace and rates need `plan.edit`.
 
 Logic: `src/state/portfolioModel.js`; storage: `utils/Projects.js`.
 
@@ -176,7 +181,9 @@ the item it waits for, type, lag and whether the lag counts working or
 calendar days — plus *Add predecessor*; a *Pin dates* toggle (resource
 leveling never moves a pinned item); the item's trade, crews and people.
 Facts show the trade (crews, people), the People team and *Waits for a crew
-from* (leveling hand-overs).
+from* (leveling hand-overs), and — once it has approved work — the **pace on
+site** (per working day, over how many days, against the plan) and the
+working days left at that pace.
 
 **Resources** (`ResourcesPage.jsx`, `ResourceChart.jsx`, `CalendarEditor.jsx`;
 logic `src/state/resourcesModel.js`, `utils/planning/ResourceLeveler.js`):
@@ -308,6 +315,15 @@ and *Today*:
   approved quantity order on the item that day), that day's orders and
   *Record work*. KPIs: completion rate (PPC = done ÷ assignments; good ≥ 80%),
   done / total, approved orders that day. *Same as yesterday*.
+- **Pace** (`utils/Productivity.js`): a month row shows *At the current pace
+  (X a day): N working days left* (or that there is no approved work yet);
+  week and day rows show the suggested crews (planned daily quantity ÷ one
+  crew's pace — the site's when known — with the people it means). The
+  month view ends with **Pace by work type**: this project, all projects
+  and the library per crew-day; *Use …* takes the site value into the
+  library (`plan.edit`) and, with *Also re-time…* ticked, re-times this
+  project's items of that type that have not started (one undo step;
+  activity event `refId: 'productivity'`).
 - Copying over a non-empty week/day asks first (`ConfirmDialog`); nothing to
   copy shows a toast. Rows with no item picked are dropped on reload.
 - Storage: `utils/PlanningStore.js` (`pm-plans`). Logic:

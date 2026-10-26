@@ -185,3 +185,16 @@
     flex-basis: 120px;
   }
 }
+
+/* ── pace ── */
+.paceLine {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  margin-top: var(--ui-space-3);
+  font-size: var(--ui-fs-sm);
+}

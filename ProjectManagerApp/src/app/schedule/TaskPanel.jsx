@@ -8,6 +8,9 @@ import { useProject } from '../../state/projectContext.js';
 import { teamNamesOf, waitsForOf } from '../../state/resourcesModel.js';
 import { todayStr } from '../../utils/OrderEngine.js';
 import { readLinks } from '../../utils/planning/links.js';
+import { loadWorkTypes, workTypeMap } from '../../utils/planning/WorkTypes.js';
+import { loadPlans } from '../../utils/PlanningStore.js';
+import { daysLeftAtPace, paceByTask } from '../../utils/Productivity.js';
 import { TRADES } from '../../utils/planning/trades.js';
 import { Button, Drawer, Field, Input, ListRow, NumberInput, ProgressBar, Select, StatusBadge } from '../../ui/index.js';
 import { ltr } from '../bidi.js';
@@ -46,6 +49,11 @@ export default function TaskPanel({ taskId, onClose }) {
   const isSigned = Boolean(projectMeta.baseline);
   const scopeOrders = useMemo(() => (raw ? ordersInScope(tasks, orders, raw.id) : []), [tasks, orders, raw]);
   const children = useMemo(() => (raw ? childrenOf(tasks, raw) : []), [tasks, raw]);
+  // The pace the site reached on this item (approved orders per working day).
+  const pace = useMemo(
+    () => (raw && !raw.isGroup ? paceByTask([raw], orders, { plans: loadPlans(), workTypes: workTypeMap(loadWorkTypes()), registries }).get(raw.id) || null : null),
+    [raw, orders, registries]
+  );
   if (!raw || !task) return null;
 
   const today = todayStr();
@@ -92,6 +100,20 @@ export default function TaskPanel({ taskId, onClose }) {
         ],
         ...(raw.trade ? [['schedule.res.tradeFact', `${t(`planning.trade.${raw.trade}`)} · ${t('schedule.res.crewsN', { n: formatNumber(Math.max(1, Math.round(Number(raw.crews) || 1))) })}${Number(raw.resources?.labour) > 0 ? ` · ${t('schedule.res.peopleN', { n: formatNumber(Number(raw.resources.labour)) })}` : ''}`]] : []),
         ...(teamNames.length ? [['schedule.res.teamFact', teamNames.join('، ')]] : []),
+        ...(pace
+          ? [
+              [
+                'schedule.pace.fact',
+                t('schedule.pace.factValue', {
+                  rate: formatNumber(Math.round(pace.perDay * 100) / 100),
+                  unit,
+                  n: formatNumber(pace.days),
+                  planned: Number(task.duration) > 0 ? formatNumber(Math.round((qty / Number(task.duration)) * 100) / 100) : '—',
+                }),
+              ],
+              ['schedule.pace.leftFact', t('schedule.durationDays', { n: daysLeftAtPace(qty - done, pace) })],
+            ]
+          : []),
         ...(waitsFor.length ? [['schedule.res.waitsForFact', waitsFor.map((p) => <span key={p.id} className={s.factLine}>{`${p.wbs} ${p.name || ''}`}</span>)]] : []),
       ];
 
