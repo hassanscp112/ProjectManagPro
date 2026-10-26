@@ -72,6 +72,10 @@ export const createIndexedDb = () => {
     kvGet: (key) => get('kv', key),
     kvSet: (key, value) => put('kv', key, value),
     kvDelete: (key) => del('kv', [key]),
+    kvKeys: async () => {
+      const db = await openDb();
+      return request(db.transaction('kv', 'readonly').objectStore('kv').getAllKeys());
+    },
     shadowGet: (id) => get('shadow', id),
     shadowSet: (id, value) => put('shadow', id, value),
     shadowDelete: (ids) => del('shadow', ids),
@@ -122,6 +126,7 @@ export const createMemoryDb = () => {
     kvGet: async (key) => copy(kv.get(key)),
     kvSet: async (key, value) => void kv.set(key, copy(value)),
     kvDelete: async (key) => void kv.delete(key),
+    kvKeys: async () => [...kv.keys()],
     shadowGet: async (id) => copy(shadow.get(id)),
     shadowSet: async (id, value) => void shadow.set(id, copy(value)),
     shadowDelete: async (ids) => ids.forEach((id) => shadow.delete(id)),

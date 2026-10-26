@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useI18n } from '../../i18n/useI18n.js';
 import { signOut } from '../../sync/account.js';
 import { probeServer } from '../../sync/client.js';
-import { pendingChanges } from '../../sync/runtime.js';
+import { pendingChanges, resetPullCursors } from '../../sync/runtime.js';
 import { envServerDefaults, loadServerConfig, resetServerConfig, saveServerConfig, validateServerConfig } from '../../sync/serverConfig.js';
 import { loadSession } from '../../sync/session.js';
 import { Button, ConfirmDialog, Field, Input, StatusBadge } from '../../ui/index.js';
@@ -41,6 +41,7 @@ export default function ServerForm({ onSaved = () => {} }) {
     setConfirm(null);
     setBusy(true);
     if (loadSession().mode === 'account') await signOut();
+    if (draft.url.trim() !== saved.url) await resetPullCursors();
     saveServerConfig(draft);
     setBusy(false);
     setResult({ ok: true, saved: true });
@@ -60,6 +61,7 @@ export default function ServerForm({ onSaved = () => {} }) {
 
   const useDefault = async () => {
     if (loadSession().mode === 'account') await signOut();
+    await resetPullCursors();
     const next = resetServerConfig();
     setDraft({ url: next.url, anonKey: next.anonKey });
     setResult(null);

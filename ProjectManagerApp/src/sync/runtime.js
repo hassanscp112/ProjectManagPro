@@ -516,5 +516,18 @@ export const discardFailed = () =>
     return failed.length;
   });
 
+/**
+ * Pull everything again on the next cycle (after the server address
+ * changed: a restored or moved database numbers its writes anew). Records
+ * that did not change are skipped, so this costs one full download.
+ */
+export const resetPullCursors = () =>
+  withSyncLock(async () => {
+    const store = getSyncDb();
+    const keys = (await store.kvKeys()).filter((key) => String(key).startsWith('cursor:'));
+    for (const key of keys) await store.kvDelete(key);
+    return keys.length;
+  });
+
 /** True when a server is set up for this device. */
 export const serverReady = () => isServerConfigured();

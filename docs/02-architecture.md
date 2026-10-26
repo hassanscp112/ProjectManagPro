@@ -9,10 +9,12 @@ Read [01-overview.md](01-overview.md) first for domain vocabulary.
 ```
  main.jsx ─ fonts + src/ui tokens/base css ─ applyTheme(loadTheme()) ─ ensureProjects()
    └─ I18nProvider → UiProvider (Radix direction, tooltips, toasts) → App
-        └─ App.jsx = AppErrorBoundary + RouterProvider (hash URLs)
+        └─ App.jsx = AppErrorBoundary + SyncRuntime (server sync, sign-in gate — §7)
+                     + RouterProvider (hash URLs)
+             ├─ /login (stand-alone: sign in, server address, "use without an account")
              ├─ projects level: PortfolioLayout → /projects, /projects/new,
              │                  /templates, /templates/new, /rates  (no project open)
-             └─ inside a project: ProjectGate → ProjectProvider key=project.id
+             └─ inside a project: ProjectGate → ProjectProvider key=project.id(:plan epoch)
                                   → AppLayout → every other route
 
  ┌──────────────── src/state/ProjectProvider.jsx ─────────────────┐
@@ -90,6 +92,9 @@ global state library** — React state + localStorage + change notifications.
 | Library | `/library/boq` (`?grid=`) · `/library/files(/:taskId)` (`?folder=`) | **Rebuilt (Phase 6)** — `app/library/`; the old `/library/templates` and `/library/rates` links redirect to the projects level |
 | People | `/people/:kind` (`contractors` · `teams` · `workers`) | **Rebuilt (Phase 6)** — `app/people/PeoplePage.jsx` |
 | Settings | `/settings` | **Rebuilt (Phase 6)** — `app/settings/SettingsPage.jsx` |
+| | `/settings/users` | `app/settings/UsersPage.jsx` — members of the open project and their roles, invite by e-mail, company roles, what each role may do (needs a signed-in account and a shared project) |
+| | `/settings/server` | `app/settings/ServerPage.jsx` — server address (device setting), the account, sync status, *Upload this device's data* |
+| (account) | `/login` | `app/account/LoginPage.jsx` — outside the shell: sign in / create account, company setup on a new server, the server address, *Use without an account* |
 | (phone) | `/more` | `app/pages/MorePage.jsx` — every area + identity |
 | (dev) | `/dev/ui` | `dev/UiReview.jsx`, dev builds only |
 
@@ -190,7 +195,8 @@ order-derived and read-only.
 | Project meta (status/baseline/VOs) | ProjectProvider (Schedule dialogs) | Monthly, Activity, Baseline, engine | `project-manager-project-meta` |
 | Order ledger | Record pages (OrderEngine `addOrder` / `approveOrder` / `deleteOrder`) | engine, Planning, Reports, Activity | `pm-orders` |
 | Registries | PeoplePage | Orders, Planning, Reports, task details | `pm-registries` |
-| Identity | IdentityDialog (first launch, sidebar user, Settings) | stamps everywhere | `pm-identity` |
+| Identity | IdentityDialog — the account dialog when signed in, else the local name (first launch, sidebar user, Settings) | stamps everywhere | `pm-identity` (+ the account in `pm-session`) |
+| Server address, sign-in | ServerForm (login page, `/settings/server`), `src/sync` | `currentActor`, sync | `pm-server`, `pm-session` (device) |
 | App events | `logAppEvent` from ProjectProvider/screens | Activity feed | `pm-activity` |
 | Plans | LookaheadPage (via PlanningStore) | itself | `pm-plans` |
 | Snapshots | SettingsPage + auto-writer | restore | `pm-snapshots` |
@@ -238,3 +244,47 @@ ProjectProvider also listens to the `storage` event for the same four keys.
 | A new computed metric | Add to `GanttEngine.calculate()` return; consume in Home / the monthly report |
 | A new stored entity | New util module with its own `STORAGE_KEY` + load/save; add one entry to `utils/storeRegistry.js` (backup, per-project keys and sync follow) |
 | A new UI string | Both `dictionaries/ar/` and `dictionaries/en/` — never hardcode text ([06-i18n-guide.md](06-i18n-guide.md)) |
+
+---
+
+## 7. Accounts and server sync (`src/sync`)
+
+Optional: without a server (or with *Use without an account*) the app is a
+single-device app exactly as above. With one (Supabase, address in
+`pm-server`, guide [08-server-setup.md](08-server-setup.md)):
+
+```
+ screens ──write──▶ localStorage stores (unchanged: still the read model)
+                          │ notifyStoreChange · every 20 s · page visible · back online
+                          ▼
+             src/sync engine (one cycle at a time, all tabs — Web Locks)
+   diff ── each SYNCED_STORES store split into items (registry `lists`) and
+   │        compared with its base (IndexedDB pm-sync) → checkChange(role) →
+   │        outbox entry { actor, device, client time } — or undo on the spot
+   push ── push_changes RPC: row-level security + conflict rules; lost /
+   │        refused versions come back into the store (kept in `changes`)
+   pull ── pull_items since the scope's cursor (+ Realtime poke) → write
+            the store → notifyStoreChange → screens refresh
+   files ── FileDB blobs ⇄ Storage files/<project>/<file>
+```
+
+- **Gate:** `SyncRuntime` (in `App.jsx`) starts the engine and sends every
+  route to `#/login` while a server is set, nobody is signed in and local
+  mode was not chosen; `ProjectGate` does the same for project routes.
+- **Who acts:** `Identity.currentActor()` = the signed-in account with its
+  role in the open project (`pm-session.projectRoles`); `useCan()` follows
+  it. The server enforces the same matrix (row-level security).
+- **Scopes:** the organization (people, templates, rates) and each shared
+  project. A project created on a device after signing in is shared
+  automatically (admin / PM); older local projects go up with *Upload this
+  device's data* (a safety backup is downloaded first).
+- **Screens unchanged, two safeguards:** ProjectProvider keeps the plan in
+  memory, so `ProjectGate` remounts it (key `project.id:epoch`) when the
+  engine rewrites tasks / meta; and a screen that saves an older copy of a
+  record a remote change replaced is not taken as an edit (until the next
+  navigation) — the store is put back instead. A store emptied or removed
+  at once is restored from the base, never deleted on the server.
+- **History:** every applied write and every lost / refused version is in
+  the server's append-only `changes`; `src/sync/history.js` reads it
+  (`getHistory`, `getProjectTimeline`) and `restoreVersion` writes an old
+  version as a new change.

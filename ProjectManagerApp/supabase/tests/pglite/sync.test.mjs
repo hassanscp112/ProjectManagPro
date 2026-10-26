@@ -5,6 +5,9 @@
 
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createEngine, orgScopeKey, projectScopeKey } from '../../../src/sync/engine.js';
 import { pullFiles, pushFiles } from '../../../src/sync/files.js';
 import { createMemoryDb } from '../../../src/sync/localDb.js';
@@ -21,6 +24,7 @@ const LOCAL = { id: 'p1', name: 'Canal' };
 const TASKS = 'project-manager-gantt-tasks';
 const ORDERS = 'pm-orders';
 const keyOf = (base) => `pm-p:p1:${base}`;
+const here = path.dirname(fileURLToPath(import.meta.url));
 
 const memoryStorage = () => {
   const data = {};
@@ -221,6 +225,21 @@ describe('client ⇄ real schema (PGlite)', () => {
     await pm.sync();
     await site.sync();
     assert.equal(JSON.parse(site.storage.getItem('pm-registries')).contractors[0].name, 'Al-Rafidain');
+  });
+
+  it('after-restore.sql re-stamps the pull cursor without touching the history', async () => {
+    const before = (await db.query('select count(*)::int as n from public.changes')).rows[0].n;
+    await db.exec(readFileSync(path.join(here, '..', '..', 'server', 'after-restore.sql'), 'utf8'));
+    assert.equal((await db.query('select count(*)::int as n from public.changes')).rows[0].n, before, 'no history rows added');
+    assert.equal((await db.query('select count(distinct txid)::int as n from public.items')).rows[0].n, 1);
+    const all = await transports.pm.pull({ orgId: org, projectId: project }, { txid: '0', seq: 0 }, 1000);
+    const last = all[all.length - 1];
+    const a = device('admin');
+    await a.sync();
+    a.write(TASKS, [...a.read(TASKS), { id: 't-after', wbs: '9', name: 'After restore' }]);
+    await a.sync();
+    const next = await transports.pm.pull({ orgId: org, projectId: project }, last, 1000);
+    assert.ok(next.some((r) => r.item_id === 't-after'), 'a write after the restore comes after the restored rows');
   });
 
   it('pull pages with the (txid, seq) cursor without repeats', async () => {
