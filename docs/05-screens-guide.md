@@ -243,6 +243,46 @@ save the date and the slow-changing fields stay for fast repeated entry.
   data and stay as entered.
 Storage: `utils/Finance.js`; rules: `src/state/financeModel.js`.
 
+### Payment certificates (الذرعات) — `src/app/finance/Certificate*.jsx`
+
+The Finance tab **Certificates**. Two kinds: **subcontractor** (that
+contractor's approved work at the rates agreed with them) and **main contract
+/ employer** (all approved work, by anyone, at the BOQ unit prices). Numbers
+run per kind and contractor.
+- **List `#/finance/certificates`** (`CertificatesPage.jsx`) — filters: kind
+  (all / subcontractor / main contract) and contractor; a table on desktop
+  (No., for, period, status, gross to date, net payable, "N without a rate")
+  and rows on phones; each opens its certificate. *New certificate* needs
+  `certificates.prepare`.
+- **New certificate** (`CertificateNewDialog.jsx`) — kind, contractor, period
+  end (default today). A series has one draft at a time: if one exists the
+  dialog offers *Open draft No. N*; the period must end after the last issued
+  certificate.
+- **Rates & terms `?view=rates`** (`CertificateRates.jsx`) — the agreed rates
+  as a contractor × item table (BOQ price shown beside them); *With orders*
+  (default) / *All items*, search, and a contractor picker (one contractor at a
+  time on phones; `&contractor=id` preselects one). A cell where that
+  contractor has orders but no rate is marked "needs a rate". Below: the
+  default terms (retention %, retention limit, main-contract advance, advance
+  recovery %, currency label). Fields save when left (Enter too).
+- **Certificate `#/finance/certificates/:id`** (`CertificatePage.jsx`) — a
+  printable `ReportSheet`: who it is for, number, terms, orders counted; **Work
+  done** per item — quantity and amount, each previous / this period / to date,
+  × the rate ("No rate" lines are flagged and left out); **Summary** — gross,
+  less retention, less advance recovery (with the advance left), less other
+  deductions → net due to date, less previous certificates → **net payable**;
+  other deductions; note; three signature lines (subcontractor: preparer,
+  project manager, subcontractor; main contract: contractor, resident engineer,
+  employer's representative). *Print* prints the sheet only.
+  - **Draft**: follows the order log live; notices say what blocks issuing
+    (items without a rate → *Set the rates*; a period before the last issued
+    one; no approved work). The side card edits the period end, the terms
+    (copied from the previous certificate of the series), other deductions and
+    the note. *Delete draft* asks first. *Issue certificate*
+    (`certificates.issue`) asks first, then freezes lines, totals and the
+    certified orders and logs it in Activity.
+  - **Issued**: frozen; the side card shows who issued it and when.
+
 ## People — `src/app/people/PeoplePage.jsx` (rebuilt in Phase 6)
 
 `#/people/:kind` — contractors, teams, workers. Edits save as you type

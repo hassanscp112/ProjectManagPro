@@ -12,8 +12,9 @@ There is **no server and no database**. Everything is stored in the browser:
 > project-scoped key is read / written through `projectKey(KEY)`.
 >
 > Registered ahead for the roadmap (`plans/roadmap-plan.md`), not used yet:
-> `pm-certificates`, `pm-site-diary`, `pm-delays` (project) and the device-only
+> `pm-site-diary`, `pm-delays` (project) and the device-only
 > `pm-server`, `pm-session`. Files may carry `orderId` (an order's photo).
+> `pm-certificates` (project, owner `Certificates`) is in use — §13.
 
 ---
 
@@ -319,3 +320,60 @@ theme and last-project stay). Older backups only write the keys they hold
 (they restore into the first project). When the backup has a `files` section it replaces ALL
 stored files in one IndexedDB transaction; a version-1 backup leaves the files
 alone. If any write fails, the localStorage keys are put back as they were.
+
+---
+
+## 13. Payment certificates (`pm-certificates`, per project)
+
+Owner: `utils/Certificates.js` (the only reader / writer, always through
+`projectKey`); rules: `state/certificateModel.js`.
+
+```js
+{
+  settings: {                  // defaults for the first certificate of a series
+    retentionPct: 5,           // 0–100
+    retentionLimit: 0,         // most that may be held back; 0 = no limit
+    advanceAmount: 0,          // the MAIN CONTRACT's advance (a subcontractor starts at 0)
+    advanceRecoveryPct: 0,     // share of each period's work recovered, 0–100
+    currencyLabel: '',         // '' = the UI's IQD label
+  },
+  rates: { [contractorId]: { [taskId]: rate } },   // agreed subcontract rates (≥ 0; 0 is a rate)
+  certificates: [ /* Certificate, below */ ],
+}
+```
+
+### Certificate
+
+```js
+{
+  id, kind: 'subcontractor' | 'employer',
+  contractorId,                // null for 'employer' (the main contract)
+  number,                      // 1, 2, 3 … per series = kind + contractor
+  periodEnd: 'YYYY-MM-DD',     // approved orders dated up to here count
+  status: 'draft' | 'issued',  // one draft per series at a time
+  terms: { retentionPct, retentionLimit, advanceAmount, advanceRecoveryPct },
+                               // copied from the series' previous certificate, else settings
+  deductions: [{ id, label, amount }],   // other deductions on THIS certificate
+  note, createdAt, createdBy,
+  // set when issued — frozen, never changed afterwards:
+  issuedAt, issuedBy: { id, name, role },   // Identity.currentActor()
+  periodStart,                 // day after the previous certificate (or the first order)
+  lines: [{ taskId, wbs, name, unit, rate, missingRate, missingTask,
+            prevQty, thisQty, cumQty, prevAmount, thisAmount, cumAmount, orderCount }],
+  totals: { gross, retention, advance, deductions, netDue,   // each { prev, this, cum }
+            previousNet, netPayable, missingRates },         // (+ retention.limited, advance.remaining/capped)
+  orderIds: [],                // the orders this certificate certified (new this period)
+}
+```
+
+- A **draft is live**: lines and totals are recomputed from the order ledger
+  every time. Issuing copies them in, with `orderIds`; an issued certificate
+  never changes (`updateDraft` / `deleteDraft` refuse it).
+- Counted orders: `family 'value'`, `status 'approved'`, a `taskId`, quantity
+  > 0, `date` ≤ `periodEnd`, not already in an issued certificate of the same
+  series; a subcontractor certificate only that contractor's
+  (`who.kind 'contractor'`). Rate: the agreed rate, or for `'employer'` the
+  task's `unitPrice`. No rate → the line is flagged (`missingRate`, amounts
+  `null`), left out of the totals, and the draft can't be issued.
+- "Previous" columns come from the series' last issued certificate (frozen).
+  `certifiedOrderIds()` = every order id in an issued certificate (for locking).
