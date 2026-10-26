@@ -217,6 +217,13 @@
   font-size: 22px;
   font-weight: 700;
 }
+.donePhotos {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
 .doneActions {
   display: flex;
   flex-direction: column;
@@ -239,6 +246,14 @@
 .expenseIcon {
   background: var(--ui-divider);
   color: var(--ui-text);
+}
+.photosButton {
+  gap: var(--ui-space-1);
+  padding-inline: var(--ui-space-2);
+  font-variant-numeric: tabular-nums;
+}
+.photoStrip {
+  margin-bottom: var(--ui-space-3);
 }
 .figure {
   font-weight: 600;

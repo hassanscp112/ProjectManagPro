@@ -127,13 +127,31 @@ Three sub-pages (tabs; Pending shows a count, as does the sidebar item):
   contractor/team/workers/none). Optional fields say "(optional)"; required ones
   show "Required" after a save attempt. **Enter / "Save and record next"** saves
   and re-seeds the same type with smart defaults (today, last who); "Save" saves
-  and closes. "Repeat last order" copies type, task, unit and who. Side panel:
-  pending approvals (Approve) and today's orders.
+  and closes. "Repeat last order" copies type, task, unit and who (never photos).
+  Side panel: pending approvals (Approve) and today's orders.
+- **Photos** (every type, after the spec fields; `ui/PhotoPicker`) — phone:
+  *Take photo* (rear camera, `capture="environment"`) and *Gallery* (several);
+  desktop: *Add photos*. At most 6; each is compressed first (thumbnail shows
+  a spinner meanwhile, Save waits: "Preparing photos…") and can be removed.
+  `useOrderEntry` keeps `photos` beside `draft`; `save()` is async: new order
+  id → each photo to FileDB (`order_photos`, `{ orderId }`) → order with
+  `evidence: ids`. A `saving` flag blocks a double submit ("Saving…"). If the
+  photos cannot be stored the order is saved without them and a red toast
+  says so.
 - **Phone** (`PhoneRecordFlow.jsx`) — type screen (repeat card + cards) →
   full-screen form (bottom bar hidden, Save pinned at the bottom) → done screen
-  (record another of this type / another type / Home).
+  (photo count when photos were attached; record another of this type /
+  another type / Home).
 - **Order log `#/record/log`** — today/week figures, filters (dates, type,
-  contractor, task), table on desktop / rows on phone, Approve + delete (confirm).
+  contractor, task), table on desktop / rows on phone, Approve + delete
+  (confirm; it names the photos, which are deleted with the order).
+- **Order rows** (`OrderRow`, the log table, Home, task panel / details) — a
+  camera button with the photo count opens the order's photos
+  (`OrderPhotos.jsx`; the viewer dialog `OrderPhotosDialog.jsx` is loaded
+  lazily). Viewer (`ui/PhotoViewer`): one photo, previous / next (arrow keys,
+  mirrored in RTL), "2 / 5", download. Photos are read by
+  `app/useOrderPhotos.js` (ids → `getFilesByIds` → object URLs, revoked on
+  change / unmount).
 - **Pending `#/record/pending`** — formal orders still `recorded`.
 
 Rules (unchanged): quick orders are approved on save by the current user;
@@ -175,10 +193,13 @@ Two sub-pages (tabs) — templates and rates moved up to the projects level:
   the selected column's source. Saves raw formulas. Storage:
   `utils/CalculatorTemplates.js`.
 - **Files `#/library/files`** — folders: root → *Items* → one per top-level
-  section (`task_<id>`); the open folder is in `?folder=`;
-  `#/library/files/:taskId` opens the folder of that item's section (the task
-  panel's *Files*). Upload (button or drop), download, delete (asks first).
-  Blobs live in IndexedDB (`utils/FileDB`).
+  section (`task_<id>`), and root → *Order photos* (`order_photos`); the open
+  folder is in `?folder=`; `#/library/files/:taskId` opens the folder of that
+  item's section (the task panel's *Files*). Upload (button or drop),
+  download, delete (asks first). *Order photos* lists every order's photos,
+  newest first, with a thumbnail and the order (type · item · date, or
+  "Deleted order"): view (viewer), download, delete — no upload; deleting a
+  photo also removes it from its order. Blobs live in IndexedDB (`utils/FileDB`).
 Logic: `src/state/libraryModel.js`.
 
 ## Reports — `src/app/reports/` (rebuilt in Phase 5)
@@ -286,7 +307,9 @@ sum × waste factor; the **elements map** sorted in progress → on hold → not
 started → completed (completed hidden behind a toggle); the latest 10
 **orders** on the item or below it (Approve inline) with a per-contractor
 roll-up; **money** (contract, executed, variance, linked expenses);
-**evidence** (tests, completions, a link to the item's files); and the
+**evidence** (tests, completions, photo count + the latest 8 photos from
+orders on the item or below it — `orderRollup().photoIds`, newest order
+first — and a link to the item's files); and the
 **sub-items** table (name opens the sub-item's panel, or its details for
 groups).
 

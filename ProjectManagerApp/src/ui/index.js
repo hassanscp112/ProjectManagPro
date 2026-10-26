@@ -15,6 +15,8 @@ export { Menu } from './Menu.jsx';
 export { CommandPalette } from './CommandPalette.jsx';
 export { TaskPicker } from './TaskPicker.jsx';
 export { WhoPicker } from './WhoPicker.jsx';
+export { PhotoPicker, BlobImage } from './PhotoPicker.jsx';
+export { PhotoStrip, PhotoViewer } from './PhotoStrip.jsx';
 export { AppShell, Sidebar, BottomNav, TopBar, SearchButton } from './shell/Shell.jsx';
 export { UiProvider } from './UiProvider.jsx';
 export { useToast } from './toastContext.js';

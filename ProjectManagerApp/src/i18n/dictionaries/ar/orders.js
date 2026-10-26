@@ -95,4 +95,9 @@ export default {
     'ادخل اسم المعتمد لاعتماد {type} بتاريخ {date}. بعد الاعتماد تُحتسب الكمية ضمن المنفذ.',
   'orders.approverPlaceholder': 'اسم المعتمد / التوقيع',
 
+  // Photo evidence
+  'orders.photosButton': 'صور الأمر ({n})',
+  'orders.photosTitle': 'صور {type} · {date}',
+  'orders.photosLoadFailed': 'تعذّر تحميل الصور من هذا الجهاز.',
+  'orders.deleteConfirmPhotos': 'ستُحذف صوره أيضاً ({n}).',
 };

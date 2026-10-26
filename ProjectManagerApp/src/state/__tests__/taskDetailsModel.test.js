@@ -75,6 +75,18 @@ test('order rollup and spans', () => {
   assert.equal(spanDays('', '2026-01-31'), null);
 });
 
+test('order rollup lists photo ids, newest order first', () => {
+  const r = orderRollup([
+    { id: 'a', type: 'quick_work', family: 'value', recordedAt: '2026-10-20T08:00:00Z', evidence: ['a1', 'a2'] },
+    { id: 'b', type: 'fuel', family: 'expense', recordedAt: '2026-10-25T08:00:00Z', evidence: ['b1'] },
+    { id: 'c', type: 'quick_work', family: 'value', recordedAt: '2026-10-22T08:00:00Z', evidence: [] },
+    { id: 'd', type: 'completion', family: 'value', recordedAt: '2026-10-23T08:00:00Z' },
+    { id: 'e', type: 'concrete_test', family: 'value', recordedAt: '2026-10-24T08:00:00Z', evidence: ['e1', null] },
+  ]);
+  assert.deepEqual(r.photoIds, ['b1', 'e1', 'a1', 'a2']);
+  assert.deepEqual(orderRollup([]).photoIds, []);
+});
+
 test('edits', () => {
   assert.deepEqual(newElement('n'), { id: 'n', name: '', location: '', status: 'not_started', notes: '', values: {} });
   assert.deepEqual(newColumn('c', { name: 'C30', unit: 'm3' }), { id: 'c', name: 'C30', unit: 'm3', wasteFactorPct: 0, linkedTaskId: null });

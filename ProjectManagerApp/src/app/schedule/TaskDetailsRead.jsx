@@ -8,6 +8,7 @@ import { ordersInScope } from '../../state/scheduleModel.js';
 import { orderRollup, quantityRows, sortedElements, statusCounts } from '../../state/taskDetailsModel.js';
 import { Button, Card, EmptyState, ProgressBar, StatusBadge, Table, cx } from '../../ui/index.js';
 import { signedAmount } from '../bidi.js';
+import { OrderPhotoStrip } from '../record/OrderPhotos.jsx';
 import OrderRow from '../record/OrderRow.jsx';
 import { useOrderActions } from '../record/useApproval.jsx';
 import s from './TaskDetails.module.css';
@@ -236,7 +237,12 @@ export default function TaskDetailsRead({ task, computed, columns, elements, sum
                 <dt>{t('taskDetails.evidenceCompletions')}</dt>
                 <dd>{rollup.completions}</dd>
               </div>
+              <div>
+                <dt>{t('taskDetails.evidencePhotos')}</dt>
+                <dd>{rollup.photoIds.length}</dd>
+              </div>
             </dl>
+            {rollup.photoIds.length > 0 && <OrderPhotoStrip ids={rollup.photoIds.slice(0, 8)} title={t('taskDetails.evidenceLatestPhotos')} />}
             <Button as={Link} to={`/library/files/${encodeURIComponent(task.id)}`} icon={FolderOpen} size="sm">
               {t('details.openFiles')}
             </Button>

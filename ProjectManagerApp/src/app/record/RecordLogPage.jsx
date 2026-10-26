@@ -8,6 +8,7 @@ import { ORDER_TYPE_LIST, daysAgoStr, resolveWhoLabel, todayStr } from '../../ut
 import { wbsCompare } from '../../utils/TaskRanking.js';
 import { Button, Card, EmptyState, Field, IconButton, Input, Select, StatCard, StatusBadge, Table, usePhone } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
+import { OrderPhotosButton } from './OrderPhotos.jsx';
 import OrderRow from './OrderRow.jsx';
 import { formatDay, orderFigure, orderSubject, typeLabel } from './orderMeta.js';
 import { useOrderActions } from './useApproval.jsx';
@@ -138,6 +139,7 @@ export default function RecordLogPage() {
                     </td>
                     <td>
                       <div className={s.cellActions}>
+                        <OrderPhotosButton order={o} />
                         {pending && (
                           <Button size="sm" variant="outline" icon={Check} onClick={() => actions.approve(o)}>
                             {t('common.approve')}
