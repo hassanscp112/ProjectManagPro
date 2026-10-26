@@ -12,6 +12,7 @@ import { ltr } from '../bidi.js';
 import OrderRow from '../record/OrderRow.jsx';
 import { formatDay } from '../record/orderMeta.js';
 import { useOrderActions } from '../record/useApproval.jsx';
+import { useCan } from '../useCan.js';
 import LinksEditor from './LinksEditor.jsx';
 import s from './Schedule.module.css';
 import { warningText } from './warningText.js';
@@ -36,6 +37,7 @@ export default function TaskPanel({ taskId, onClose }) {
   const navigate = useNavigate();
   const { tasks, orders, engineResult, projectMeta, updateTask, requestDeleteTask, addSubTask } = useProject();
   const actions = useOrderActions();
+  const canEdit = useCan()('plan.edit');
   const [editing, setEditing] = useState(false);
   const raw = tasks.find((x) => x.id === taskId) || null;
   const task = engineResult.tasks.find((x) => x.id === taskId) || null;
@@ -104,9 +106,11 @@ export default function TaskPanel({ taskId, onClose }) {
           <Button icon={FileText} onClick={() => goto(`/schedule/task/${encodeURIComponent(raw.id)}/details`)}>
             {t('schedule.fullDetails')}
           </Button>
-          <Button variant={editing ? 'outline' : 'secondary'} icon={Pencil} aria-pressed={editing} onClick={() => setEditing((v) => !v)}>
-            {editing ? t('schedule.closeEdit') : t('schedule.quickEdit')}
-          </Button>
+          {canEdit && (
+            <Button variant={editing ? 'outline' : 'secondary'} icon={Pencil} aria-pressed={editing} onClick={() => setEditing((v) => !v)}>
+              {editing ? t('schedule.closeEdit') : t('schedule.quickEdit')}
+            </Button>
+          )}
         </div>
       }
     >
@@ -154,7 +158,7 @@ export default function TaskPanel({ taskId, onClose }) {
           ))}
         </dl>
 
-        {editing && (
+        {editing && canEdit && (
           <div className={s.editBox}>
             <span className={s.sectionTitle}>{t('schedule.quickEdit')}</span>
             {isSigned && !task.isGroup && <p className={s.muted}>{t('schedule.editLockedNote')}</p>}

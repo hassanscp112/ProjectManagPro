@@ -34,7 +34,7 @@ npm run dev     # dev server → http://localhost:5173, port fixed (data is per 
 npm run lint    # ESLint
 npm run build   # production build
 npm test        # unit tests: engines + ar/en dictionary parity (node:test)
-npm run test:e2e  # Playwright smoke tests on port 5190: every route in ar/en, desktop + phone (3–5 min)
+npm run test:e2e  # Playwright smoke tests on port 5190 (E2E_PORT=… for a parallel worktree): every route in ar/en, desktop + phone (3–5 min)
 npm run icons   # regenerate the app icons from public/app-icon.svg
 npm run test:db # server: SQL / row-level-security tests in PGlite + the app's sync code against the migrations (~5 s, no Docker)
 ```
