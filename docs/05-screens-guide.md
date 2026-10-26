@@ -364,9 +364,25 @@ run per kind and contractor.
   (`useBackupRestore.jsx`, shared with the Schedule's More menu). Restore
   downloads a safety backup of the current data first. The "Browser storage"
   row shows whether the browser may clear the data (Protect asks again).
+  Under it, the storage meter (`utils/StoragePersistence.getStorageUsage`):
+  *Space used on this device* (the browser's quota for the app, shown when
+  the browser reports it), *Project data* (localStorage of its ~5 MB limit)
+  and *Order photos* (count · size, all projects). A bar turns orange and a
+  warning asks for a backup when either reaches 80 %. Read once when the
+  page opens.
 - **Snapshots** — counts and size; create a named snapshot; named ones can be
   restored, renamed, deleted; automatic daily ones (last 14) restored. Restore
   asks first, keeps the current data as a "Before restoring …" snapshot, and reloads. Snapshots cover tasks + project meta only.
+
+## App updates and offline — `src/app/UpdatePrompt.jsx` (every screen)
+
+Builds only (no service worker in dev; see [02 §7](02-architecture.md)).
+- **"A new version is ready · Reload"** — a banner at the top centre (above
+  the page, hidden when printing) when a new deployment has downloaded.
+  *Reload* switches to it; *Later* (×) hides the banner until the next
+  launch. The app never reloads on its own, so nothing being typed is lost.
+- **"Ready to work offline"** — a toast once, when the app has finished
+  saving itself for offline use after the first visit.
 
 ## Task Details — `src/app/schedule/TaskDetailsPage.jsx` (rebuilt in Phase 7)
 

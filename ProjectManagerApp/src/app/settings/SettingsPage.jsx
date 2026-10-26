@@ -1,14 +1,16 @@
-import { CalendarRange, Download, History, Pencil, Plus, RotateCcw, ShieldCheck, Trash2, Upload, UserRound } from 'lucide-react';
+import { CalendarRange, Download, History, Pencil, Plus, RotateCcw, ShieldCheck, Trash2, TriangleAlert, Upload, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useI18n } from '../../i18n/useI18n.js';
+import { formatBytes } from '../../state/libraryModel.js';
 import { STATUS_KEYS } from '../../state/projectModel.js';
 import { useProject } from '../../state/projectContext.js';
 import { createNamedSnapshot, deleteNamedSnapshot, loadSnapshots, renameNamedSnapshot, restoreSnapshot, snapshotsStats } from '../../utils/Snapshots.js';
-import { getPersistenceState, requestPersistentStorage } from '../../utils/StoragePersistence.js';
+import { STORAGE_WARN_RATIO, getPersistenceState, getStorageUsage, requestPersistentStorage } from '../../utils/StoragePersistence.js';
 import { THEMES, applyTheme, loadTheme, saveTheme } from '../../utils/Theme.js';
-import { Button, Card, ConfirmDialog, EmptyState, IconButton, Input, Segmented, StatusBadge, Table, useToast } from '../../ui/index.js';
+import { Button, Card, ConfirmDialog, EmptyState, IconButton, Input, ProgressBar, Segmented, StatusBadge, Table, useToast } from '../../ui/index.js';
 import { formatDay, formatTime } from '../record/orderMeta.js';
+import { ltr } from '../bidi.js';
 import { Page } from '../Page.jsx';
 import { useBackupRestore } from '../useBackupRestore.jsx';
 import s from './Settings.module.css';
@@ -249,6 +251,59 @@ function StorageProtection() {
   );
 }
 
+// Sizes and percentages are Latin text: isolate them so Arabic keeps their order.
+const size = (bytes) => ltr(formatBytes(bytes));
+const percent = (ratio) => ltr(`${ratio > 0 && ratio < 0.01 ? '<1' : Math.round(ratio * 100)}%`);
+
+/**
+ * How full this device's storage is (utils/StoragePersistence): the
+ * browser's quota for the app, the project data against the localStorage
+ * limit, and the order photos. Warns at 80 % of either limit.
+ */
+function StorageMeter() {
+  const { t } = useI18n();
+  const [usage, setUsage] = useState(null);
+
+  useEffect(() => {
+    let ignore = false;
+    getStorageUsage().then((next) => !ignore && setUsage(next));
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  if (!usage) return null;
+  const meters = [
+    usage.device && { key: 'device', label: t('settings.storageDevice'), ...usage.device },
+    { key: 'data', label: t('settings.storageData'), ...usage.data },
+  ].filter(Boolean);
+  return (
+    <div className={s.meters}>
+      {meters.map((m) => (
+        <div key={m.key} className={s.meter}>
+          <div className={s.meterHead}>
+            <span>{m.label}</span>
+            <span className={s.meterValue}>
+              {t('settings.storageOf', { used: size(m.used), total: size(m.total), pct: percent(m.ratio) })}
+            </span>
+          </div>
+          <ProgressBar value={m.ratio * 100} tone={m.ratio >= STORAGE_WARN_RATIO ? 'warning' : 'accent'} label={m.label} />
+        </div>
+      ))}
+      <div className={s.meterHead}>
+        <span>{t('settings.storagePhotos')}</span>
+        <span className={s.meterValue}>{t('settings.storagePhotosValue', { n: usage.photos.count, size: size(usage.photos.bytes) })}</span>
+      </div>
+      {usage.warn && (
+        <p className={s.storageWarn} role="alert">
+          <TriangleAlert size={16} aria-hidden="true" />
+          {t('settings.storageWarn')}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /**
  * /settings — who you are, appearance (theme, language), the project's
  * lifecycle, full backup / restore, and restore points.
@@ -323,6 +378,7 @@ export default function SettingsPage() {
           <div className={s.rows}>
             <p className={s.muted}>{t('settings.backupHint')}</p>
             <StorageProtection />
+            <StorageMeter />
             <div className={s.buttons}>
               <Button variant="primary" icon={Download} onClick={backupRestore.backup}>
                 {t('schedule.backup')}

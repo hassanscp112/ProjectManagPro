@@ -27,5 +27,11 @@ export default {
   'settings.storage_best-effort': 'قد يمسحه المتصفح',
   'settings.storage_unsupported': 'الحالة غير معروفة',
   'settings.storageAsk': 'حماية',
+  'settings.storageDevice': 'المساحة المستخدمة على هذا الجهاز',
+  'settings.storageData': 'بيانات المشاريع',
+  'settings.storageOf': '{used} من {total} · {pct}',
+  'settings.storagePhotos': 'صور الأوامر',
+  'settings.storagePhotosValue': '{n} · {size}',
+  'settings.storageWarn': 'مساحة التخزين أوشكت على الامتلاء. نزّل نسخة احتياطية الآن، ثم احذف اللقطات القديمة أو الصور التي لم تعد تحتاجها.',
   'settings.storageRefused': 'لم يسمح المتصفح بذلك بعد. أضف الصفحة إلى المفضلة أو ثبّتها كتطبيق ثم حاول مرة أخرى — واستمر في تنزيل النسخ الاحتياطية.',
 };
