@@ -328,6 +328,15 @@ begin
        where i.org_id = v_org and i.project_id is not distinct from v_project
          and i.collection = v_collection and i.item_id = v_item;
 
+      -- The same rule as the row-level security, checked up front so a
+      -- version nobody may write is refused (not "lost a conflict"): the
+      -- role must be allowed to write the version on the server and the
+      -- one sent.
+      if not app_private.can_write(v_org, v_project, v_collection, v_item, coalesce(v_data, v_cur.data))
+         or (v_cur.id is not null and not app_private.can_write(v_org, v_project, v_collection, v_item, v_cur.data)) then
+        raise exception 'pm_not_allowed';
+      end if;
+
       if v_cur.id is null then
         if v_deleted then
           v_status := 'same'; -- the server never had it
@@ -358,6 +367,9 @@ begin
                  rev = v_cur.rev + 1
            where id = v_cur.id
           returning * into v_new;
+          if v_new.id is null then
+            raise exception 'pm_not_allowed'; -- row-level security left the row alone
+          end if;
           v_status := 'applied';
         else
           insert into public.changes (

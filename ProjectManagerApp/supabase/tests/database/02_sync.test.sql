@@ -160,6 +160,9 @@ insert into res select 'p7', push_changes(jsonb_build_array(
 select is((select v -> 0 ->> 'status' || ',' || (v -> 1 ->> 'status') from res where k = 'p7'), 'denied,applied', 'one refused entry does not stop the batch');
 select is((select outcome || ' ' || left(note, 7) from public.changes where item_id = 't2'), 'rejected denied:', 'the refused attempt is on record');
 select is((select v -> 0 ->> 'status' from (select push_changes(jsonb_build_array(jsonb_build_object('k', 1, 'project_id', (select v from ids where k = 'project'),
+  'collection', 'project-manager-gantt-tasks', 'item_id', 't1', 'op', 'update', 'data', '{"id":"t1","name":"x"}'::jsonb, 'base_rev', 0, 'rev', 99))) as v) x),
+  'denied', 'a stale edit without the right is refused, not merely outvoted');
+select is((select v -> 0 ->> 'status' from (select push_changes(jsonb_build_array(jsonb_build_object('k', 1, 'project_id', (select v from ids where k = 'project'),
   'collection', 'pm-orders', 'item_id', 'orders/o9', 'op', 'import', 'data', '{"id":"o9"}'::jsonb))) as v) x), 'denied', 'only admins and project managers import');
 reset role;
 
@@ -179,7 +182,8 @@ insert into res select 'p9', push_changes(jsonb_build_array(
 select is((select v -> 0 ->> 'status' from res where k = 'p9'), 'applied', 'restoring a version is a new change');
 select is((select op || ' ' || (restored_from is not null)::text from public.changes where item_id = 't1' order by id desc limit 1), 'restore true', 'which names the version it restored');
 select is((select deleted::text || ' ' || (data ->> 'quantity') from public.items where item_id = 't1'), 'false 6', 'and the record is back');
-select is((select count(*)::int from public.changes where item_id = 't1'), 6, 'nothing in the history was rewritten');
+-- insert, update, conflict lost, conflict won, refused attempt, delete, restore
+select is((select count(*)::int from public.changes where item_id = 't1'), 7, 'nothing in the history was rewritten');
 select is((select v -> 0 ->> 'status' from (select push_changes(jsonb_build_array(jsonb_build_object('k', 1, 'project_id', (select v from ids where k = 'project'),
   'collection', 'project-manager-gantt-tasks', 'item_id', 't1', 'op', 'restore', 'data', '{"id":"t1"}'::jsonb, 'base_rev', 5, 'rev', 6, 'restored_from', 999999))) as v) x),
   'denied', 'a restore must name a version of the same record');

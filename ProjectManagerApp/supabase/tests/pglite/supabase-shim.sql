@@ -43,7 +43,8 @@ create table storage.objects (
   bucket_id text references storage.buckets (id),
   name text not null,
   owner uuid default auth.uid(),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (bucket_id, name)
 );
 alter table storage.objects enable row level security;
 grant select, insert on storage.objects to authenticated;

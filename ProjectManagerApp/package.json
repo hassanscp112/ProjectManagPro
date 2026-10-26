@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "node --test \"src/**/__tests__/*.test.js\"",
-    "test:db": "node supabase/tests/pglite/run.mjs",
+    "test:db": "node supabase/tests/pglite/run.mjs && node --test supabase/tests/pglite/sync.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
