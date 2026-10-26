@@ -391,7 +391,8 @@ let subscribedTo = '';
 
 const updateRealtime = async () => {
   const session = loadSession();
-  const want = isSignedIn(session) && session.org?.id ? `${loadServerConfig().url}|${session.user.id}|${session.org.id}` : '';
+  // Only with a live sign-in: an expired one would only retry the socket.
+  const want = isSignedIn(session) && !session.needsSignIn && session.org?.id ? `${loadServerConfig().url}|${session.user.id}|${session.org.id}` : '';
   if (want === subscribedTo) return;
   if (unsubscribe) unsubscribe();
   unsubscribe = null;
@@ -421,11 +422,13 @@ export const startSync = () => {
   let account = '';
   const onAccount = () => {
     const session = loadSession();
-    const next = `${loadServerConfig().url}|${session.mode}|${session.user?.id || ''}|${session.org?.id || ''}`;
+    const next = `${loadServerConfig().url}|${session.mode}|${session.user?.id || ''}|${session.org?.id || ''}|${session.needsSignIn}`;
     if (next === account) return;
+    const wasExpired = account.endsWith('|true');
     account = next;
     updateRealtime();
-    requestSync({ full: true, delay: 300 });
+    // an expiring sign-in needs no new cycle; anything else does
+    if (!session.needsSignIn || wasExpired) requestSync({ full: true, delay: 300 });
   };
   const offStore = onStoreChange((key) => {
     if (key === SESSION_STORAGE_KEY || key === SERVER_STORAGE_KEY) onAccount();

@@ -27,17 +27,15 @@ import { FILES_COLLECTION, PROJECTS_COLLECTION, checkChange, entryFor } from './
 
 // Stores whose screens show a remote change as soon as it is written (the
 // project store re-reads orders, people and activity on every change, and
-// is remounted when the plan changes), so writing an older version there
-// is a real edit, not a screen writing back what it loaded earlier.
-export const LIVE_STORES = new Set([
-  'project-manager-gantt-tasks',
-  'project-manager-project-meta',
-  'pm-orders',
-  'pm-registries',
-  'pm-activity',
-]);
+// their owners write by merging into what is stored), so writing an older
+// version there is a real edit, not a screen writing back what it loaded
+// earlier. Every other store gets the stale-write check (itemDiff `sup`).
+export const LIVE_STORES = new Set(['pm-orders', 'pm-registries', 'pm-activity']);
 
-/** Stores the project store holds in memory (it is remounted when they change remotely). */
+/**
+ * Stores the project store holds in memory: ProjectGate remounts it when
+ * the engine rewrites them (until then the stale-write check covers them).
+ */
 export const PLAN_STORES = new Set(['project-manager-gantt-tasks', 'project-manager-project-meta']);
 
 const PUSH_BATCH = 150;
