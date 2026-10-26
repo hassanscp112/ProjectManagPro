@@ -116,3 +116,16 @@ test('heatmap: day stats, buckets, Saturday-first calendar, empty-days radar', (
   assert.ok(last.days.includes(null) || last.days.length === 7);
   assert.deepEqual(gapRadar(stats, '2026-10-03', 3), { recorded: 1, empty: 2 });
 });
+
+test('dayReport.photoIds: the day’s order photos in report order, without repeats', () => {
+  const withPhotos = [
+    { id: 'p1', family: 'expense', status: 'approved', amount: 10, date: '2026-10-02', evidence: ['e1'] },
+    { id: 'p2', family: 'value', status: 'approved', taskId: 'a', quantity: 1, date: '2026-10-02', evidence: ['v1', 'v2'] },
+    { id: 'p3', family: 'value', status: 'recorded', taskId: 'c', quantity: 1, date: '2026-10-02T08:00:00Z', evidence: ['v3', '', null, 'v1'] },
+    { id: 'p4', family: 'value', status: 'approved', taskId: 'a', quantity: 1, date: '2026-10-02' },
+    { id: 'p5', family: 'value', status: 'approved', taskId: 'a', quantity: 1, date: '2026-10-03', evidence: ['other-day'] },
+  ];
+  assert.deepEqual(dayReport(withPhotos, tasks, '2026-10-02').photoIds, ['v1', 'v2', 'v3', 'e1']);
+  assert.deepEqual(dayReport(orders, tasks, '2026-10-02').photoIds, []);
+  assert.deepEqual(dayReport([], tasks, '2026-10-02').photoIds, []);
+});

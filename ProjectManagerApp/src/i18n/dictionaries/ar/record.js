@@ -51,4 +51,35 @@ export default {
   'record.photosNotSaved': 'حُفظ الأمر بدون صوره',
   'record.photosNotSavedBody': 'تعذّر حفظ الصور على هذا الجهاز (المساحة ممتلئة أو التخزين محظور).',
   'record.donePhotos': 'الصور المرفقة: {n}',
+
+  // Warnings before saving ("Save anyway?")
+  'record.warnTitle': 'الحفظ على أي حال؟',
+  'record.warnIntro': 'راجِع ما يلي قبل الحفظ:',
+  'record.saveAnyway': 'احفظ على أي حال',
+  'record.warnBack': 'رجوع',
+  'record.warnDuplicate': 'يوجد أمر مسجَّل مطابق لهذا: النوع والبند والتاريخ والكمية والجهة نفسها.',
+  'record.warnOverLeft': 'الكمية {qty} {unit} أكبر من المتبقي في عقد هذا البند ({left} {unit}).',
+  'record.warnOverLeftPending': 'الكمية {qty} {unit} أكبر من المتبقي في عقد هذا البند ({left} {unit}، بعد {pending} {unit} بانتظار الاعتماد).',
+  'record.warnAmountOutlier': 'المبلغ {amount} أكبر من {factor} أضعاف المعتاد لهذا النوع (الوسيط {median}).',
+  'record.warnFutureDate': 'التاريخ في المستقبل (اليوم {today}).',
+  'record.warnBeforeStart': 'التاريخ قبل بداية المشروع ({start}).',
+
+  // Who may approve
+  'record.cannotApproveOwn': 'أنت من سجّله',
+  'record.cannotApproveRole': 'دورك لا يسمح بالاعتماد',
+  'record.cannotApproveCertified': 'ضمن ذرعة مُصدَرة',
+  'record.notApproved': 'لم يُعتمد',
+  'record.cannotApproveOwnBody': 'الأمر الذي سجّلته يعتمده شخص آخر.',
+  'record.cannotApproveRoleBody': 'دورك في هذا المشروع لا يشمل اعتماد الأوامر.',
+
+  // Locked by an issued payment certificate
+  'record.inCertificate': 'ضمن الذرعة رقم {number}',
+  'record.inCertificateMain': 'ضمن ذرعة العقد الرئيسي رقم {number}',
+  'record.inCertificateShort': 'ذرعة {number}',
+  'record.certificateSub': 'الذرعة رقم {number} · {party}',
+  'record.certificateMain': 'ذرعة العقد الرئيسي رقم {number}',
+  'record.lockedTitle': 'هذا الأمر ضمن ذرعة مُصدَرة',
+  'record.lockedDelete': 'لا يمكن حذفه: الذرعة المُصدَرة تبقى كما صدرت تماماً.',
+  'record.lockedApprove': 'لا يمكن اعتماده مرة أخرى: الذرعة المُصدَرة تبقى كما صدرت تماماً.',
+  'record.lockedIn': 'شملته:',
 };

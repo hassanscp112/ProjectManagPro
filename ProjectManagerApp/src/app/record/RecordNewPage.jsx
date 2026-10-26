@@ -5,7 +5,7 @@ import { useI18n } from '../../i18n/useI18n.js';
 import { latestOrder, ordersOnDay, pendingOrders, repeatOrderDraft } from '../../state/orderForm.js';
 import { useProject } from '../../state/projectContext.js';
 import { todayStr } from '../../utils/OrderEngine.js';
-import { Button, Card, StatusBadge, usePhone, useToast } from '../../ui/index.js';
+import { Button, Card, Dialog, StatusBadge, usePhone, useToast } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
 import OrderForm from './OrderForm.jsx';
 import OrderRow from './OrderRow.jsx';
@@ -13,6 +13,7 @@ import OrderTypeCards from './OrderTypeCards.jsx';
 import PhoneRecordFlow from './PhoneRecordFlow.jsx';
 import { formatDay, savedMessage } from './orderMeta.js';
 import { useOrderActions } from './useApproval.jsx';
+import { useDraftWarnings } from './useDraftWarnings.js';
 import { draftFromNavigation, useOrderEntry } from './useOrderEntry.js';
 import s from './Record.module.css';
 
@@ -43,6 +44,8 @@ function DesktopRecord() {
   const pending = pendingOrders(orders);
   const today = todayStr();
   const todays = ordersOnDay(orders, today);
+  const warnings = useDraftWarnings(draft);
+  const [confirming, setConfirming] = useState(null); // what comes after "Save anyway": 'same' | 'close'
 
   const saveAnd = async (next) => {
     const order = await entry.save();
@@ -50,6 +53,12 @@ function DesktopRecord() {
     toast({ title: savedMessage(t, order) });
     if (next === 'same') entry.start(order.type);
     else entry.clear();
+  };
+
+  // Warnings never block: a draft that is complete but looks odd asks first.
+  const trySave = (next) => {
+    if (missing.length === 0 && warnings.list.length > 0) setConfirming(next);
+    else saveAnd(next);
   };
 
   return (
@@ -74,7 +83,7 @@ function DesktopRecord() {
               noValidate
               onSubmit={(e) => {
                 e.preventDefault();
-                saveAnd('same');
+                trySave('same');
               }}
             >
               <div className={s.divider} />
@@ -95,7 +104,7 @@ function DesktopRecord() {
                 <Button variant="ghost" onClick={entry.clear}>
                   {t('common.cancel')}
                 </Button>
-                <Button onClick={() => saveAnd('close')} disabled={saving || photosBusy}>
+                <Button onClick={() => trySave('close')} disabled={saving || photosBusy}>
                   {t('record.save')}
                 </Button>
                 <Button variant="primary" type="submit" disabled={saving || photosBusy} aria-busy={saving || undefined}>
@@ -145,6 +154,34 @@ function DesktopRecord() {
         </aside>
       </div>
       {actions.dialogs}
+      <Dialog
+        open={Boolean(confirming)}
+        onOpenChange={(open) => !open && setConfirming(null)}
+        title={t('record.warnTitle')}
+        description={t('record.warnIntro')}
+        footer={
+          <>
+            <Button onClick={() => setConfirming(null)}>{t('record.warnBack')}</Button>
+            <Button
+              variant="primary"
+              data-autofocus
+              onClick={() => {
+                const next = confirming;
+                setConfirming(null);
+                saveAnd(next);
+              }}
+            >
+              {t('record.saveAnyway')}
+            </Button>
+          </>
+        }
+      >
+        <ul className={s.warnList}>
+          {warnings.list.map((w) => (
+            <li key={w.code}>{w.text}</li>
+          ))}
+        </ul>
+      </Dialog>
     </Page>
   );
 }

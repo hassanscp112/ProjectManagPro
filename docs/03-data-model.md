@@ -214,6 +214,7 @@ this calendar (`utils/planning/WorkCalendar.js`).
   status: 'recorded' | 'approved',   // quick orders are born approved
   approvedBy,
   recordedAt: 'ISO', recordedBy,
+  recordedById,                // the recorder's account id (currentActor().id); null without accounts
   details,
   evidence: [fileId, …],       // photo ids in IndexedDB (folder 'order_photos'), [] when none
 }
@@ -251,6 +252,19 @@ the order is saved with `evidence: []` and a warning toast. Deleting an order
 deletes its photos (`deleteFiles(order.evidence)`); deleting a photo in
 Files → *Order photos* removes its id from the order. "Repeat last order"
 never copies photos.
+
+**Order rules** (nothing extra is stored; `state/orderForm.js`):
+- *Warnings* before saving (over the contract, likely duplicate, future date,
+  before the project start, an expense far above its type's median) only ask
+  "Save anyway?"; the order is stored as usual.
+- *Approving*: nobody approves their own formal order once accounts exist —
+  compared by `recordedById`, else by `recordedBy` name (orders from before
+  accounts). Without accounts (`currentActor().id` null) the one local user
+  approves everything, as before. The server enforces the same rule with its
+  own `items.recorded_by`.
+- *Certificate lock*: an order whose id is in an **issued** certificate's
+  `orderIds` (§13, `certificatesByOrder()`) is not deleted or approved again;
+  the Record screens refuse with the certificate's number and a link.
 
 ---
 
@@ -528,7 +542,8 @@ Owner: `utils/Certificates.js` (the only reader / writer, always through
   task's `unitPrice`. No rate → the line is flagged (`missingRate`, amounts
   `null`), left out of the totals, and the draft can't be issued.
 - "Previous" columns come from the series' last issued certificate (frozen).
-  `certifiedOrderIds()` = every order id in an issued certificate (for locking).
+  `certifiedOrderIds()` = every order id in an issued certificate (for locking:
+  those orders cannot be deleted or approved again — §4 *Order rules*).
 
 ---
 
