@@ -7,6 +7,7 @@ import { useProject } from '../../state/projectContext.js';
 import { ORDER_TYPE_LIST, daysAgoStr, resolveWhoLabel, todayStr } from '../../utils/OrderEngine.js';
 import { wbsCompare } from '../../utils/TaskRanking.js';
 import { Button, Card, EmptyState, Field, IconButton, Input, Select, StatCard, StatusBadge, Table, usePhone } from '../../ui/index.js';
+import { HistoryButton } from '../../ui/HistoryButton.jsx';
 import { Page } from '../Page.jsx';
 import { OrderPhotosButton } from './OrderPhotos.jsx';
 import OrderRow from './OrderRow.jsx';
@@ -145,6 +146,7 @@ export default function RecordLogPage() {
                       <div className={s.cellActions}>
                         <OrderPhotosButton order={o} />
                         {pending && <ApproveButton order={o} onApprove={actions.approve} icon={Check} badge={false} />}
+                        <HistoryButton collection="pm-orders" itemId={o.id} name={orderSubject(o) || typeLabel(o.type)} record={o} />
                         <IconButton icon={Trash2} label={t('orders.deleteOrder')} size="sm" onClick={() => actions.requestDelete(o)} />
                       </div>
                     </td>
