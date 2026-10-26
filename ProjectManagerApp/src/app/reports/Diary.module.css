@@ -1,0 +1,275 @@
+/* Site diary (daily report) and the delay register. */
+
+/* ── printed diary block ── */
+.weather {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+}
+.counts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ui-space-4);
+}
+.countBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  min-width: 0;
+}
+.subTitle {
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+  font-weight: 700;
+  color: var(--ui-text-2);
+}
+.issues {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ── side column: diary card above the note form ── */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+  min-width: 0;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ui-space-3);
+}
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--ui-fs-sm);
+}
+.summary li {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+}
+
+/* ── editors (drawers) ── */
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+}
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-3);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-sunken);
+}
+.quickHint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ui-space-3);
+}
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.choiceLabel {
+  font-size: var(--ui-fs-sm);
+  font-weight: 600;
+  color: var(--ui-text);
+}
+.choiceHint {
+  margin: 0;
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.legend {
+  margin-bottom: var(--ui-space-1);
+  padding: 0;
+  font-size: var(--ui-fs-sm);
+  font-weight: 700;
+  color: var(--ui-accent-ink);
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px auto;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+/* visitors: the name on its own line, organisation and purpose under it */
+.rowWide {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+.rowWide > :first-child {
+  grid-column: 1 / -1;
+}
+.countInput {
+  min-width: 0;
+}
+.addRow {
+  align-self: flex-start;
+}
+
+/* ── delay register ── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+.filterSelect {
+  width: auto;
+  min-width: 160px;
+}
+.eventTitle {
+  font-weight: 600;
+}
+.eventMeta {
+  display: block;
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.rowButton {
+  cursor: pointer;
+}
+.rowButton:hover td {
+  background: var(--ui-sunken);
+}
+.cards {
+  display: none;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.delayCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-1);
+  width: 100%;
+  padding: var(--ui-space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-surface);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+button.delayCard {
+  cursor: pointer;
+}
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-1);
+}
+.items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  max-width: 100%;
+  padding-inline: var(--ui-space-2) 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-sunken);
+  font-size: var(--ui-fs-sm);
+}
+.itemText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.warn {
+  margin: 0;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-warning-soft);
+  color: var(--ui-warning);
+  font-size: var(--ui-fs-sm);
+  font-weight: 600;
+}
+.info {
+  margin: 0;
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.toneWarning {
+  color: var(--ui-warning);
+}
+.footerSpread {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 767px) {
+  .counts,
+  .pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .row:not(.rowWide) {
+    grid-template-columns: minmax(0, 1fr) 90px auto;
+  }
+  .filterSelect {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  /* the register is a list of cards on phones, the table on paper */
+  .cards {
+    display: flex;
+  }
+  .registerTable {
+    display: none;
+  }
+}
+
+@media print {
+  .counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cards {
+    display: none !important;
+  }
+  .registerTable {
+    display: block !important;
+  }
+  .eventMeta,
+  .subTitle {
+    color: #333;
+  }
+  .toneWarning {
+    color: #000;
+  }
+}

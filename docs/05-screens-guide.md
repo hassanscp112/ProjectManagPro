@@ -214,12 +214,27 @@ whatever the screen theme.
 
 **Daily `#/reports/daily`** — *Day* (date with previous / next / Today) or
 *Period* (from–to, notes filtered by engineer). Per day: figures (orders, work
-value, expenses, pending), **Work done** (quantity orders grouped by item with
-who did it, valued at the contract unit price), **Recorded expenses**, and
-**Site notes**. The side card adds a note (engineer prefilled from the
-identity, optional item, the note). Notes never record quantities (golden rule
-5); old notes that have one show it as "Quantity noted". Deleting a note asks
-first. Storage: `utils/DailyNotes.js`.
+value, expenses, pending), **Site diary** (weather, max temperature, working
+hours; manpower by trade and equipment by type with totals; recorded by),
+**Work done** (quantity orders grouped by item with who did it, valued at the
+contract unit price), **Recorded expenses**, **Visitors** and **Issues** (from
+the diary), a marked slot for the day's photos (roadmap WS8), and **Site
+notes**. A period prints the days with orders, notes or a diary (diary-only
+days only when no engineer is picked); the day view says when a day has no
+diary. The side column (day view, screen only) holds the **diary card** — the
+day at a glance and *Fill in / Edit the diary* (`record.work`; other roles see
+a read-only line) — and the note form (engineer prefilled from the identity,
+optional item, the note). The diary editor is a drawer (a bottom sheet on
+phones): weather chips (tap again to clear), temperature, hours, rows for
+manpower (trade + count), equipment (type + count) and visitors (name,
+organisation, purpose), issues. A new day opens with manpower **prefilled from
+the day's plan crews** (Lookahead); *From the day plan* refills it and *Same as
+yesterday* copies weather, hours, manpower and equipment from the last
+recorded day. Saving an empty diary removes the day. Notes never record
+quantities (golden rule 5); old notes that have one show it as "Quantity
+noted". Deleting a note asks first. Storage: `utils/DailyNotes.js`,
+`utils/SiteDiary.js`; diary components `reports/DiaryParts.jsx`
+(+ `Diary.module.css`).
 
 **Monthly `#/reports/monthly`** — month with previous / next (defaults to the
 **previous** month). Sections: summary figures (as of today — said under them),
@@ -227,8 +242,29 @@ S-curve (`home/SCurve.jsx`), BOQ progress per top-level section (approved
 quantity orders before vs within the month, remaining, %), the month's orders,
 variation orders (old → new follows the reading direction), quantities per
 contractor plus internal crews, money summary (work value − expenses per
-category, net), signature lines. The project name comes from `ui.projectName`
-/ `ui.projectContract` (the legacy sheet had it hardcoded in Arabic).
+category, net), **Delays this month** (`reports/MonthDelays.jsx`: the events
+that touch the month with the part inside it, days in the month — a day under
+two events counts once — excusable days, claimed / granted), signature lines.
+The project name comes from `ui.projectName` / `ui.projectContract` (the
+legacy sheet had it hardcoded in Arabic).
+
+**Delays `#/reports/delays`** — the delay register (`reports/DelaysPage.jsx`),
+a printable `ReportSheet` "as of today": figures (events, delay days with
+overlaps counted once, excusable days, claimed — drafts excluded — granted,
+awaiting decision, notice warnings), the events newest first (title with
+cause, recorded by and affected items; period; days — an open event runs to
+today; excusable; notice date with a badge: in time / late notice / no notice
+/ due by; claimed / granted; status), totals and signature lines. Filters:
+status and cause (the totals follow them; a badge on the sheet names them). On
+phones the register is a list of cards; paper always gets the table. *New
+delay*, a row's edit button (or a click on the row / card) open the editor
+drawer (`record.work` only):
+title, cause chips, start / end (empty = ongoing), affected items (task picker
+plus removable chips), excusable or not, **notice date** with a live warning
+when it is more than 28 days after the start, or when no notice was given and
+the 28 days have passed (FIDIC 20.1), status, days claimed, days granted (when
+granted), notes; Delete asks first. A new event records `recordedBy` from
+`currentActor()`. Storage: `utils/Delays.js`; rules: `state/diaryModel.js`.
 
 **Activity `#/reports/activity`** — three views kept in the URL (`?view=task`,
 `?view=heatmap`):
@@ -243,7 +279,7 @@ category, net), signature lines. The project name comes from `ui.projectName`
    days; click a day for its entries (variation orders only in whole-project
    scope). Opens scrolled to the latest weeks.
 
-Logic: `src/state/reportsModel.js`; month / weekday names and the issue stamp:
+Logic: `src/state/reportsModel.js` (diary and delays: `src/state/diaryModel.js`); month / weekday names and the issue stamp:
 `src/app/dates.js`.
 
 ## Finance — `src/app/finance/FinancePage.jsx` (rebuilt in Phase 6)
