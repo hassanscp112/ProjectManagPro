@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- مدير المشروع: an aubergine tile with a roof over three staggered plan
+       bars (a Gantt read right-to-left). Source for `npm run icons`. -->
+  <rect width="512" height="512" rx="112" fill="#553285"/>
+  <path d="M120 198 256 98 392 198" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#fff">
+    <rect x="236" y="236" width="156" height="44" rx="22"/>
+    <rect x="178" y="304" width="158" height="44" rx="22"/>
+    <rect x="120" y="372" width="156" height="44" rx="22"/>
+  </g>
+</svg>
