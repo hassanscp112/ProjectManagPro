@@ -49,7 +49,7 @@ The rules that prevent mistakes. Read this before changing anything.
 | 1 | ~~`exceljs` and `mathjs` in package.json but imported nowhere~~ **removed** | — | No Excel export exists; the archived `analyze_excel.cjs` needs `npm i exceljs` to run again |
 | 2 | ~~`PROJECT_START` is a hardcoded constant~~ **fixed** — each project has its own `startDate` | `utils/Projects.projectStartDate` | `PROJECT_START` remains only as the first project's default |
 | 3 | ~~Topbar breadcrumb is a hardcoded Arabic string~~ **fixed in Phase 1** | — | Project name/contract now `ui.projectName` / `ui.projectContract` |
-| 4 | Payroll compares raw `'مستقطع'` data value | `state/financeModel.js` (`DEDUCTED_STATUS`) | Stored data value — don't translate the comparison |
+| 4 | Payroll compares raw `'مستقطع'` data value | `utils/OrderEngine.js` (`DEDUCTED_STATUS`, re-exported by `state/financeModel.js`) | Stored data value — don't translate the comparison. Payroll is now an expense order; net = salary − advance only for this status |
 | 5 | ~~LanguageSwitcher caption is a ternary~~ **fixed in Phase 7** — the old switcher is archived; language menus use `l.label` | — | A 3rd language needs no UI change |
 | 6 | ~~No router~~ **fixed in Phase 1** — hash routes | `src/app/router.jsx` | Refresh and links keep the screen; use `#/…` hrefs or `useNavigate()` |
 | 7 | Snapshots cover tasks + projectMeta ONLY | Snapshots.js | Orders/finance NOT in snapshots (full safety = JSON backup) |
