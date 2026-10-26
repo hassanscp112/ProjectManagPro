@@ -1,7 +1,7 @@
 # 04 — Utils Reference (the engines)
 
 `ProjectManagerApp/src/utils/` — pure logic + localStorage persistence.
-(Planning sections last verified 2026-10-26.) **No React here.** All modules are plain ES modules; most are covered by
+(Planning and history sections last verified 2026-10-26.) **No React here.** All modules are plain ES modules; most are covered by
 tests in `__tests__/` (run: `npm test` from `ProjectManagerApp/`).
 
 Dependency order (leaf → top):
@@ -200,6 +200,7 @@ storage. Tests: `criticalPath.test.js`, `engineParity.test.js`.
 - `logAppEvent({actor, kind, summary, refType, refId, payload})` — call from anywhere
 - `loadAppEvents()` / `saveAppEvents(list)`
 - `buildUnifiedFeed({orders, variations, appEvents})` — merged, newest-first feed entries
+  (event kinds in words: `state/reportsModel.eventKindKey`)
 - `formatDiff(before, after)` — value-change formatting
 - `orderValueInIQD(order, tasks)` — money value of an order for heatmap weighting
 
@@ -442,6 +443,24 @@ migrations in PGlite with `npm run test:db`.
 
 React hooks for screens: `app/account/useAccount.js` (`useSession`,
 `useServerConfig`, `useSyncStatus`, `usePlanEpoch`).
+
+**History screens** read `history.js` only; their rules are pure in
+`state/historyModel.js` (tested in `state/__tests__/historyModel.test.js`):
+`diffFields(before, after, { hidden })` → `[{ path, segments, change:
+'added'|'removed'|'changed', before, after, list? }]` (nested values per leaf,
+record lists matched by `id` / `taskId` / `key`, plain lists with `list: {
+added, removed }`, the id and bookkeeping in `HIDDEN_FIELDS` left out);
+`valueText(value, words)` (yes / no, numbers, dates, records by name);
+`recordStamps(record, { last })` → `[{ kind: 'recorded'|'approved'|'issued'|'edited',
+name, at }]` (a newest row that is the first version is not an edit); `lastChange(rows)`; `restorePayload(row)` / `restoreGate({ row,
+rows, current, actor })` (the same `checkChange` the sync engine uses);
+`timelineQuery(filters)` → `getProjectTimeline` arguments (local days → ISO
+bounds), `filterTimeline` (order family, variation orders, pending rows'
+person and dates), `timelineActors`, `personSummary`, `periodDays`,
+`localDay`, `historyHref`, `splitItemId`, `recordName`, `COLLECTION_KEYS`.
+Hooks: `app/history/timelineHooks.jsx` (`useServerHistory`, `useMembers`,
+`useTimeline`, `usePeriod`), `app/history/useLastChange.js`,
+`app/history/useCurrentRecord.js`.
 
 ---
 

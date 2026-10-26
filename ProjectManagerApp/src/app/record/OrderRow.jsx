@@ -3,6 +3,7 @@ import { useProject } from '../../state/projectContext.js';
 import { resolveWhoLabel } from '../../utils/OrderEngine.js';
 import { Trash2 } from 'lucide-react';
 import { Button, IconButton, ListRow, StatusBadge, cx } from '../../ui/index.js';
+import { HistoryButton } from '../../ui/HistoryButton.jsx';
 import { OrderPhotosButton } from './OrderPhotos.jsx';
 import { TYPE_ICONS, formatDay, formatTime, orderFigure, orderSubject, typeLabel } from './orderMeta.js';
 import s from './Record.module.css';
@@ -42,6 +43,7 @@ export default function OrderRow({ order, onApprove, onDelete, showDate = true, 
           ) : pending ? (
             <StatusBadge tone="warning">{t('common.pending')}</StatusBadge>
           ) : null}
+          <HistoryButton collection="pm-orders" itemId={order.id} name={subject || typeLabel(order.type)} record={order} />
           {onDelete && <IconButton icon={Trash2} label={t('orders.deleteOrder')} size="sm" onClick={() => onDelete(order)} />}
         </>
       }

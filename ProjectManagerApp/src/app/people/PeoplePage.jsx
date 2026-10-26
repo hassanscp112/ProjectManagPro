@@ -17,6 +17,7 @@ import {
   updateWorker,
 } from '../../utils/Registries.js';
 import { Button, Card, ConfirmDialog, EmptyState, Field, IconButton, Input, NumberInput, Select, StatusBadge, Table, cx } from '../../ui/index.js';
+import { HistoryButton } from '../../ui/HistoryButton.jsx';
 import { Page } from '../Page.jsx';
 import s from './People.module.css';
 
@@ -112,7 +113,8 @@ export default function PeoplePage() {
                     <td>
                       <Input aria-label={t('common.notes')} value={c.notes || ''} placeholder={t('registries.contractorNotesPh')} onChange={(e) => set({ notes: e.target.value })} />
                     </td>
-                    <td>
+                    <td className={s.rowActions}>
+                      <HistoryButton collection="pm-registries" itemId={`contractors/${c.id}`} name={unnamed(c)} />
                       <IconButton icon={Trash2} label={t('registries.deleteContractorTitle')} variant="ghost" onClick={() => setToDelete({ kind, item: c })} />
                     </td>
                   </tr>
@@ -163,7 +165,8 @@ export default function PeoplePage() {
                       <td>
                         <Input aria-label={t('common.notes')} value={w.notes || ''} onChange={(e) => set({ notes: e.target.value })} />
                       </td>
-                      <td>
+                      <td className={s.rowActions}>
+                        <HistoryButton collection="pm-registries" itemId={`workers/${w.id}`} name={unnamed(w)} />
                         <IconButton icon={Trash2} label={t('registries.deleteWorkerTitle')} variant="ghost" onClick={() => setToDelete({ kind, item: w })} />
                       </td>
                     </tr>
@@ -191,6 +194,7 @@ export default function PeoplePage() {
                 <Card key={team.id} padding="md" className={s.team}>
                   <div className={s.teamHead}>
                     <Input aria-label={t('registries.teamNamePh')} className={s.teamName} value={team.name || ''} placeholder={t('registries.teamNamePh')} onChange={(e) => set({ name: e.target.value })} />
+                    <HistoryButton collection="pm-registries" itemId={`teams/${team.id}`} name={unnamed(team)} />
                     <IconButton icon={Trash2} label={t('registries.deleteTeamTitle')} variant="ghost" onClick={() => setToDelete({ kind, item: team })} />
                   </div>
                   <Field label={t('registries.colForeman')}>

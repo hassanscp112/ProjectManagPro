@@ -1,0 +1,107 @@
+/* The server's project timeline and "by person" (Activity screen) */
+
+.source {
+  margin: 0;
+  color: var(--ui-text-2);
+  font-size: var(--ui-fs-sm);
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ui-space-3);
+}
+
+.count {
+  padding-bottom: var(--ui-space-2);
+  color: var(--ui-text-2);
+  font-size: var(--ui-fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--ui-divider);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ui-r-md);
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent-ink);
+}
+
+.iconDelete {
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger);
+}
+
+.iconPending {
+  background: var(--ui-sunken);
+  color: var(--ui-text-2);
+}
+
+.figure {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border: 1px solid var(--ui-warning);
+  border-radius: var(--ui-r-lg);
+  background: var(--ui-warning-soft);
+  color: var(--ui-text);
+}
+
+.notice p {
+  margin: 0;
+}
+
+.waiting {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
+}
+
+.waitingTitle {
+  margin: 0;
+  font-size: var(--ui-fs-md);
+  font-weight: 600;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--ui-space-3);
+}
+
+.types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

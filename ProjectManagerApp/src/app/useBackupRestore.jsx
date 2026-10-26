@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useI18n } from '../i18n/useI18n.js';
+import { isSignedIn } from '../sync/session.js';
 import { exportAppData, readBackupFile, restoreAppData, validateBackup } from '../utils/DataIO';
 import { ConfirmDialog, useToast } from '../ui/index.js';
 
@@ -9,6 +10,8 @@ const SAFETY_DOWNLOAD_SETTLE_MS = 800;
 /**
  * Backup download + restore (validate → confirm → safety copy of the current
  * data → write → reload). Returns { backup, restore, element } — render element.
+ * Signed in to a server, the confirm says the restored data goes to the
+ * server as edits by this person (recorded in the history).
  */
 export function useBackupRestore() {
   const { t } = useI18n();
@@ -41,7 +44,7 @@ export function useBackupRestore() {
         return;
       }
       pendingRef.current = parsed;
-      setInfo(result.stats);
+      setInfo({ ...result.stats, signedIn: isSignedIn() });
     } catch (err) {
       toast({ title: errorText(err, 'app.modal.readFail'), tone: 'danger' });
     }
@@ -77,7 +80,7 @@ export function useBackupRestore() {
           info
             ? `${t('app.modal.restoreText', { keys: info.keys, kb: (info.bytes / 1024).toFixed(0) })} ${
                 info.files === null ? t('app.modal.restoreFilesKept') : t('app.modal.restoreFiles', { n: info.files })
-              }`
+              }${info.signedIn ? ` ${t('history.restoreBackupWarning')}` : ''}`
             : ''
         }
         confirmLabel={t('app.modal.restoreAction')}

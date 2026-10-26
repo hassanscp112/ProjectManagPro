@@ -1,6 +1,6 @@
 # 03 — Data Model: Where Every Byte Lives
 
-<!-- Planning sections (task links, meta.planning) last verified 2026-10-26. -->
+<!-- Planning sections (task links, meta.planning) and history (§9, §14) last verified 2026-10-26. -->
 There is **no server and no database**. Everything is stored in the browser:
 
 - **localStorage** — all structured data (20 keys, listed first)
@@ -348,6 +348,13 @@ orders + variations (from project-meta) + these app events —
 `{id, at, date, actor, kind: 'order'|'variation'|'event', family, title,
 subtitle, tone, refTaskId, payload}`.
 
+Event `kind` values written today: `'certificate'` (issued), `'lifecycle'`
+(sign-off, status), `'project'` (created / copied), `'template'` (generated
+from a template). The feed shows them in words (`reportsModel.eventKindKey` →
+`activity.kind.*`; any other kind shows as a plain event). This local feed is
+the Activity screen's source with no server, offline, or in a project only on
+this device; in a shared project it reads the server's `changes` instead (§14).
+
 ---
 
 ## 10. Calculator & reports & finance keys
@@ -564,6 +571,18 @@ itself syncs through the server's `projects` table.
 | `invites(org_id, project_id?, email, role)` | e-mails waiting to sign up |
 | `items(org_id, project_id?, collection, item_id, data, pos, rev, deleted, recorded_by, updated_by, updated_at, txid, seq)` | one row per record; `project_id` null = organization store; deleting keeps the data |
 | `changes(id, org_id, project_id?, collection, item_id, op, before, after, rev, outcome, note, actor, actor_name, device_id, client_at, server_at, restored_from)` | append-only history: every applied write (`outcome 'applied'`, by trigger) and every version that lost a conflict or was refused (`'rejected'`); `op` = insert / update / delete / restore / import |
+
+**Reading the history** (`src/sync/history.js`, screens in
+`app/history/`): a row is `{ id, collection, itemId, op, before, after, rev,
+outcome: 'applied' | 'rejected' | 'pending' | 'failed', note
+('conflict-lost:…' | 'conflict-won:…' | 'denied:…'), actor: { id, name },
+deviceId, clientAt, serverAt, restoredFrom, pending }` — `before` / `after`
+are whole item versions (a record, a keyed day, or `'$doc'`), which
+`state/historyModel.diffFields` turns into labelled field changes. A history
+link is `#/history/<collection>/<encoded item id>`: the record id, or the item
+key when a store has several lists (`contractors/<id>` in `pm-registries`,
+`days/<YYYY-MM-DD>` in `pm-site-diary`, `variations/<id>` in the meta). The
+history UI keeps nothing locally — no new key.
 
 Row-level security: members read; writes need the action of
 `app_private.collection_rules` (mirror of `src/sync/rules.js`, from the
