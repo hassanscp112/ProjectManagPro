@@ -6,6 +6,7 @@ import { cleanTemplateDraft } from '../../state/libraryModel.js';
 import { PARTS, saveTemplate } from '../../utils/TemplateEngine.js';
 import { Button, Card, Field, IconButton, Input, NumberInput, Select, useToast } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
+import { useCan } from '../useCan.js';
 import s from '../library/Library.module.css';
 
 const DEP_TYPES = ['FS', 'SS', 'FF', 'SF'];
@@ -27,6 +28,7 @@ export default function TemplateBuilderPage() {
     elements: [],
   }));
   const [error, setError] = useState(null);
+  const canEdit = useCan()('plan.edit');
   const groups = useMemo(() => [...new Set(draft.elements.map((el) => el.group).filter(Boolean))], [draft.elements]);
 
   const patch = (changes) => setDraft((d) => ({ ...d, ...changes }));
@@ -50,7 +52,7 @@ export default function TemplateBuilderPage() {
         <Button icon={dir === 'rtl' ? ArrowRight : ArrowLeft} onClick={() => navigate('/templates')}>
           {t('library.backToTemplates')}
         </Button>
-        <Button variant="primary" onClick={save}>
+        <Button variant="primary" disabled={!canEdit} onClick={save}>
           {t('library.saveTemplate')}
         </Button>
       </div>

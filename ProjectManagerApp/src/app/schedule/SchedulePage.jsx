@@ -26,6 +26,7 @@ import { Page } from '../Page.jsx';
 import Gantt from './Gantt.jsx';
 import { SignOffDialog, VariationDialog } from './LifecycleDialogs.jsx';
 import { useBackupRestore } from '../useBackupRestore.jsx';
+import { useCan } from '../useCan.js';
 import TaskPanel from './TaskPanel.jsx';
 import s from './Schedule.module.css';
 
@@ -40,7 +41,11 @@ export default function SchedulePage() {
   const match = useMatch('/schedule/task/:taskId');
   const panelTaskId = match ? decodeURIComponent(match.params.taskId) : null;
   const { tasks, engineResult, projectMeta, projectStart, ganttView, setGanttView, setStatus, updateTask, addMainTask, addSubTask, requestDeleteTask, undo, canUndo } = useProject();
-  const view = ganttView;
+  const can = useCan();
+  const canEdit = can('plan.edit');
+  const canSign = can('plan.signOff');
+  // Editing needs plan.edit (an edit mode left on from elsewhere is ignored).
+  const view = canEdit ? ganttView : { ...ganttView, isEditMode: false };
   const setView = useCallback((changes) => setGanttView((v) => ({ ...v, ...changes })), [setGanttView]);
   const location = useLocation();
 
@@ -119,28 +124,34 @@ export default function SchedulePage() {
       <div className={s.toolbar}>
         <div className={s.group}>
           {status === 'draft' ? (
-            <Button variant="primary" icon={Lock} onClick={() => setSignOffOpen(true)}>
-              {t('schedule.signOff')}
-            </Button>
+            canSign && (
+              <Button variant="primary" icon={Lock} onClick={() => setSignOffOpen(true)}>
+                {t('schedule.signOff')}
+              </Button>
+            )
           ) : (
             <>
-              {status === 'signed' && (
+              {canSign && status === 'signed' && (
                 <Button variant="primary" icon={Play} onClick={() => changeStatus('executing')}>
                   {t('schedule.startExecution')}
                 </Button>
               )}
-              {status === 'executing' && (
+              {canSign && status === 'executing' && (
                 <Button icon={CircleCheck} onClick={() => changeStatus('completed')}>
                   {t('schedule.complete')}
                 </Button>
               )}
-              <Button icon={RotateCcw} title={t('app.toolbar.reBaselineTitle')} onClick={() => setSignOffOpen(true)}>
-                {t('schedule.reBaseline')}
-              </Button>
-              <Button icon={ScrollText} onClick={() => setVoOpen(true)}>
-                {t('schedule.variations')}
-                <StatusBadge>{(projectMeta.variations || []).length}</StatusBadge>
-              </Button>
+              {canSign && (
+                <Button icon={RotateCcw} title={t('app.toolbar.reBaselineTitle')} onClick={() => setSignOffOpen(true)}>
+                  {t('schedule.reBaseline')}
+                </Button>
+              )}
+              {can('vo.draft') && (
+                <Button icon={ScrollText} onClick={() => setVoOpen(true)}>
+                  {t('schedule.variations')}
+                  <StatusBadge>{(projectMeta.variations || []).length}</StatusBadge>
+                </Button>
+              )}
             </>
           )}
         </div>
@@ -151,9 +162,11 @@ export default function SchedulePage() {
               {t('schedule.undo')}
             </Button>
           )}
-          <Button variant={view.isEditMode ? 'primary' : 'secondary'} icon={Pencil} aria-pressed={view.isEditMode} onClick={() => setView({ isEditMode: !view.isEditMode })}>
-            {view.isEditMode ? t('schedule.doneEditing') : t('schedule.edit')}
-          </Button>
+          {canEdit && (
+            <Button variant={view.isEditMode ? 'primary' : 'secondary'} icon={Pencil} aria-pressed={view.isEditMode} onClick={() => setView({ isEditMode: !view.isEditMode })}>
+              {view.isEditMode ? t('schedule.doneEditing') : t('schedule.edit')}
+            </Button>
+          )}
           <Menu
             trigger={<IconButton icon={Ellipsis} label={t('ui.more')} variant="secondary" />}
             items={[

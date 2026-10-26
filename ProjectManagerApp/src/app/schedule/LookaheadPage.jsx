@@ -54,6 +54,7 @@ import {
 import { monthLabel, weekdayLabel } from '../dates.js';
 import { formatDay } from '../record/orderMeta.js';
 import { Page } from '../Page.jsx';
+import { useCan } from '../useCan.js';
 import s from './Lookahead.module.css';
 
 const WHO_KINDS = ['count', 'team', 'workers'];
@@ -83,6 +84,11 @@ export default function LookaheadPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const { tasks, orders, registries } = useProject();
+  const can = useCan();
+  // Month targets are plan editors'; week and day plans also site engineers'
+  // ('plan.lookahead' — until the integrator adds it, the same roles as record.work).
+  const canMonth = can('plan.edit');
+  const canDays = can('plan.lookahead') || can('record.work');
   const [plans, setPlans] = useState(loadPlans);
   const [view, setView] = useState('month');
   const today = todayStr();
@@ -259,7 +265,7 @@ export default function LookaheadPage() {
       </div>
 
       {view === 'month' && (
-        <>
+        <fieldset className={s.lockable} disabled={!canMonth}>
           <p className={s.hint}>{t('planning.monthHint')}</p>
           <dl className={s.kpis}>
             <Kpi label={t('planning.kpiMonthTargets')} value={summary.count} />
@@ -297,11 +303,11 @@ export default function LookaheadPage() {
               <ul className={s.rows}>{otherTargets.map((x) => targetRow(x, leaves))}</ul>
             </Card>
           )}
-        </>
+        </fieldset>
       )}
 
       {view === 'week' && (
-        <>
+        <fieldset className={s.lockable} disabled={!canDays}>
           <p className={s.hint}>{t('planning.weekHint')}</p>
           <div className={s.actions}>
             <Button icon={Copy} onClick={() => copyPrevious('week')}>
@@ -318,11 +324,11 @@ export default function LookaheadPage() {
               <ul className={s.rows}>{weekRows.map((a) => assignmentRow('weeks', a))}</ul>
             </Card>
           )}
-        </>
+        </fieldset>
       )}
 
       {view === 'day' && (
-        <>
+        <fieldset className={s.lockable} disabled={!canDays}>
           <p className={s.hint}>{t('planning.dayHint')}</p>
           <dl className={s.kpis}>
             <Kpi label={t('planning.kpiPpc')} value={pct(completion.rate)} tone={rateTone(completion.rate, 0.8)} />
@@ -347,7 +353,7 @@ export default function LookaheadPage() {
               <ul className={s.rows}>{dayRows.map((a) => assignmentRow('days', a))}</ul>
             </Card>
           )}
-        </>
+        </fieldset>
       )}
 
       <ConfirmDialog

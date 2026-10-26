@@ -9,6 +9,7 @@ import { loadRateLibrary } from '../../utils/RateLibrary.js';
 import { activeTemplates, deleteTemplate, listTemplates, makeTemplateFromTasks, saveTemplate, toISODate } from '../../utils/TemplateEngine.js';
 import { Button, Card, ConfirmDialog, Dialog, EmptyState, Field, IconButton, Input, Select, cx, useToast } from '../../ui/index.js';
 import { Page } from '../Page.jsx';
+import { useCan } from '../useCan.js';
 import { templateName } from './templateLabels.js';
 import { TemplatePreview, TemplateVariables } from './TemplatePreview.jsx';
 import s from '../library/Library.module.css';
@@ -19,17 +20,20 @@ function TemplateDetail({ template }) {
   const navigate = useNavigate();
   const [values, setValues] = useState(() => templateDefaults(template));
   const preview = useMemo(() => previewTemplate(template, values, toISODate(new Date()), loadRateLibrary(), { lang }), [template, values, lang]);
+  const canEdit = useCan()('plan.edit');
   if (!preview) return null;
 
   return (
     <Card title={`${template.icon || '🏗️'} ${templateName(template, t, lang)}`} titleAs="h2" padding="md" className={s.main}>
       <TemplateVariables template={template} values={values} onChange={setValues} />
       <TemplatePreview preview={preview} />
-      <div className={s.actionsEnd}>
-        <Button variant="primary" icon={FolderPlus} onClick={() => navigate('/projects/new', { state: { templateId: template.id, values } })}>
-          {t('projects.newFromTemplate')}
-        </Button>
-      </div>
+      {canEdit && (
+        <div className={s.actionsEnd}>
+          <Button variant="primary" icon={FolderPlus} onClick={() => navigate('/projects/new', { state: { templateId: template.id, values } })}>
+            {t('projects.newFromTemplate')}
+          </Button>
+        </div>
+      )}
     </Card>
   );
 }
@@ -44,6 +48,7 @@ export default function TemplatesPage() {
   const { t, lang } = useI18n();
   const toast = useToast();
   const navigate = useNavigate();
+  const canEdit = useCan()('plan.edit');
   const [templates, setTemplates] = useState(() => activeTemplates(listTemplates()));
   const [params, setParams] = useSearchParams();
   const [toDelete, setToDelete] = useState(null);
@@ -70,14 +75,16 @@ export default function TemplatesPage() {
     <Page area="templates">
       <div className={s.toolbar}>
         <p className={s.hint}>{t('projects.templatesHint')}</p>
-        <div className={s.actions}>
-          <Button icon={CopyPlus} onClick={openFromProject}>
-            {t('library.saveProject')}
-          </Button>
-          <Button variant="primary" icon={Plus} onClick={() => navigate('/templates/new')}>
-            {t('library.newTemplate')}
-          </Button>
-        </div>
+        {canEdit && (
+          <div className={s.actions}>
+            <Button icon={CopyPlus} onClick={openFromProject}>
+              {t('library.saveProject')}
+            </Button>
+            <Button variant="primary" icon={Plus} onClick={() => navigate('/templates/new')}>
+              {t('library.newTemplate')}
+            </Button>
+          </div>
+        )}
       </div>
 
       {templates.length === 0 ? (
@@ -95,7 +102,7 @@ export default function TemplatesPage() {
                   <span className={s.muted}>{t('templates.cardMeta', { vars: (tpl.variables || []).length, elements: (tpl.elements || []).length })}</span>
                 </span>
               </button>
-              <IconButton icon={Trash2} label={t('templates.deleteTemplateTitle')} size="sm" variant="ghost" onClick={() => setToDelete(tpl)} />
+              {canEdit && <IconButton icon={Trash2} label={t('templates.deleteTemplateTitle')} size="sm" variant="ghost" onClick={() => setToDelete(tpl)} />}
             </li>
           ))}
         </ul>
