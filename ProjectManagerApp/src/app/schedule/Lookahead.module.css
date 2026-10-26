@@ -1,4 +1,9 @@
 /* ── Toolbar: view switch + period navigation ── */
+/* A <fieldset> that only disables what is inside (no box of its own). */
+.lockable {
+  display: contents;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
