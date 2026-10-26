@@ -9,9 +9,11 @@ file already answers.** Docs last verified 2026-10-26.
 A **React 19 + Vite** single-page app (`ProjectManagerApp/`) for managing
 construction projects (the first one is a real Iraqi canal contract). A
 projects level (`#/projects`) lists them and creates new ones from a
-template, blank, or a copy; templates, rates and people are shared. No backend, no database (hash-URL router) —
-**all data in browser localStorage** (+ IndexedDB for file blobs), Arabic-first
-(RTL) with English. Core design: site reality is entered once as **"orders"**
+template, a building wizard, a contract BOQ, blank, or a copy; templates,
+rates, work types and people are shared. Hash-URL router; **data lives in the
+browser** (localStorage + IndexedDB for files) and, when a Supabase server is
+set, syncs offline-first with accounts, roles and a full change history
+(`src/sync/`, `supabase/`). Arabic-first (RTL) with English. Core design: site reality is entered once as **"orders"**
 in one screen; every other screen (schedule, dashboard, reports, activity) is a
 live view over that ledger. Blueprint: `plans/ecosystem-plan.md`.
 
@@ -60,7 +62,7 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 4. **Cleanup = move to `_archive/`** with a note; never delete files.
 5. Don't add manual "actual quantity" inputs — executed qty is order-derived.
 6. There is no Excel export (the unused `exceljs`/`mathjs` deps were removed).
-7. Data loss risk: everything lives in the browser — never instruct clearing storage without exporting a backup first (in-app Backup button).
+7. Data loss risk: without a server everything lives in the browser — never instruct clearing storage without exporting a backup first (in-app Backup button).
 
 ## Fast facts (so you never grep for them)
 
@@ -77,10 +79,14 @@ Dev-only component review page: `npm run dev`, then http://localhost:5173/#/dev/
 
 ## Current state & next steps
 
-**Roadmap in progress** (2026-10-26): `plans/roadmap-plan.md` — a full
-multi-user app (Supabase accounts + offline-first sync + audit history),
-auto-planning, photos, PWA, certificates, diary, built by parallel sessions on
-branch `roadmap/integration`. Read it before starting any roadmap work.
+**Roadmap** (2026-10-26, `plans/roadmap-plan.md`): waves 1–2 are merged on
+branch `roadmap/integration` — accounts + offline-first sync + history,
+auto-planning M1–M5 (`plans/auto-planning-plan.md`), photos, PWA + Pages
+workflow, payment certificates, site diary + delays, expenses as orders,
+order rules, history UI. Release to `main` (deploys Pages) waits for the
+user's go-ahead; nothing has run against a real server yet. Current state and
+next steps: `docs/07-conventions-quirks-roadmap.md` §6–7. Read the roadmap
+before starting any roadmap work.
 
 **Multi-project** (2026-10-25): projects level, new project from template /
 blank / copy, per-project storage, backup format v3 (all projects). See

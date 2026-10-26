@@ -52,11 +52,11 @@ The rules that prevent mistakes. Read this before changing anything.
 | 4 | Payroll compares raw `'مستقطع'` data value | `utils/OrderEngine.js` (`DEDUCTED_STATUS`, re-exported by `state/financeModel.js`) | Stored data value — don't translate the comparison. Payroll is now an expense order; net = salary − advance only for this status |
 | 5 | ~~LanguageSwitcher caption is a ternary~~ **fixed in Phase 7** — the old switcher is archived; language menus use `l.label` | — | A 3rd language needs no UI change |
 | 6 | ~~No router~~ **fixed in Phase 1** — hash routes | `src/app/router.jsx` | Refresh and links keep the screen; use `#/…` hrefs or `useNavigate()` |
-| 7 | Snapshots cover tasks + projectMeta ONLY | Snapshots.js | Orders/finance NOT in snapshots (full safety = JSON backup) |
+| 7 | Snapshots cover tasks + projectMeta ONLY | Snapshots.js | Orders/finance NOT in snapshots (full safety = JSON backup). With a server, every record's versions are kept in the append-only `changes` table (History page, *Restore this version*) |
 | 8 | Gantt bars are not draggable by design | `src/app/schedule/Gantt.jsx` | Dates/durations edited via grid inputs (edit mode) |
 | 9 | localStorage **quota** (~5 MB) is the only real limit | all | File blobs already live in IndexedDB; big data goes to backup files |
 | 14 | The first project keeps the plain (unprefixed) keys | `utils/Projects.js` (`legacy: true`) | Never read a project store with a fixed key — always `projectKey(KEY)` (or `keyFor(project, KEY)`), or you get the first project's data |
-| 13 | Data belongs to the origin (`http://localhost:5173`) | `vite.config.js` | The dev port is pinned (`strictPort`): if 5173 is busy, `npm run dev` fails instead of opening an empty app on another port |
+| 13 | Data belongs to the origin (`http://localhost:5173`) | `vite.config.js` | The dev port is pinned (`strictPort`): if 5173 is busy, `npm run dev` fails instead of opening an empty app on another port. The GitHub Pages site is another origin with its own, empty storage (move data with Backup → Restore). With a server set, each device's local stores are an offline copy of the server's data |
 | 10 | Element columns/BOQ links only on group tasks | `app/schedule/TaskDetailsEdit.jsx` | Leaves are "record only" |
 | 11 | Quick orders are born approved (`approvedBy` = identity) | OrderEngine | Only formal+recorded need the Approve action |
 | 12 | ~~Engine task warnings are hardcoded Arabic~~ **fixed** — warnings carry `code` + `params` | `GanttEngine.js`, `app/schedule/warningText.js` | Shown in the UI language (grid tooltip and the task panel's warning list) |
@@ -93,47 +93,70 @@ The rules that prevent mistakes. Read this before changing anything.
 | `plans/advanced-lifecycle-plan.md` | Baseline / VO / lifecycle design — **implemented** |
 | `plans/study-folder-analysis.md` | Notes on the Study research folder |
 | `plans/roadmap-plan.md` | Full multi-user app, built by parallel sessions (accounts, sync, history, auto-planning, photos, PWA, certificates, diary) — **in progress** |
+| `plans/auto-planning-plan.md` | Building wizard, BOQ → plan, working calendar, resources and leveling, learned productivity — **M1–M5 implemented**, M6–M7 in progress |
 
-## 6. Current state (as of 2026-10-25)
+## 6. Current state (as of 2026-10-26)
 
-- **Code:** 3+ build rounds shipped — orders foundation, snapshots,
-  read-first task details, i18n ar/en + RTL, planning/activity/templates/
-  registries screens, EVM + S-curve, monthly report, full backup/restore.
-- **Git:** `main` fully committed (2026-10-25). UI rebuild on branch
-  `redesign/aubergine`, merged to `main` phase by phase.
-- **UI rebuild:** done (Phases 0–7, `plans/ui-rebuild-plan.md`). Every screen
-  lives in `src/app/<area>/` on the shared components in `src/ui/`; the old
-  `src/components/` screens and global CSS are in `_archive/ui-rebuild/`.
-  Home and Record load with the app; the other areas are lazy routes
-  (initial JS ≈ 650 kB, was 1.5 MB in one file; the jspreadsheet BOQ editor
-  loads only with the BOQ page).
-- **Theme:** Settings → Appearance (Light / Dark / Device), stored in
-  `pm-theme`, applied in `main.jsx`. Paper always prints light.
-- **Accessibility:** a "Skip to content" link, a window title per page, a
-  focus ring on every focusable element (`base.css` fallback), labelled
-  fields and icon buttons (checked on every route), status always with words.
-- **Projects:** several projects with a level above them (`#/projects`):
-  create from a template / blank / copy, open, edit, delete. Per-project
-  stores via `Projects.projectKey`; templates, rates and people shared.
-- **Data safety:** backups include uploaded files (format v2); restore
-  downloads a safety copy first; persistent storage requested at startup;
-  crash screens offer a backup download.
-- **Tests:** 21 test files (171 tests), all pure-logic (engines, project model, order form, home model,
-  schedule model, lookahead model, reports model, finance / library / people models, task details model,
-  task ranking, who selection, backup encoding, projects and the projects-level model, ar/en dictionary parity); no component tests.
-- **Printing:** only `.ui-print-sheet` content prints (report pages, finance
-  tables); shell and `.ui-no-print` controls are hidden.
+Everything below is on branch `roadmap/integration` (built by parallel
+sessions, `plans/roadmap-plan.md`); `main` still has the 2026-10-25 state
+until the release merge.
+
+- **Base app** (unchanged foundations): orders ledger, schedule + EVM +
+  S-curve, lifecycle / baseline / VOs, reports, multi-project, i18n ar/en +
+  RTL, Aubergine UI (`plans/ui-rebuild-plan.md`), backups (format v3,
+  `pm-session` / `pm-server` never included).
+- **Store registry:** every localStorage key is one entry in
+  `utils/storeRegistry.js`; backups, per-project keys and sync derive from it.
+- **Accounts, server, sync** (`supabase/`, `src/sync/`, `docs/08-server-setup.md`):
+  Supabase schema + row-level security, offline-first item-level sync with an
+  outbox, files to Storage, sign-in, server address per device, users and
+  roles per project, "Upload this device's data", append-only `changes`
+  history with restore. **No server set = the app works on this device
+  only**, as before. Tested against the real migrations in PGlite
+  (`npm run test:db`); **not yet run against a real server**.
+- **Roles:** Admin, Project manager, Technical office engineer, Site
+  engineer, Accountant, Viewer (`utils/permissions.js`, mirrored in
+  `src/sync/rules.js` + SQL). The matrix still needs the user's confirmation
+  on a real server.
+- **Auto-planning** (`plans/auto-planning-plan.md`, M1–M5 merged): several
+  predecessors per item, working calendar, leveling links; New project
+  wizard (building templates per floor and trade, or from a contract BOQ by
+  paste / `.xlsx`, matched to the work-type library), markups, resources and
+  leveling (`#/schedule/resources`). M6–M7 (learned productivity, template
+  editor v2) in progress.
+- **Site and money:** photo evidence on orders; site diary + delay register
+  (FIDIC 20.1 notice warning); payment certificates (subcontractor / main
+  contract, retention, advance recovery, issue freezes and locks their
+  orders); expenses recorded as orders, Finance = views over them, with a
+  one-time move of the old ledger; order warnings ("Save anyway?") and no
+  self-approval.
+- **History:** History page per record, project timeline and *By person*
+  (server), record stamps (recorded / approved / last edited by).
+- **Platform:** installable PWA (offline, update prompt); GitHub Pages
+  workflow (`.github/workflows/deploy-pages.yml`, Pages not yet switched on);
+  storage meter in Settings.
+- **Tests:** 513 unit tests (`npm test`), 96 SQL assertions + 12 sync tests
+  (`npm run test:db`), 8 browser E2E tests (`npm run test:e2e`).
+- **Printing:** only `.ui-print-sheet` content prints; certificates, daily
+  report (with diary and day photos), delay register and monthly report were
+  checked with print styles, not yet in a real print preview.
 
 ## 7. Roadmap (agreed next steps, in order)
 
-0. **UI rebuild, Phases 1–7** — see `plans/ui-rebuild-plan.md`.
-1. **Markups/pricing layer** — markup on top of rate library prices.
-2. **Baseline-diff view** — visual comparison current vs baseline beyond the
-   existing scope/exec variance numbers.
-3. **Validation rules** — stronger order/entry validation (ranges, duplicates).
-4. Deferred-quirks list: see §3 above; pick from there when doing cleanup.
-5. Optional: 3rd language = one dictionary folder + LANGUAGES entry
-   (no UI change needed).
+1. **Release:** merge `roadmap/integration` into `main` (that push deploys the
+   Pages site) and switch GitHub Pages on — only with the user's go-ahead.
+2. **Real server:** set up the test laptop (`docs/08-server-setup.md`), then
+   the two-device walkthrough from `plans/roadmap-plan.md` (offline order with
+   photos, live sync, self-approval refused, role limits, history restore) and
+   confirm the role matrix.
+3. **Planning M6–M7** (learned productivity and Lookahead pace; template
+   editor v2) and the History button in the task panel.
+4. **Follow-ups:** device-side gate for deleting an approved formal order (the
+   server already refuses it); history offline short-circuit in
+   `src/sync/history.js`; `FileDB.putFile`; decide whether `ProjectGate`'s
+   remount on sync can go; Pages repository variables for the server address;
+   a real print preview pass; baseline-diff view.
+5. Optional: 3rd language = one dictionary folder + LANGUAGES entry.
 
 ---
 
