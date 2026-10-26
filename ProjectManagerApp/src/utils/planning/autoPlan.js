@@ -20,6 +20,7 @@ import { findRateById, findRateByName } from '../RateLibrary.js';
 import { OTHER_SECTION, applyBoq } from './boqPlan.js';
 import { expandTemplate, resolveLinks } from './generator.js';
 import { writeLinks } from './links.js';
+import { taskResources } from './resources.js';
 import { durationFor, workTypeMap, workTypeName } from './WorkTypes.js';
 
 export const DEFAULT_MARKUPS = { overhead: 10, contingency: 5, profit: 10 };
@@ -188,6 +189,8 @@ export const itemsToTasks = (items, { template, levels = [], workTypes = [], sta
         workTypeId: item.workTypeId,
         trade: item.trade || (wt ? wt.trade : 'general'),
         crews: item.crews || 1,
+        // People and equipment it uses at once: the work type's crew × crews.
+        ...(taskResources(wt, item.crews || 1) ? { resources: taskResources(wt, item.crews || 1) } : {}),
         productivity: item.productivity ?? (wt ? wt.productivity : 0),
         durationSource: item.durationSource || 'productivity',
         unitCost: item.unitCost ?? 0,

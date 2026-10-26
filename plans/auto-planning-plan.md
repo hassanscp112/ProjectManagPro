@@ -325,6 +325,11 @@ Each milestone:
   - the first free team of each trade is assigned (`teamId`), and the task
     shows "waits for …".
 - A resources view: a histogram per resource per week, against capacity.
+- *Built (2026-10-26):* `#/schedule/resources` with a live leveling preview
+  (no separate preview step), `teamIds` (several crews → several teams),
+  crew fitting to the pool, and *Fill from work types* for items planned
+  before resources existed. Fixed work = pinned, started or done items
+  plus everything they wait for.
 
 **M6, learned productivity and Lookahead pace**
 - `utils/Productivity.js`:

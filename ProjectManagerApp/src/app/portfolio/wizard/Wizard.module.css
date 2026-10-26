@@ -237,32 +237,6 @@
   box-shadow: var(--ui-focus-ring);
 }
 
-/* ── calendar ── */
-.days {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ui-space-2);
-}
-.list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 260px;
-  overflow: auto;
-}
-.listRow {
-  display: flex;
-  align-items: center;
-  gap: var(--ui-space-2);
-  font-size: var(--ui-fs-sm);
-}
-.listRow > span:first-child {
-  font-variant-numeric: tabular-nums;
-}
-
 /* ── review ── */
 .figures {
   margin: 0;

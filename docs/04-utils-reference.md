@@ -20,6 +20,7 @@ SiteDiary, Delays                                                      (import I
 OrderEngine                                                            (imports i18n)
 TemplateEngine                                                         (imports RateLibrary)
 GanttEngine                                                            (imports OrderEngine + CriticalPath + planning/*)
+planning/ResourceLeveler                                               (imports GanttEngine: leveling runs the engine)
 Certificates                                                           (imports i18n / Projects / ActivityLog / Identity / Registries)
 ```
 
@@ -83,6 +84,8 @@ Pipeline explained in [02-architecture.md §3](02-architecture.md). Returns:
   expenses, scheduleStartDate, scheduleEndDate, projectDuration,
   projectWorkingDays,          // working days on the project calendar
   calendarIssues,              // [{ code }] from a bad calendar spec
+  timing: { ES, EF },          // Maps id → working-time units (100 = 1 working day)
+  overloads,                   // [{ resource, from, to, demand, capacity, taskIds }]
   warnings,   // [{ taskId, wbs, name, code, params, message }]
 }
 ```
@@ -100,7 +103,10 @@ when every day works). With no calendar the results are exactly the old
 Each computed task also carries `warnings: [{ code, params, message }]`.
 Codes: `duplicateWbs {wbs}`, `overExecuted`, `invalidDepType` (coerced to FS;
 `{id}` for an extra link),
-`dependencyCycle {cycle}`, `selfDependency`, `missingPredecessor {id}`.
+`dependencyCycle {cycle}`, `selfDependency`, `missingPredecessor {id}`,
+`resourceOverload {resource, from, to}` (only when
+`projectMeta.planning.resources` sets limits — the engine flags, it never
+levels).
 `message` is an Arabic fallback; the UI shows `code` + `params` in its own
 language (`src/app/schedule/warningText.js`, keys `schedule.warn*`).
 
@@ -208,6 +214,32 @@ storage. Tests: `criticalPath.test.js`, `engineParity.test.js`.
   unplaced, unassigned, leftOut, unitMismatch }`.
   Tests: `autoPlan.test.js` (every seeded template, several sizes: no issues,
   no engine warnings, everything priced and linked).
+- **`resources.js`** — what a project has and what an item uses:
+  `capacitiesOf(planning.resources)` → Map key → limit (`crew:<trade>` —
+  a trade with People teams and no number has one crew per team —,
+  `labour`, `eq:<type>`), `demandOf(task)` (its crews of its trade + its
+  `resources`), `taskResources(workType, crews)` (generated items),
+  `findOverloads(tasks, timing, caps, cal)`,
+  `resourceHistogram(tasks, timing, caps, cal, start, end, bucketDays)` →
+  peak use per week per resource.
+- **`ResourceLeveler.js`** — `levelResources(tasks, { projectStart, meta,
+  orders })` → `{ patches, tasks, before, after, report }`: fits crews to
+  the pool (fewer crews, longer productivity-driven durations), keeps fixed
+  work where it is (pinned, started or done, and everything it waits for),
+  then places the rest in logic order, least float first, at the first
+  moment its links allow and every limited resource is free; the result is
+  written as `levelLinks` (FS 0 to ≤ 3 items that free the resource) so
+  the engine reproduces it exactly (`report.mismatch` = 0), and People
+  teams are given as `teamIds` (the team waited for first). Report:
+  `{ blocked: null|'noLimits'|'cycle', endBefore, endAfter, daysBefore,
+  daysAfter, moved [{ id, from, to, days, waitsFor }], crewChanges,
+  conflicts [{ code: 'tooBig', … }], remaining (overloads left in fixed
+  work), fixedCount, linkCount }`. `clearLeveling(tasks, ctx)` →
+  `{ patches, count }`. `fixedTaskIds`. Tests: `resourceLeveler.test.js`
+  (1 crew → floors in turn, 2 crews → two at a time, logic first, labour
+  and equipment, pinned / started work stays, crew fitting, teams,
+  stable re-leveling, exact Clear, 150 random networks reproduced by the
+  engine with no overload left, a generated apartment block).
 
 ---
 

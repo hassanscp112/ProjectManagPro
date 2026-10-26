@@ -2,6 +2,7 @@ import { sumValueOrdersByTask, sumExpenses } from './OrderEngine.js';
 import { computeCriticalPath } from './CriticalPath.js';
 import { readLevelLinks, readLinks } from './planning/links.js';
 import { forwardPass } from './planning/network.js';
+import { capacitiesOf, findOverloads } from './planning/resources.js';
 import { UNITS_PER_DAY, dayIndex, getCalendar } from './planning/WorkCalendar.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -59,6 +60,7 @@ const WARNING_MESSAGES = {
   dependencyCycle: ({ cycle }) => `توجد دورة في العلاقات: ${cycle}`,
   selfDependency: () => 'لا يمكن ربط الفقرة بنفسها',
   missingPredecessor: ({ id }) => `الفقرة السابقة غير موجودة (${id})`,
+  resourceOverload: ({ resource, from, to }) => `يتجاوز الموارد المتاحة (${resource}) من ${from} إلى ${to}`,
 };
 
 // task.warnings / result.warnings entries: { code, params, message }.
@@ -488,6 +490,21 @@ export class GanttEngine {
       }
     });
 
+    // Resources: where the plan asks for more crews / people / equipment than
+    // the project has (projectMeta.planning.resources). Only flagged —
+    // leveling is the person's explicit action (planning/ResourceLeveler).
+    const capacities = capacitiesOf(projectMeta && projectMeta.planning ? projectMeta.planning.resources : null);
+    const overloads = capacities.size ? findOverloads(leafTasks, timing, capacities, cal) : [];
+    const flagged = new Set();
+    overloads.forEach(o => {
+      o.taskIds.forEach(id => {
+        const key = `${id}|${o.resource}`;
+        if (flagged.has(key)) return;
+        flagged.add(key);
+        addTaskWarning(tasksById.get(id), 'resourceOverload', { resource: o.resource, from: o.from, to: o.to }, warnings);
+      });
+    });
+
     // Real money out (expense orders) — separate from valued work so
     // overspend becomes visible (CPI vs expenses).
     const expenses = sumExpenses(orders);
@@ -512,6 +529,10 @@ export class GanttEngine {
         ? daysBetween(scheduleStartDate, scheduleEndDate)
         : Math.max(0, (cal.cum(dayIndex(scheduleEndDate)) - cal.cum(dayIndex(scheduleStartDate))) / UNITS_PER_DAY),
       calendarIssues: cal.issues,
+      // Early start / finish of every task on the working-time axis
+      // (100 units = one working day), for leveling and resource charts.
+      timing: { ES: timing.ES, EF: timing.EF },
+      overloads,
       warnings,
     };
   }

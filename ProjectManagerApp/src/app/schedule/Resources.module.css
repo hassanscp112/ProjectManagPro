@@ -1,0 +1,237 @@
+/* Resources page (#/schedule/resources) and the shared calendar editor. */
+
+/* A <fieldset> that only disables what is inside (no box of its own). */
+.lockable {
+  display: contents;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-4);
+}
+.muted {
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ui-space-3);
+}
+.row > * {
+  min-width: 0;
+}
+.grow {
+  flex: 1 1 160px;
+}
+.narrow {
+  flex: 0 1 120px;
+}
+.spacer {
+  flex: 1 1 auto;
+}
+
+/* ── calendar ── */
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 260px;
+  overflow: auto;
+}
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  font-size: var(--ui-fs-sm);
+}
+.listRow > span:first-child {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── figures ── */
+.kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+  margin: 0;
+}
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 140px;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-md);
+  background: var(--ui-surface);
+}
+.kpi dt {
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text-2);
+}
+.kpi dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.danger {
+  color: var(--ui-danger);
+}
+.success {
+  color: var(--ui-success);
+}
+
+/* ── limits ── */
+.cellInput {
+  width: 100%;
+  min-width: 80px;
+}
+.teams {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-inline-start: var(--ui-space-2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-r-pill);
+  background: var(--ui-sunken);
+  font-size: var(--ui-fs-sm);
+}
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-2);
+  margin: 0;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text);
+}
+.alert svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ui-warning);
+}
+
+/* ── leveling report ── */
+.moves {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.move {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px var(--ui-space-3);
+  padding: var(--ui-space-2) 0;
+  border-bottom: 1px solid var(--ui-divider);
+  font-size: var(--ui-fs-sm);
+}
+.move:last-child {
+  border-bottom: 0;
+}
+.moveName {
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.moveDays {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.moveMeta {
+  grid-column: 1 / -1;
+  color: var(--ui-text-2);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+/* ── weekly use chart ── */
+.chart {
+  position: relative;
+}
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-y;
+}
+.gridLine {
+  stroke: var(--ui-divider);
+  stroke-width: 1;
+}
+.axisText {
+  fill: var(--ui-text-2);
+  font-size: 11px;
+  font-family: var(--ui-font);
+}
+.bar {
+  fill: var(--ui-accent);
+}
+.barOver {
+  fill: var(--ui-danger);
+}
+.barActive {
+  opacity: 0.75;
+}
+.capLine {
+  stroke: var(--ui-text);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+.capText {
+  fill: var(--ui-text);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--ui-font);
+  paint-order: stroke;
+  stroke: var(--ui-surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.hit {
+  fill: transparent;
+}
+.tip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+  padding: 6px 8px;
+  border-radius: var(--ui-r-sm);
+  background: var(--ui-raised);
+  box-shadow: var(--ui-shadow-pop);
+  font-size: var(--ui-fs-xs);
+  color: var(--ui-text);
+  white-space: nowrap;
+  z-index: 1;
+}
+.tip strong {
+  display: block;
+}
+.tableToggle summary {
+  cursor: pointer;
+  font-size: var(--ui-fs-sm);
+  color: var(--ui-text-2);
+}
